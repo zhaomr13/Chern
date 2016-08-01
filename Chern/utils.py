@@ -9,6 +9,14 @@ def read_variables(module_name, path):
 
 
 def write_variables(module, path, variables):
+
+    try_times = 10 ** 4
+    for i in xrange(try_times):
+        if not os.path.exists(path + ".lock") : break
+    if os.path.exists(path + ".lock") :
+        raise os.error
+
+    open(path+".lock", "a").close()
     f = open(path, "write")
 
     # Module variables, key value mapping
@@ -32,6 +40,8 @@ def write_variables(module, path, variables):
                 f.write("%s='%s'\n"%(key, str(dic[key])) )
             else :
                 f.write("%s=%s\n"%(key, str(dic[key])) )
+    f.close()
+    os.remove(path+".lock")
 
 
 #c = read_variables("configuration", os.environ["HOME"]+"/.Chern/configuration.py")
