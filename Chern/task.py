@@ -3,7 +3,7 @@ from Chern import utils
 global_config_path = os.environ["HOME"]+"/.Chern/configuration.py"
 
 class task:
-    def __init__(self, name, algorithm, algorithm_type, recreate = True):
+    def __init__(self, name, algorithm = None, algorithm_type = None, recreate = True):
         global global_config_path
         config = utils.read_variables("configuration", global_config_path)
         self.name = name
@@ -26,9 +26,14 @@ class task:
         if not os.path.exists(project_path + "/.config/tasks") :
             os.mkdir(project_path+"/.config/tasks")
         task_path = project_path + "/.config/tasks/" + self.name + ".py"
-        dic = {key:value for key, value in self.__dict__.iteritems()}
-        print dic
+        if not os.path.exists(task_path) :
+            open(task_path, "a").close()
+        dic = [(key, value) for key, value in vars(self).iteritems()]
+        #print dic
+        from imp import load_source
+        utils.write_variables(load_source(self.name, task_path), task_path, dic)
         #utils.write_variables("")
+        print vars(self)
         print "finished register job"
 
     def start_binary():
@@ -38,6 +43,10 @@ class task:
         ps = Popen("", )
         return ps
         """
+
+    def load_variable():
+        pass
+
 
     def start_davinci():
         print "DaVinci Job started"
