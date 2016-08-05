@@ -21,7 +21,8 @@ while not os.path.exists(global_config_path+"/server/close") :
                 ps = None
 
         for tasks in tasks_list:
-            tryto start tasks
+            # tryto start tasks
+            task = task(name)
             task.start()
 
     # check jobs
