@@ -3,8 +3,12 @@ import os
 import sys
 
 def read_variables(module_name, path):
+    if not os.path.exists(path):
+        open(path, "w").close()
     from imp import load_source
     module = load_source(module_name, path)
+    if os.path.exists(path+"c"):
+        os.remove(path+"c")
     return module
 
 
@@ -24,6 +28,7 @@ def write_variables(module, path, variables):
 
     # Add new variables to the list
     old_variables = dir(module)
+    print old_variables
     for key, value in variables:
         if key not in old_variables:
             old_variables.append(key)
@@ -33,15 +38,17 @@ def write_variables(module, path, variables):
         dic[key] = value
 
     # Save to file
-    print old_variables
     for key in old_variables:
         if not key.startswith("__") and not key.startswith("-") :
             if type(dic[key]) == str :
                 f.write("%s='%s'\n"%(key, str(dic[key])) )
             else :
                 f.write("%s=%s\n"%(key, str(dic[key])) )
+    print "written"
     f.close()
     os.remove(path+".lock")
+    if os.path.exists(path+"c"):
+        os.remove(path+"c")
 
 
 #c = read_variables("configuration", os.environ["HOME"]+"/.Chern/configuration.py")
