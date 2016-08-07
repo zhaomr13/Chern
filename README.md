@@ -10,11 +10,11 @@ I don't know either
 
 ## Usage
 ### Configuration
-+ `Chern config`
++ `Chern config`: edit the global configuration file for all the projects, the default editor is nano 
 
 ### About project management
-+ Chern projects: list all the current projects
-    * Chern projects [project]: change the current project to [project] and jump its root directory
-+ Chern tasks:
++ `Chern projects`: list all the current projects
+    * `Chern projects [project]`: change the current project to [project] and jump its root directory
++ `Chern tasks`:
 
 ### 
