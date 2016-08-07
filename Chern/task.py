@@ -1,11 +1,11 @@
 import os
 from Chern import utils
-global_config_path = os.environ["HOME"]+"/.Chern/configuration.py"
+global_config_path = os.environ["HOME"]+"/.Chern/config.py"
 
 class task:
     def __init__(self, name, algorithm = None, algorithm_type = None, project = None, new_project = True):
         global global_config_path
-        global_config = utils.read_variables("configuration", global_config_path)
+        global_config = utils.read_variables("config", global_config_path)
         self.name = name
         self.project = config.current_project if project == None else project
         if new_project:
@@ -26,10 +26,10 @@ class task:
         print self.project
 
     def register(self) :
-        # save the configuration
+        # save the config
         print "starting to register job"
         global global_config_path
-        config = utils.read_variables("configuration", global_config_path)
+        config = utils.read_variables("config", global_config_path)
         project_path = config.projects_path[self.project]
         if not os.path.exists(project_path + "/.config/tasks") :
             os.mkdir(project_path+"/.config/tasks")
