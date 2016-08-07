@@ -51,7 +51,7 @@ class running_jobs_list:
 while not os.path.exists(global_config_path+"/server/lock") :
 
     # Get the global configurations
-    global_config = utils.read_variables("configuration", global_config_path+"/configuration.py")
+    global_config = utils.read_variables("config", global_config_path+"/config.py")
     projects_list = global_config.projects_list
     projects_path = global_config.projects_path
 
