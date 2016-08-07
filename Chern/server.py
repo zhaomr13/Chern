@@ -1,8 +1,11 @@
 import os
 import Chern as chen
+from Chern import utils
+from Chern.task import task
 
 # global configurations
 global_config_path = os.environ["HOME"] + "/.Chern"
+rest_ncpus = 100
 
 # Why do I need such a lock?
 # if os.path.exists(global_config_path+"/server/lock") :
@@ -18,18 +21,18 @@ from collections import namedtuple
 task_type = namedtuple("task_type", ["pid", "name", "poll_status", "previous_node", "next_node"])
 
 class running_jobs_list:
-    def __init__():
+    def __init__(self):
         self.size = 0
         self.tail = None
 
-    def append(pid, name):
+    def append(self, pid, name):
         new_node = task_type(pid, name, None, next_node, tail, None)
         if self.tail is not None:
             self.tail.next_node = new_node
         self.tail = new_node
         self.size += 1
 
-    def remove():
+    def remove(self):
         remove_list = []
         present = self.tail
         while present is not None:
@@ -46,6 +49,9 @@ class running_jobs_list:
             present = present.previous_node
         return remove_list
 
+
+def get_tasks_name_list(project, status):
+    return ["hello"]
 
 # Loop forever to start applications
 while not os.path.exists(global_config_path+"/server/lock") :
@@ -67,7 +73,7 @@ while not os.path.exists(global_config_path+"/server/lock") :
             change_task_status(project, t.name, t.poll_status)
 
         # Add new jobs according to cpus
-        tasks_name_list = get_tasks_name_list(project, status == "new")
+        tasks_name_list = get_tasks_name_list(project, status = "new")
         for task_name in tasks_name_list:
             t = task(task_name, project)
             if not t.check_start(rest_ncpus):

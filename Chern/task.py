@@ -7,7 +7,7 @@ class task:
         global global_config_path
         global_config = utils.read_variables("config", global_config_path)
         self.name = name
-        self.project = config.current_project if project == None else project
+        self.project = global_config.current_project if project == None else project
         if new_project:
             self.algorithm = algorithm
             self.algorithm_type = algorithm_type
@@ -54,7 +54,7 @@ class task:
     def load_variable():
         pass
 
-    def check_start(ncpus = "1000")
+    def check_start(self, ncpus = "1000"):
         if ncpus < self.ncpus :
             return False
         print "checking dependencies for ", self.name
@@ -70,7 +70,7 @@ class task:
     def start_gauss():
         print "Gauss Job started"
 
-    def start():
+    def start(self):
         if self.algorithm_type == "binary":
             return start_binary()
         if self.algorithm_type == "davinci":
