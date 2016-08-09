@@ -6,7 +6,7 @@ It provides the following features:
 + Work flow:
 
 ## Installation
-I don't know either
+I don't know either, but you can try this: `git@github.com:zhaomr13/Chern.git`
 
 ## Usage
 ### Configuration
