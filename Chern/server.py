@@ -27,6 +27,7 @@ class running_jobs_list:
         self.tail = None
 
     def append(self, pid, name):
+        print "append things"
         new_node = task_type(pid, name, None, self.tail, None)
         if self.tail is not None:
             self.tail.next_node = new_node
@@ -58,10 +59,12 @@ def get_tasks_name_list(project, status):
     projects_path = global_config.projects_path
     project_config_path = projects_path[project]
     project_config = utils.read_variables("project_config", project_config_path+"/.config/config.py")
-    tasks_list = project_config.tasks_list if "tasks_list" in dir(global_config) else {}
-    return [key for key, value in tasks_list if value in status]
+    tasks_list = project_config.tasks_list if "tasks_list" in dir(project_config) else {}
+    print "tasks list here:?", tasks_list
+    return [key for key, value in tasks_list.items() if value in status]
 
 def change_task_status(project, name, status):
+    print "changing project", project, "name", name, "status to", status
     print global_config_path
     global_config = utils.read_variables("global_config", global_config_path+"/config.py")
     projects_path = global_config.projects_path
@@ -70,6 +73,7 @@ def change_task_status(project, name, status):
     tasks_list = project_config.tasks_list
     tasks_list[name] = status
     utils.write_variables(project_config, project_config_path+"/.config/config.py", ["task_list", task_list])
+    print "finished changing status"
 
 
 # Loop forever to start applications
@@ -93,6 +97,7 @@ while not os.path.exists(global_config_path+"/server/lock") :
 
         # Add new jobs according to cpus
         tasks_name_list = get_tasks_name_list(project, status = ["new"])
+        print "task_name_list = ", tasks_name_list
         for task_name in tasks_name_list:
             t = task(task_name, project)
             if not t.check_start(rest_ncpus):
@@ -124,7 +129,7 @@ while not os.path.exists(global_config_path+"/server/lock") :
     # check the job list
     # for in project list
     # check project
-    time.sleep(10)
+    time.sleep(1)
     pass
 
 

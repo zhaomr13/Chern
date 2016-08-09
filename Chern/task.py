@@ -29,8 +29,8 @@ class task:
         # save the config
         print "starting to register job"
         global global_config_path
-        config = utils.read_variables("config", global_config_path)
-        project_path = config.projects_path[self.project]
+        global_config = utils.read_variables("global_config", global_config_path)
+        project_path = global_config.projects_path[self.project]
         if not os.path.exists(project_path + "/.config/tasks") :
             os.mkdir(project_path+"/.config/tasks")
         task_path = project_path + "/.config/tasks/" + self.name + ".py"
@@ -41,7 +41,10 @@ class task:
         from imp import load_source
         utils.write_variables(load_source(self.name, task_path), task_path, dic)
         #utils.write_variables("")
-        print vars(self)
+        project_config = utils.read_variables("project_config", project_path+"/.config/config.py")
+        tasks_list = project_config.task_list if "tasks_list" in dir(project_config) else {}
+        tasks_list[self.name] = "new"
+        utils.write_variables(project_config, project_path+"/.config/config.py", [("tasks_list", tasks_list)])
         print "finished register job"
 
     def load_variable():
