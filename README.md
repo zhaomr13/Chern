@@ -8,7 +8,7 @@ It provides the following features:
 
 ### Tasks and algorithms
 The key concept of Chern project are tasks and algorithms.
-An analysis is usually divided into many small steps, for instance, one of which might be fit in a specific bin. Many such small steps will use a same program but only different parameters or inputs. We call the steps **task** and the programs **algorithms**. What you need to do about the analysis is simply to setting parameters and start tasks.
+An analysis is usually divided into many small steps, for instance, one of which might be fit in a specific bin. Many such small steps will use a same program but only different parameters or inputs. We call the steps **"task"** and the programs **"algorithms"**. What you need to do about the analysis is simply to setting parameters and start tasks.
 
 ## Installation
 I don't know either, but you can try this: `git@github.com:zhaomr13/Chern.git`
