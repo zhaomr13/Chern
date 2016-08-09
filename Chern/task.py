@@ -44,13 +44,6 @@ class task:
         print vars(self)
         print "finished register job"
 
-    def start_binary():
-        print "Binary Job started"
-        os.symlink()
-        from subprocess import Popen
-        ps = Popen("./execuable.exe", shell=True)
-        return ps
-
     def load_variable():
         pass
 
@@ -64,6 +57,18 @@ class task:
                 return False
         return True
 
+    def start_echo():
+        print "echo program started"
+        from subprocess import Popen
+        ps = Popen("echo running ok", shell=True)
+
+    def start_binary():
+        print "Binary Job started"
+        os.symlink()
+        from subprocess import Popen
+        ps = Popen("./execuable.exe", shell=True)
+        return ps
+
     def start_davinci():
         print "DaVinci Job started"
 
@@ -71,10 +76,15 @@ class task:
         print "Gauss Job started"
 
     def start(self):
+        if self.algorithm_type == "echo":
+            return start_echo()
+
         if self.algorithm_type == "binary":
             return start_binary()
+
         if self.algorithm_type == "davinci":
             return start_davinci()
+
         if self.algorithm_type == "gauss":
             return start_gauss()
 

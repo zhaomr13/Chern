@@ -2,6 +2,7 @@ import os
 import Chern as chen
 from Chern import utils
 from Chern.task import task
+import time
 
 # global configurations
 global_config_path = os.environ["HOME"] + "/.Chern"
@@ -26,7 +27,7 @@ class running_jobs_list:
         self.tail = None
 
     def append(self, pid, name):
-        new_node = task_type(pid, name, None, next_node, tail, None)
+        new_node = task_type(pid, name, None, self.tail, None)
         if self.tail is not None:
             self.tail.next_node = new_node
         self.tail = new_node
@@ -51,7 +52,25 @@ class running_jobs_list:
 
 
 def get_tasks_name_list(project, status):
-    return ["hello"]
+    print global_config_path
+    global_config = utils.read_variables("global_config", global_config_path+"/config.py")
+    print dir(global_config)
+    projects_path = global_config.projects_path
+    project_config_path = projects_path[project]
+    project_config = utils.read_variables("project_config", project_config_path+"/.config/config.py")
+    tasks_list = project_config.tasks_list if "tasks_list" in dir(global_config) else {}
+    return [key for key, value in tasks_list if value in status]
+
+def change_task_status(project, name, status):
+    print global_config_path
+    global_config = utils.read_variables("global_config", global_config_path+"/config.py")
+    projects_path = global_config.projects_path
+    project_config_path = projects_path[project]
+    project_config = utils.read_variables("project_config", project_config_path+"/.config/config.py")
+    tasks_list = project_config.tasks_list
+    tasks_list[name] = status
+    utils.write_variables(project_config, project_config_path+"/.config/config.py", ["task_list", task_list])
+
 
 # Loop forever to start applications
 while not os.path.exists(global_config_path+"/server/lock") :
@@ -73,7 +92,7 @@ while not os.path.exists(global_config_path+"/server/lock") :
             change_task_status(project, t.name, t.poll_status)
 
         # Add new jobs according to cpus
-        tasks_name_list = get_tasks_name_list(project, status = "new")
+        tasks_name_list = get_tasks_name_list(project, status = ["new"])
         for task_name in tasks_name_list:
             t = task(task_name, project)
             if not t.check_start(rest_ncpus):
