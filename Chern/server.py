@@ -84,8 +84,13 @@ def change_task_status(project, name, status):
     project_config_path = projects_path[project]
     project_config = utils.read_variables("project_config", project_config_path+"/.config/config.py")
     tasks_list = project_config.tasks_list
-    tasks_list[name] = status
+    if status == 0:
+        tasks_list[name] = "completed"
+    else:
+        tasks_list[name] = "error %d"%status
     utils.write_variables(project_config, project_config_path+"/.config/config.py", [("tasks_list", tasks_list)])
+    task_config = utils.read_variables("task_config", project_config_path+"/.config/tasks/" + name + ".py")
+    utils.write_variables(task_config, project_config_path+"/.config/tasks/"+name+".py", [("status", tasks_list[name])])
     # print "finished changing status"
 
 

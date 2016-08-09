@@ -32,7 +32,7 @@ def write_variables(module, path, variables):
 
     # Add new variables to the list
     old_variables = dir(module)
-    print old_variables
+    # DELETE print old_variables
     for key, value in variables:
         if key not in old_variables:
             old_variables.append(key)
