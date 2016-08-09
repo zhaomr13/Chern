@@ -3,12 +3,16 @@ import os
 import sys
 
 def read_variables(module_name, path):
-    if not os.path.exists(path):
-        open(path, "w").close()
+    # if the requested module is not here at the beginning
+    if not os.path.exists(path): open(path, "w").close()
+
+    # read the module
     from imp import load_source
     module = load_source(module_name, path)
-    if os.path.exists(path+"c"):
-        os.remove(path+"c")
+
+    # remove pyc file
+    if os.path.exists(path+"c"): os.remove(path+"c")
+
     return module
 
 
@@ -44,12 +48,10 @@ def write_variables(module, path, variables):
                 f.write("%s='%s'\n"%(key, str(dic[key])) )
             else :
                 f.write("%s=%s\n"%(key, str(dic[key])) )
-    print "written"
+    # DELETED print "written"
     f.close()
     os.remove(path+".lock")
-    if os.path.exists(path+"c"):
-        os.remove(path+"c")
+    if os.path.exists(path+"c"): os.remove(path+"c")
 
-
-#c = read_variables("configuration", os.environ["HOME"]+"/.Chern/configuration.py")
-#write_variables(c, os.environ["HOME"]+"/.Chern/configuration.py", [("hello", [3124567])])
+# DELETED c = read_variables("configuration", os.environ["HOME"]+"/.Chern/configuration.py")
+# DELETED write_variables(c, os.environ["HOME"]+"/.Chern/configuration.py", [("hello", [3124567])])

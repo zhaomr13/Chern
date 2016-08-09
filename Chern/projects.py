@@ -40,7 +40,7 @@ def new_project(project_name):
         return
     os.mkdir(pwd + "/.config")
 
-    print "Start ========================================="
+    # print "Start ========================================="
     # Write information to global config file
     global global_config_path
     global_config = utils.read_variables("global_config", global_config_path)

@@ -5,6 +5,7 @@ Chern is a program intended to simplify the progress of physics analysis.
 It provides the following features:
 + Project management:
 + Work flow:
+
 The name of the project is in memory of a Chinese-American mathematica, [Shiing-Shen Chern](documents/SSChern.md)
 
 ### Tasks and algorithms

@@ -27,6 +27,15 @@ if __name__ == "__main__" :
         pass
     #print args.projects
 
+    if args.command[0] == "start":
+        import subprocess
+        if os.path.exists(os.environ["HOME"] + "/.Chern/server.closed"):
+            os.remove(os.environ["HOME"] + "/.Chern/server.closed")
+        subprocess.Popen("python " + os.environ["CHERNSYSROOT"]+"/Chern/server.py", shell=True)
+
+    if args.command[0] == "stop":
+        open(os.environ["HOME"] + "/.Chern/server.closed", "a").close()
+
     if type(return_value) == str :
         std_command_output_file = open(args.std_command_path, "w")
         print "return value is ", return_value

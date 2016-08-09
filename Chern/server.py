@@ -18,19 +18,34 @@ print "server started."
 running_jobs = {}
 
 # Data structure for saving running tasks status
-from collections import namedtuple
-task_type = namedtuple("task_type", ["pid", "name", "poll_status", "previous_node", "next_node"])
+class task_type:
+    def __init__(self, pid, name, poll_status, ncpus, previous_node, next_node):
+        self.pid = pid
+        self.name = name
+        self.poll_status = poll_status
+        self.ncpus = ncpus
+        self.previous_node = previous_node
+        self.next_node = next_node
+
+    def link_to_previous(self, node):
+        if node is None : return
+        node.next_node = self
+        self.previous_node = node
+
+    def link_to_next(self, node):
+        if node is None : return
+        node.previous_node = self
+        self.next_node = node
 
 class running_jobs_list:
     def __init__(self):
         self.size = 0
         self.tail = None
 
-    def append(self, pid, name):
+    def append(self, pid, name, ncpus):
         print "append things"
-        new_node = task_type(pid, name, None, self.tail, None)
-        if self.tail is not None:
-            self.tail.next_node = new_node
+        new_node = task_type(pid, name, None, ncpus, self.tail, None)
+        new_node.link_to_previous(self.tail)
         self.tail = new_node
         self.size += 1
 
@@ -42,42 +57,40 @@ class running_jobs_list:
             if present.poll_status is not None:
                 remove_list.append(present)
                 if present.next_node is not None:
-                    present.next_node.previous_node = present.previous_node
-                if present.previous_node is not None:
-                    present.previous_node.next_node = present.new_node
+                    present.new_node.link_to_previous(present.previous_node)
                 if present is self.tail:
                     self.tail = present.previous_node
-                size -= 1
+                self.size -= 1
             present = present.previous_node
         return remove_list
 
 
 def get_tasks_name_list(project, status):
-    print global_config_path
+    # print global_config_path
     global_config = utils.read_variables("global_config", global_config_path+"/config.py")
-    print dir(global_config)
+    # print dir(global_config)
     projects_path = global_config.projects_path
     project_config_path = projects_path[project]
     project_config = utils.read_variables("project_config", project_config_path+"/.config/config.py")
     tasks_list = project_config.tasks_list if "tasks_list" in dir(project_config) else {}
-    print "tasks list here:?", tasks_list
+    # print "tasks list here:?", tasks_list
     return [key for key, value in tasks_list.items() if value in status]
 
 def change_task_status(project, name, status):
-    print "changing project", project, "name", name, "status to", status
-    print global_config_path
+    # print "changing project", project, "name", name, "status to", status
+    # print global_config_path
     global_config = utils.read_variables("global_config", global_config_path+"/config.py")
     projects_path = global_config.projects_path
     project_config_path = projects_path[project]
     project_config = utils.read_variables("project_config", project_config_path+"/.config/config.py")
     tasks_list = project_config.tasks_list
     tasks_list[name] = status
-    utils.write_variables(project_config, project_config_path+"/.config/config.py", ["task_list", task_list])
-    print "finished changing status"
+    utils.write_variables(project_config, project_config_path+"/.config/config.py", [("tasks_list", tasks_list)])
+    # print "finished changing status"
 
 
 # Loop forever to start applications
-while not os.path.exists(global_config_path+"/server/lock") :
+while not os.path.exists(global_config_path+"/server.closed") :
 
     # Get the global configurations
     global_config = utils.read_variables("config", global_config_path+"/config.py")
@@ -97,14 +110,15 @@ while not os.path.exists(global_config_path+"/server/lock") :
 
         # Add new jobs according to cpus
         tasks_name_list = get_tasks_name_list(project, status = ["new"])
-        print "task_name_list = ", tasks_name_list
+        # print "task_name_list = ", tasks_name_list
         for task_name in tasks_name_list:
-            t = task(task_name, project)
+            # print "project = ", project
+            t = task(task_name, project = project, new_project = False)
             if not t.check_start(rest_ncpus):
                 continue
             rest_ncpus -= t.ncpus
             ps = t.start()
-            running_jobs[project].append(ps, t.name)
+            running_jobs[project].append(ps, t.name, t.ncpus)
 
 
 
@@ -133,5 +147,5 @@ while not os.path.exists(global_config_path+"/server/lock") :
     pass
 
 
-open(global_config_path+"/server/close", "a").close()
+#open(global_config_path+"/server/close", "a").close()
 print "server closed."

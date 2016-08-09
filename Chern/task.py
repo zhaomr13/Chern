@@ -5,7 +5,7 @@ global_config_path = os.environ["HOME"]+"/.Chern/config.py"
 class task:
     def __init__(self, name, algorithm = None, algorithm_type = None, project = None, new_project = True):
         global global_config_path
-        global_config = utils.read_variables("config", global_config_path)
+        global_config = utils.read_variables("global_config", global_config_path)
         self.name = name
         self.project = global_config.current_project if project == None else project
         if new_project:
@@ -18,10 +18,14 @@ class task:
             self.output_files = []
             self.ncpus = 1
         else:
-            projects_path_list = global_config.projects_path_list
-            task_config = utils.read_variables(name, projects_path_list[project] + "/.config/tasks/" + name + "/.py")
-            for key, value in vars(task_config):
-                vars(self)[key] = value
+            projects_path = global_config.projects_path
+            print projects_path, project
+            print projects_path[project] + "/.config/tasks/" + name + ".py"
+            task_config = utils.read_variables(name, projects_path[project] + "/.config/tasks/" + name + ".py")
+            # print dir(task_config)
+            dic = {key:value for key,value in task_config.__dict__.iteritems()}
+            for key in dir(task_config):
+                vars(self)[key] = dic[key]
 
         print self.project
 
@@ -60,35 +64,37 @@ class task:
                 return False
         return True
 
-    def start_echo():
+    def start_echo(self):
+        print "start echo"
         print "echo program started"
         from subprocess import Popen
         ps = Popen("echo running ok", shell=True)
+        return ps
 
-    def start_binary():
+    def start_binary(self):
         print "Binary Job started"
         os.symlink()
         from subprocess import Popen
         ps = Popen("./execuable.exe", shell=True)
         return ps
 
-    def start_davinci():
+    def start_davinci(self):
         print "DaVinci Job started"
 
-    def start_gauss():
+    def start_gauss(self):
         print "Gauss Job started"
 
     def start(self):
         if self.algorithm_type == "echo":
-            return start_echo()
+            return self.start_echo()
 
         if self.algorithm_type == "binary":
-            return start_binary()
+            return self.start_binary()
 
         if self.algorithm_type == "davinci":
-            return start_davinci()
+            return self.start_davinci()
 
         if self.algorithm_type == "gauss":
-            return start_gauss()
+            return self.start_gauss()
 
 
