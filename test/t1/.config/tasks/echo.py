@@ -1,0 +1,10 @@
+algorithm='hello'
+algorithm_type='echo'
+comment=''
+input_files=[]
+name='echo'
+ncpus=1
+output_files=[]
+partents=[]
+project='t1'
+status='new'
