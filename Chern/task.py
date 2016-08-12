@@ -46,7 +46,7 @@ class task:
         utils.write_variables(load_source(self.name, task_path), task_path, dic)
         #utils.write_variables("")
         project_config = utils.read_variables("project_config", project_path+"/.config/config.py")
-        tasks_list = project_config.task_list if "tasks_list" in dir(project_config) else {}
+        tasks_list = project_config.tasks_list if "tasks_list" in dir(project_config) else {}
         tasks_list[self.name] = "new"
         utils.write_variables(project_config, project_path+"/.config/config.py", [("tasks_list", tasks_list)])
         print "finished register job"
@@ -64,6 +64,7 @@ class task:
                 return False
         return True
 
+
     def start_echo(self):
         print "start echo"
         print "echo program started"
@@ -72,10 +73,21 @@ class task:
         return ps
 
     def start_binary(self):
-        print "Binary Job started"
-        os.symlink()
+        print "Binary Job started ..."
+
+        global_config = utils.get_global_config()
+        project_path = global_config.projects_path[self.project]
+
+        os.chdir(project_path+"/tasks/"+self.name)
+
+        for input_file, alias_name in self.input_files:
+            task, name = tuple(input_file.split("/"))
+            os.symlink(project_path+"/tasks/"+task+"/"+name, alias_name)
+
+        output_file = open("stdout", "w")
+        error_file = open("stderr", "w")
         from subprocess import Popen
-        ps = Popen("./execuable.exe", shell=True)
+        ps = Popen(project_path+"/Algs/"+algorithm+"/execuable.exe", shell=True, stdout=output_file, stderr = error_file)
         return ps
 
     def start_davinci(self):
@@ -84,7 +96,22 @@ class task:
     def start_gauss(self):
         print "Gauss Job started"
 
+
+    def start_copy_only(self):
+        global_config = utils.get_global_config()
+        project_path = global_config.projects_path[self.project]
+        if not os.path.exists(project_path+"/tasks/"+self.name):
+            os.mkdir(project_path+"/tasks/"+self.name)
+        os.chdir(project_path+"/tasks/"+self.name)
+        for input_file, alias_name in self.input_files:
+            os.symlink(project_path+"/"+input_file, alias_name)
+        from subprocess import Popen
+        return Popen("echo Finished", shell=True)
+
     def start(self):
+        if self.algorithm_type == "internal" and self.algorithm == "copy_only":
+            return self.start_copy_only()
+
         if self.algorithm_type == "echo":
             return self.start_echo()
 

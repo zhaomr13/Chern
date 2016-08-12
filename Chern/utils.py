@@ -53,5 +53,14 @@ def write_variables(module, path, variables):
     os.remove(path+".lock")
     if os.path.exists(path+"c"): os.remove(path+"c")
 
+def get_global_config():
+    global_config = read_variables("global_config", os.environ["HOME"]+"/.Chern/config.py")
+    return global_config
+
+def get_project_config(global_config, project):
+    project_path = global_config.projects_path[project]
+    project_config = read_variables("project_config", project_path+"/.config/config.py")
+    return project_config
+
 # DELETED c = read_variables("configuration", os.environ["HOME"]+"/.Chern/configuration.py")
 # DELETED write_variables(c, os.environ["HOME"]+"/.Chern/configuration.py", [("hello", [3124567])])
