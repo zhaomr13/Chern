@@ -79,10 +79,9 @@ def get_tasks_name_list(project, status):
 def change_task_status(project, name, status):
     # print "changing project", project, "name", name, "status to", status
     # print global_config_path
-    global_config = utils.read_variables("global_config", global_config_path+"/config.py")
-    projects_path = global_config.projects_path
-    project_config_path = projects_path[project]
-    project_config = utils.read_variables("project_config", project_config_path+"/.config/config.py")
+    global_config = utils.get_global_config()
+    project_config = utils.get_project_config(global_config, project)
+
     tasks_list = project_config.tasks_list
     if status == 0:
         tasks_list[name] = "completed"

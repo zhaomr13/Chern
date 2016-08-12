@@ -54,6 +54,9 @@ class task:
     def load_variable():
         pass
 
+    def change_status(self):
+
+
     def check_start(self, ncpus = "1000"):
         if ncpus < self.ncpus :
             return False

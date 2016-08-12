@@ -15,7 +15,6 @@ def read_variables(module_name, path):
 
     return module
 
-
 def write_variables(module, path, variables):
 
     try_times = 10 ** 4

@@ -1,4 +1,4 @@
-_foo() 
+_foo()
 {
     local cur prev opts
     COMPREPLY=()
