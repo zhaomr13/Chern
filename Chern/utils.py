@@ -61,5 +61,9 @@ def get_project_config(global_config, project):
     project_config = read_variables("project_config", project_path+"/.config/config.py")
     return project_config
 
+def strip(project_name):
+    ## FIXME
+    return project_name
+
 # DELETED c = read_variables("configuration", os.environ["HOME"]+"/.Chern/configuration.py")
 # DELETED write_variables(c, os.environ["HOME"]+"/.Chern/configuration.py", [("hello", [3124567])])

@@ -14,10 +14,13 @@ def get_current_project():
 def get_all_projects():
     global global_config_path
     global_config = utils.get_global_config()
-    if "projects_list" not in dir(global_config) :
-        utils.write_variables(global_config, global_config_path, [("projects_list", [])])
-        return []
-    return global_config.projects_list
+    # if "projects_list" not in dir(global_config) :
+    # utils.write_variables(global_config, global_config_path, [("projects_list", [])])
+    if "projects_path" not in dir(global_config):
+        utils.write_variables(global_config, global_config_path, [("projects_path", {})])
+        return {}
+    # return []
+    return global_config.projects_path.keys()
 
 def get_project_path(command):
     global global_config_path
@@ -30,9 +33,13 @@ def switch_project(project_name):
     global_config = utils.get_global_config()
     utils.write_variables(global_config, global_config_path, [("current_project", project_name)])
 
-def new_project(project_name):
+def start_project():
+    pass
 
-    #def check the forbidden name
+def new_project(project_name):
+    project_name = utils.strip(project_name)
+
+    # Check the forbidden name
     forbidden_names = ["config", "new", "projects", "start"]
     def check_project_failed(project_name, forbidden_names):
         message = "The following project names are forbidden:"
@@ -46,25 +53,30 @@ def new_project(project_name):
     ncpus = int(input("Please input the number of cpus to use for this project: "))
 
     pwd = os.getcwd()
-    if os.path.exists(pwd + "/.config") :
-        raise Exception("The folder already has configuration file")
+    if not os.path.exists(pwd + "/" + project_name):
+        os.mkdir(pwd + "/" + project_name)
+    else:
+        raise Exception("Project exist")
 
-    os.mkdir(pwd + "/.config")
-    os.mkdir(pwd + "/Algs")
-    os.mkdir(pwd + "/tasks")
-    os.mkdir(pwd + "/data")
-    os.mkdir(pwd + "/result")
+    # if os.path.exists(pwd + "/.config") :
+    # raise Exception("The folder already has configuration file")
+
+    # os.mkdir(pwd + "/.config")
+    # os.mkdir(pwd + "/Algs")
+    # os.mkdir(pwd + "/tasks")
+    # os.mkdir(pwd + "/data")
+    # os.mkdir(pwd + "/result")
 
     global_config = utils.get_global_config()
     projects_path = global_config.projects_path if "projects_path" in dir(global_config) else {}
-    projects_path[project_name] = pwd
-    projects_list = global_config.projects_list if "projects_list" in dir(global_config) else []
-    projects_list.append(project_name)
-    utils.write_variables(global_config, global_config_path, [("current_project", project_name), ("projects_path", projects_path), ("projects_list", projects_list)])
+    projects_path[project_name] = pwd + "/" + project_name
+    # projects_list = global_config.projects_list if "projects_list" in dir(global_config) else []
+    # projects_list.append(project_name)
+    utils.write_variables(global_config, global_config_path, [("projects_path", projects_path)])
     # Write information to the config file of the project
-    global_config = utils.get_global_config()
-    project_config = utils.get_project_config(global_config, project_name)
-    utils.write_variables(project_config, pwd + "/.config/config.py", [("ncpus", ncpus)])
+    # global_config = utils.get_global_config()
+    # project_config = utils.get_project_config(global_config, project_name)
+    # utils.write_variables(project_config, pwd + "/.config/config.py", [("ncpus", ncpus)])
 
 
 def update_configuration():

@@ -2,6 +2,9 @@ import os
 from Chern import utils
 global_config_path = os.environ["HOME"]+"/.Chern/config.py"
 
+def register_task("name", ):
+
+
 class task:
     def __init__(self, name, algorithm = None, algorithm_type = None, project = None, new_project = True):
         global global_config_path
@@ -28,6 +31,11 @@ class task:
                 vars(self)[key] = dic[key]
 
         print self.project
+
+
+    def comment(self, message):
+        print(message)
+
 
     def register(self) :
         # save the config
