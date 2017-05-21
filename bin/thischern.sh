@@ -8,10 +8,11 @@ export PATH="${CHERNSYSROOT}/bin:${PATH}"
 export PYTHONPATH="${CHERNSYSROOT}:${PYTHONPATH}"
 
 Chern() {
-    ${CHERNSYSROOT}/bin/init.py "$@" --std_command_path="${HOME}/.Chern/tmp/execuable"
-    while read line ; do
-        eval $line
-    done < "${HOME}/.Chern/tmp/execuable"
+    ${CHERNSYSROOT}/bin/Chern "$@"
+    #--std_command_path="${HOME}/.Chern/tmp/execuable"
+    #while read line ; do
+        #eval $line
+    #done < "${HOME}/.Chern/tmp/execuable"
 }
 
 alias chern=Chern
