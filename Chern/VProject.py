@@ -1,7 +1,9 @@
 from Chern.VObject import VObject
+from Chern.utils import debug
 class VProject(VObject):
     def __init__(self, file_name):
-        print("load success")
+        debug("VProject:__init__")
+        debug("load success")
         super(VProject, self).__init__(file_name)
 
     def load_object(self):

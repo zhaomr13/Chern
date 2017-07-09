@@ -1,10 +1,11 @@
 from Chern.VObject import VObject
+# from Chern.run_standalone import run_standalone
 class VTask(VObject):
-    def __init__(self):
+    def __init__(self, file_name):
         super(VTask, self).__init__(file_name)
 
-    def load_object(self):
-        super(VTask, self).__init__(file_name)
+    # def load_object(self):
+    # super(VTask, self).__init__(file_name)
 
     def mk_task(self, file_name):
         pass
@@ -13,10 +14,21 @@ class VTask(VObject):
         pass
 
     def run(self):
-        pass
+        subprocess.call("python {0}/run_standalone.py {1} {2}".format("/home/zhaomr/workdir/", self.path, self.get_algorithm()))
 
     def has_super_task(self):
+        config_file = utils.ConfigFile(path + "/../.config.py")
+        return config_file.read_variable("object_type") == "task"
+
+    def set_algorithm(self, algorithm_path):
+        config_file = utils.ConfigFile(path + "./config.py")
+        config_file.write_variable("algorithm", algorithm_path)
+    def unset_algorithm(self, path):
         pass
+
+    def get_algorithm(self):
+        config_file = utils.ConfigFile(path + "/.config.py")
+        return config_file.read_variable("algorithm")
 
 
 def create_task(path):

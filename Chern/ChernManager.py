@@ -1,10 +1,10 @@
-import os
 from Chern import utils
 from Chern.VAlgorithm import VAlgorithm
 from Chern.VTask import VTask
 from Chern.VData import VData
 from Chern.VDirectory import VDirectory
 from Chern.VProject import VProject
+import os
 
 VObjectClass = {"algorithm":VAlgorithm, "task":VTask, "data":VData, "directory":VDirectory, "project":VProject}
 
