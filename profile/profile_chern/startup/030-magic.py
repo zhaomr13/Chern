@@ -94,60 +94,9 @@ def cd(line):
     new_object = manager.create_object_instance(line)
     del manager.c
     manager.c = new_object
+    print(c.readme())
     os.chdir(manager.c.path)
 del cd
-
-@register_line_magic
-def mkdata(line):
-    line = utils.strip_path_string(line)
-    if line.startswith("p"):
-        line = manager.p.path + line[1:]
-        create_data(line)
-        new_object = manager.create_object_instance(path)
-        del manager.c
-        manager.c = new_object
-        return
-
-    line = os.getcwd() + "/" + line
-    create_data(line)
-    new_object = manager.create_object_instance(line)
-    del manager.c
-    manager.c = new_object
-    os.chdir(manager.c.path)
-del mkdata
-
-@register_line_magic
-def mkalgorithm(line):
-    line = utils.strip_path_string(line)
-    if line.startswith("p"):
-        line = manager.p.path + line[1:]
-        create_algorithm(line)
-        new_object = manager.create_object_instance(path)
-        del manager.c
-        manager.c = new_object
-        return
-
-    line = os.getcwd() + "/" + line
-    create_data(line)
-del mkalgorithm
-
-@register_line_magic
-def mktask(line):
-    line = utils.strip_path_string(line)
-    if line.startswith("p"):
-        line = manager.p.path + line[1:]
-        create_task(line)
-        new_object = manager.create_object_instance(path)
-        del manager.c
-        manager.c = new_object
-        return
-
-    line = os.getcwd() + "/" + line
-    create_data(line)
-
-
-# from IPython.core.alias import Alias
-# Alias.blacklist.add("ls")
 
 old_ls = ip.magics_manager.magics["line"]["ls"]
 
@@ -156,7 +105,14 @@ def ls(line):
     if line == "projects":
         manager.ls_projects()
         return
-    old_ls()
+    # old_ls()
     manager.c.ls()
 del ls
 # ip.magic("alias_magic ls lsp")
+
+@register_line_magic
+def set_algorithm(line):
+    if manager.c.get_type() != "task":
+        print("Can not set the algorithm if you are not a task")
+        return
+    manager.c.set_algorithm(line)
