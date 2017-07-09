@@ -137,3 +137,7 @@ def strip_path_string(path_string):
 
 # DELETED c = read_variables("configuration", os.environ["HOME"]+"/.Chern/configuration.py")
 # DELETED write_variables(c, os.environ["HOME"]+"/.Chern/configuration.py", [("hello", [3124567])])
+def debug(*arg):
+    for s in arg:
+        print(s,)
+        print("")
