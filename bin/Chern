@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import os
 import sys
@@ -12,20 +12,29 @@ def default(args):
     # import test
     start_ipython(argv=["--profile=chern", "--ipython-dir=/home/zhaomr/workdir/Chern/profile"])
     # start_ipython(argv=["--profile=test"])
-    print "Running"
+    print("Running")
     # print args
 
 def projects(args):
-    print "hello"
-    print args.projects
+    print("hello")
 
 def start(args):
-    print args
+    pass
+    # print args
 
 # def
 
 # ------------------------------------------------------------
 if __name__ == "__main__" :
+    start_ipython(argv=["--profile=chern", "--ipython-dir=/home/zhaomr/workdir/Chern/profile"])
+    from IPython import get_ipython
+    ip = get_ipython()
+    del ip.magics_manager.magics["line"]["ls"]
+    # ip.alias_manager.undefine_alias("ls")
+
+
+    """
+
     chen.utils.get_global_config()
 
     from argparse import ArgumentParser
@@ -49,7 +58,7 @@ if __name__ == "__main__" :
     # NEW: If no command specified, start a IPython shell with the current project
     # if len(args.command) == 0:
     # chen.enter(chen.projects.get_current_project())
-
+    """
 
     """
 

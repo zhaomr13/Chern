@@ -55,3 +55,16 @@ I don't know either, but you can try this: `git clone https://github.com/zhaomr1
 + `Chern tasks`:
     * `Chern tasks` 查看目前正在运行的所有task
 
+
+`Chern` 进入chen的ipython环境
+`ls projects` 列出所有的project
+`lsp` 列出所有的projects
+`cdp` 跳转到某个project并且设置好相关信息
+`mkproject` 新建project
+`mktask` 新建任务
+`mkdata` 新建数据
+`mkalgorithm` 新建算法
+
+atask.set_algorithm
+atask.link_input
+atask.link_output
