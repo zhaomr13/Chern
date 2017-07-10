@@ -140,4 +140,3 @@ def strip_path_string(path_string):
 def debug(*arg):
     for s in arg:
         print(s,)
-        print("")
