@@ -64,6 +64,8 @@ def new_project(project_name):
         check_project_failed(project_name, forbidden_names)
 
     ncpus = int(input("Please input the number of cpus to use for this project: "))
+    user_name = input("Please input the Author name of the project: ")
+    user_email = input("Please input the Email of the author")
 
     pwd = os.getcwd()
     if not os.path.exists(pwd + "/" + project_name):
@@ -89,6 +91,9 @@ def new_project(project_name):
         type_file.write("project")
     global global_vproject
     global_vproject = VProject(pwd+"/"+project_name, None)
+
+
+    call("git init", shell=True, stdout=PIPE, stderr=PIPE)
     # Write information to the config file of the project
     # global_config = utils.get_global_config()
     # project_config = utils.get_project_config(global_config, project_name)
