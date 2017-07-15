@@ -1,44 +1,53 @@
-from Chern import utils
-from Chern.VAlgorithm import VAlgorithm
-from Chern.VTask import VTask
-from Chern.VData import VData
-from Chern.VDirectory import VDirectory
-from Chern.VProject import VProject
+"""
+This is the top class for project manager
+"""
 import os
-
-VObjectClass = {"algorithm":VAlgorithm, "task":VTask, "data":VData, "directory":VDirectory, "project":VProject}
+from subprocess import call, PIPE
+from Chern import utils
+# from Chern.VAlgorithm import VAlgorithm
+# from Chern.VTask import VTask
+# from Chern.VData import VData
+# from Chern.VDirectory import VDirectory
+# from Chern.VProject import VProject
 
 class ChernManager(object):
+    """ ChernManager class
+    """
     instance = None
+    c = None
 
     @classmethod
-    def get_manager(self):
-        if self.instance == None:
-            self.instance = ChernManager()
-        return self.instance
+    def get_manager(cls):
+        """ Return the manager itself
+        """
+        if cls.instance is None:
+            cls.instance = ChernManager()
+        return cls.instance
 
     def __init__(self):
-        print("this is to time the instance time")
-        self.c = None
-        self.p = None
         self.init_global_config()
 
-    def create_object_instance(self, path):
-        path = utils.strip_path_string(path)
-        object_config_file = utils.ConfigFile(path+"/.config.py")
-        object_type = object_config_file.read_variable("object_type")
-        print(object_type)
-        return VObjectClass[object_type](path)
+    def root_object(self):
+        """ Get the root object
+        """
+        pass
+
+    def current_object(self):
+        """ Get the current object
+        """
+        # os.get_current_directory()
+        # return create_object_instance()
+        pass
 
     def init_global_config(self):
         chern_config_path = os.environ.get("CHERNCONFIGPATH")
-        if chern_config_path == None:
+        if chern_config_path is None:
             raise Exception("CHERNCONFIGPATH is not set")
         self.global_config_path = utils.strip_path_string(chern_config_path) + "/config.py"
 
     def get_current_project(self):
         """ Get the name of the current working project.
-        If there isn't a working project, return "/"
+        If there isn't a working project, return None
         """
         global_config_file = utils.ConfigFile(self.global_config_path)
         current_project = global_config_file.read_variable("current_project")
@@ -70,17 +79,22 @@ class ChernManager(object):
         return projects_path[project_name]
 
 
-    def switch_project(project_name):
-        global global_config_path
-        global_config = utils.get_global_config()
-        utils.write_variables(global_config, global_config_path, [("current_project", project_name)])
-        global global_vproject
-        del global_vproject
-        global_vproject = VProject()
+    def switch_project(self, project_name):
+        """ Switch the current project
+
+        """
+        global_config_file = utils.ConfigFile(self.global_config_path)
+        global_config_file.write_variable("current_project", project_name)
+        # global global_vproject
+        # del global_vproject
+        # global_vproject = VProject()
 
 
-    def new_project(project_name):
-        project_name = utils.strip(project_name)
+    def new_project(self, project_name):
+        """ Create a new project
+        """
+        project_name = utils.strip_path_string(project_name)
+        print("The project name is ", project_name)
 
         # Check the forbidden name
         forbidden_names = ["config", "new", "projects", "start"]
@@ -94,26 +108,47 @@ class ChernManager(object):
             check_project_failed(project_name, forbidden_names)
 
         ncpus = int(input("Please input the number of cpus to use for this project: "))
+        user_name = input("Please input your name:")
+        user_mail = input("Please input your email:")
 
         pwd = os.getcwd()
-        if not os.path.exists(pwd + "/" + project_name):
-            os.mkdir(pwd + "/" + project_name)
+        project_path = pwd + "/" + project_name
+        if not os.path.exists(project_path):
+            os.mkdir(project_path)
         else:
             raise Exception("Project exist")
-        global_config = utils.get_global_config()
-        projects_path = global_config.projects_path if "projects_path" in dir(global_config) else {}
-        projects_path[project_name] = pwd + "/" + project_name
-        utils.write_variables(global_config, global_config_path, [("projects_path", projects_path)])
+        config_file = utils.ConfigFile(project_path+"/.config.py")
+        config_file.write_variable("object_type", "project")
+        config_file.write_variable("ncpus", ncpus)
+        config_file.write_variable("user_name", user_name)
+        config_file.write_variable("user_mail", user_mail)
+        with open(project_path + ".README.md", "w") as f:
+            f.write("Please write README for this project")
+        call("vim %s/.README.md"%project_path, shell=True)
+        global_config_file = utils.ConfigFile(self.global_config_path)
+        projects_path = global_config_file.read_variable("projects_path")
+        if projects_path is None:
+            projects_path = {}
+        projects_path[project_name] = project_path
+        global_config_file.write_variable("projects_path", projects_path)
+        global_config_file.write_variable("current_project", project_name)
+        print(project_path)
+        os.chdir(project_path)
+        call("git init", shell=True, stdout=PIPE, stderr=PIPE)
+        call("git add .config.py", shell=True, stdout=PIPE, stderr=PIPE)
+        call("git commit -m \" Create config file for the project\"", shell=True, stdout=PIPE, stderr=PIPE)
+        call("git add .README.md", shell=True, stdout=PIPE, stderr=PIPE)
+        call("git commit -m \" Create README file for the project\"", shell=True, stdout=PIPE, stderr=PIPE)
 
-        with open(pwd+"/"+project_name+"/.type", "w") as type_file:
-            type_file.write("project")
-        global global_vproject
-        global_vproject = VProject(pwd+"/"+project_name, None)
+        # global global_vproject
+        # global_vproject = VProject(pwd+"/"+project_name, None)
 
+        """
         def update_configuration():
             if not os.path.exists(global_config_path):
                 shutil.copyfile(os.environ["CHENSYSPATH"]+"/config/global_config.py", os.environ["HOME"])
 
+        This is something not used currently
         def main(command_list):
             #current_project = get_current_project()
             #projects_list = get_all_projects()
@@ -146,7 +181,7 @@ class ChernManager(object):
 
             #except :
             #    print "Can not config new project for some reason"
-
+        """
 
 def get_manager():
     return ChernManager.get_manager()

@@ -19,14 +19,14 @@ def mkdata(line):
     if line.startswith("p"):
         line = manager.p.path + line[1:]
         create_data(line)
-        new_object = manager.create_object_instance(path)
+        new_object = create_object_instance(path)
         del manager.c
         manager.c = new_object
         return
 
     line = os.getcwd() + "/" + line
     create_data(line)
-    new_object = manager.create_object_instance(line)
+    new_object = create_object_instance(line)
     del manager.c
     manager.c = new_object
     os.chdir(manager.c.path)
@@ -38,7 +38,7 @@ def mkalgorithm(line):
     if line.startswith("p"):
         line = manager.p.path + line[1:]
         create_algorithm(line)
-        new_object = manager.create_object_instance(path)
+        new_object = create_object_instance(path)
         del manager.c
         manager.c = new_object
         return
@@ -53,14 +53,14 @@ def mktask(line):
     if line.startswith("p"):
         line = manager.p.path + line[1:]
         create_task(line)
-        new_object = manager.create_object_instance(path)
+        new_object = create_object_instance(line)
         del manager.c
         manager.c = new_object
         return
 
     line = os.getcwd() + "/" + line
     create_task(line)
-    new_object = manager.create_object_instance(path)
+    new_object = create_object_instance(line)
     del manager.c
     manager.c = new_object
     os.chdir(manager.c.path)

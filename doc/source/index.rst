@@ -6,14 +6,16 @@
 Chern documentation
 =================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-   UserGuide
 
 
 
 Indices and tables
 ==================
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   UserGuide
+
 
 

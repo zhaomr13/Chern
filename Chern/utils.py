@@ -46,12 +46,13 @@ class ConfigFile(object):
             raise os.error
 
         open(file_path+".lock", "a").close()
-        f = open(file_path, "write")
+        debug("write to", file_path)
+        f = open(file_path, "w")
 
         # Module variables, key value mapping
         # dic = {key:value for key,value in module.__dict__.iteritems()}
         from imp import load_source
-        module = load_source("tmp_module", file_path)
+        module = load_source("tmp_module_{0}".format(file_path), file_path)
         dic = module.__dict__
 
         # Add new variables to the list
@@ -66,8 +67,8 @@ class ConfigFile(object):
         # Save to file
         for key in old_variables:
             if not key.startswith("__") and not key.startswith("-") :
-                if type(dic[key]) == unicode:
-                    f.write("%s=u'%s'\n"%(key, unicode(dic[key])))
+                if type(dic[key]) == str:
+                    f.write("%s=u'%s'\n"%(key, str(dic[key])))
                 elif type(dic[key]) == str:
                     f.write("%s='%s'\n"%(key, str(dic[key])) )
                 else :
@@ -118,6 +119,7 @@ def write_variables(module, path, variables):
     # DELETED print "written"
     f.close()
     os.remove(path+".lock")
+    print("lock removed")
     if os.path.exists(path+"c"): os.remove(path+"c")
 
 def get_global_config():

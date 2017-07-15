@@ -1,4 +1,7 @@
 from Chern.VObject import VObject
+from Chern import utils
+import subprocess
+import os
 # from Chern.run_standalone import run_standalone
 class VTask(VObject):
     def __init__(self, file_name):

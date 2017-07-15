@@ -8,6 +8,7 @@ from Chern.ChernManager import get_manager
 from Chern.VData import create_data
 from Chern.VAlgorithm import create_algorithm
 from Chern.VTask import create_task
+from Chern import create_object_instance
 
 manager = get_manager()
 c = manager.c
@@ -50,7 +51,7 @@ del p
 @register_line_magic
 def mkp(line):
     "make a new project"
-    return Chern.projects.new_project(line)
+    return manager.new_project(line)
 del mkp
 
 @register_line_magic
@@ -73,15 +74,16 @@ del cdp
 def cd(line):
     # cd can be used to change project
     line = utils.strip_path_string(line)
-    if line.startswith("projects"):
-        manager.switch_project()
+    if line.startswith("project"):
+        line = utils.strip_path_string(line[8:])
+        manager.switch_project(line)
         os.chdir(manager.c.path)
         return
 
     # cd can be used to change directory using absolute path
     if line.startswith("p"):
         line = manager.p.path + line[1:]
-        new_object = manager.create_object_instance()
+        new_object = create_object_instance()
         del manager.c
         manager.c = new_object
         return
@@ -91,10 +93,13 @@ def cd(line):
     if os.path.relpath(line, manager.p.path).startswith(".."):
         print("Can not go to a place not in the project")
         return
-    new_object = manager.create_object_instance(line)
+    if not os.path.exists(line):
+        print("Directory not exists")
+        return
+    new_object = create_object_instance(line)
     del manager.c
     manager.c = new_object
-    print(c.readme())
+    print(manager.c.readme())
     os.chdir(manager.c.path)
 del cd
 
@@ -116,3 +121,11 @@ def set_algorithm(line):
         print("Can not set the algorithm if you are not a task")
         return
     manager.c.set_algorithm(line)
+
+@register_line_magic
+def readme(line):
+    if line == "edit":
+        manager.c.edit_readme()
+    else:
+        print(manager.c.readme())
+del readme

@@ -1,5 +1,6 @@
 import os
 from Chern import utils
+from subprocess import call
 # import Chern.VAlgorithm
 # import Chern.VData
 # import Chern.VTask
@@ -28,7 +29,10 @@ class VObject(object):
         """
         if path is None:
             path = self.path
-        config_file = utils.ConfigFile(path + "/" + ".config.py")
+        print(path)
+        if not os.path.exists(path+"/.config.py"):
+                return None
+        config_file = utils.ConfigFile(path + "/.config.py")
         return config_file.read_variable("object_type")
         # with open(path + "/" + ".type") as type_file:
         # return type_file.readline()[:-1]
@@ -38,10 +42,12 @@ class VObject(object):
         # return VObject()
 
     def ls(self):
+        print("Running ls")
         # print(self.readme())
         # print(self.sub_objects())
         sub_objects = self.sub_objects()
-        sub_objects.sort(key=lambda x:x[1])
+        print(sub_objects)
+        sub_objects.sort(key=lambda x:(x[1],x[0]))
         for item, object_type in sub_objects:
             print("{0:>10} {1:>20}".format(object_type, item))
 
@@ -51,13 +57,21 @@ class VObject(object):
     def sub_objects(self):
         sub_directories = os.listdir(self.path)
         sub_object_list = []
+        print(sub_directories)
         for item in sub_directories:
             if os.path.isdir(self.path+"/"+item):
                 object_type = self.get_type(self.path+"/"+item)
+                print(object_type)
+                if object_type is None:
+                    continue
                 sub_object_list.append((item, object_type))
         return sub_object_list
 
+    def edit_readme(self):
+        call("vim {0}".format(self.path+"/.README.md"), shell=True)
+
     def readme(self):
+        print(self.path)
         with open(self.path+"/.README.md") as f:
             return f.read()
 
