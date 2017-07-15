@@ -15,6 +15,7 @@ Indices and tables
    :maxdepth: 2
    :caption: Contents:
 
+   schedule
    UserGuide
    SSChern
 
