@@ -16,6 +16,7 @@ Indices and tables
    :caption: Contents:
 
    UserGuide
+   SSChern
 
 
 
