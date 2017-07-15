@@ -11,11 +11,6 @@ Chern documentation
 软件框架，使大家的数据分析工作更加条理清楚。
 
 
-
-
-
-Indices and tables
-==================
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
