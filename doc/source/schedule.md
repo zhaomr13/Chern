@@ -1,7 +1,7 @@
 # 开发进度
 ## task
 + unfinished
-<table border="1" width="100">
+<table border="0" width="100%">
 <tr><td colspan=3><hr></td></tr>
 <tr><th>时间</th> <th>命令             </th> <th>完成度  </th></tr>
 <tr><td colspan=3><hr></td></tr>
