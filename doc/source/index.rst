@@ -3,14 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-   index
-   schedule
-   start
-
 
 Chern documentation
 =================================
@@ -20,5 +12,13 @@ Chern documentation
 软件框架，使大家的数据分析工作更加条理清楚。
 
 
+
+Contents:
+.. toctree::
+   :maxdepth: 2
+
+   index
+   schedule
+   start
 
 
