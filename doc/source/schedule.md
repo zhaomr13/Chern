@@ -1,8 +1,10 @@
 # 开发进度
 ## task
 + unfinished
-<table border="1">
+<table border="1" width="100">
+<tr><td colspan=3><hr></td></tr>
 <tr><th>时间</th> <th>命令             </th> <th>完成度  </th></tr>
+<tr><td colspan=3><hr></td></tr>
 <tr><td>    </td> <th>task             </th> <td>        </td></tr>
 <tr><td>    </td> <td>ls               </td> <td>100%        </td></tr>
 <tr><td>    </td> <td>mv               </td> <td>        </td></tr>
@@ -31,4 +33,5 @@
 <tr><td>    </td> <td>vim              </td> <td>        </td></tr>
 <tr><td>    </td> <td>set_distination  </td> <td>        </td></tr>
 <tr><td>    </td> <td>run script       </td> <td>        </td></tr>
+<tr><td colspan=3><hr></td></tr>
 </table>
