@@ -1,7 +1,6 @@
 # 开发进度
 ## task
 + unfinished
-<body>
 <table border="0">
 <tr><th>时间</th> <th>命令             </th> <th>完成度  </th></tr>
 <tr><td>    </td> <th>task             </th> <td>        </td></tr>
@@ -33,4 +32,3 @@
 <tr><td>    </td> <td>set_distination  </td> <td>        </td></tr>
 <tr><td>    </td> <td>run script       </td> <td>        </td></tr>
 </table>
-</bbody>
