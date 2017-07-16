@@ -3,9 +3,9 @@
 + unfinished
 <table border="0" width="100%">
 <tr><td colspan=3><hr></td></tr>
-<tr><th>时间</th> <th>命令             </th> <th>完成度  </th></tr>
+<tr><td>**时间**</td> <td>**命令**             </td> <td>**完成度**  </td></tr>
 <tr><td colspan=3><hr></td></tr>
-<tr><td>    </td> <th>task             </th> <td>        </td></tr>
+<tr><td>    </td> <td>**task**             </td> <td>        </td></tr>
 <tr><td>    </td> <td>ls               </td> <td>100%        </td></tr>
 <tr><td>    </td> <td>mv               </td> <td>        </td></tr>
 <tr><td>    </td> <td>cd               </td> <td>        </td></tr>
@@ -19,13 +19,13 @@
 <tr><td>    </td> <td>add_output       </td> <td>        </td></tr>
 <tr><td>    </td> <td>run              </td> <td>        </td></tr>
 <tr><td>    </td> <td>test             </td> <td>        </td></tr>
-<tr><td>    </td> <th>alogirithm       </th> <td>        </td></tr>
+<tr><td>    </td> <td>**alogirithm**       </td> <td>        </td></tr>
 <tr><td>    </td> <td>ls               </td> <td>        </td></tr>
 <tr><td>    </td> <td>mv               </td> <td>        </td></tr>
 <tr><td>    </td> <td>cd               </td> <td>        </td></tr>
 <tr><td>    </td> <td>mkdir            </td> <td>        </td></tr>
 <tr><td>    </td> <td>vim              </td> <td>        </td></tr>
-<tr><td>    </td> <th>data             </th> <td>        </td></tr>
+<tr><td>    </td> <td>**data**             </td> <td>        </td></tr>
 <tr><td>    </td> <td>ls               </td> <td>        </td></tr>
 <tr><td>    </td> <td>mv               </td> <td>        </td></tr>
 <tr><td>    </td> <td>cd               </td> <td>        </td></tr>
