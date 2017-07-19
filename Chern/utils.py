@@ -131,7 +131,10 @@ def get_project_config(global_config, project):
     project_config = read_variables("project_config", project_path+"/.config/config.py")
     return project_config
 
+
+
 def strip_path_string(path_string):
+    path_string = path_string.strip(" ")
     if path_string.endswith("/"):
         return path_string[:-1]
     else:
