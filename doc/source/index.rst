@@ -42,11 +42,11 @@ An typical analysis is modeled as a flow.
 The data, task and algorithm can be modeled as nodes.
 The nodes are linked by their relationships.
 The basic idea of Chern is to manage this flow.
-In the figure above, the `raw data` is processed by a task called `task selection` and generate data called `data after selection`. The task `task selection` use an algorithm `algorithm selection`. The data `data after selection` is further processed by an task called `task fit`, which uses `algorithm fit` and generates data file called `result after fit`. The specific mean of data, task and algorithm will be explained in the following .
+In the figure above, the *`raw data`* is processed by a task called `task selection` and generate data called `data after selection`. The task `task selection` use an algorithm `algorithm selection`. The data `data after selection` is further processed by an task called `task fit`, which uses `algorithm fit` and generates data file called `result after fit`. The specific mean of data, task and algorithm will be explained in the following .
 
 The algorithm means the code and the compile flow. It seems that snakemake provide a good tool to manage the compile flow.
 
-工作流：
+抽象工作流：
 ~~~~~~~~
 
 首先我想把在分析中需要的一些要素抽象成一些点。这些点包括数据、算法和任务。
