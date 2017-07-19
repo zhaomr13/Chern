@@ -26,8 +26,6 @@ The best way to force them to do so is to rewrite the shell. And make every shel
 However, it is impossible to create a new shell use for HEP. I recommend to use IPython as the shell and modify 
 the functions of `mkdir`, `mv`, `rm`, `cp` etc.
 
-
-
 对于保存分析来说，我建议强制用户使用git并且写readme。
 最好的方法来强制用户做我们想要他们做的事是重写shell，把shell的每一步都设定成强制记录等等。在这里，我建议采取的方法是修改ipython。即使用ipython作为shell，并且修改mkdir mv rm等等命令的功能。
 
@@ -40,7 +38,9 @@ Design philosophy of Chern/Chern的设计思想
 
 Workflow:
 ~~~~~~~~
-
+An typical analysis is modeled as a flow.
+The data, task and algorithm can be modeled as nodes.
+The node are linked by their 
 
 工作流：
 ~~~~~~~~
@@ -57,7 +57,7 @@ Workflow:
 
 .. figure:: fig/fig2.png
 
-   demo analysis structure (mad by Shunan Zhang)
+   Demo analysis structure (mad by Shunan Zhang)
 
 data
 selection1_algorithm
@@ -72,16 +72,9 @@ fit_result
 并且在分析之前就应该设定好。
 并且指定selection1_task使用selection1_algorithm, 输入文件为data，输出文件为data_after_selection1。
 在运行的时候，从data开始运行，程序发现data应该是一个数据，结束。然后运行selection1_algorithm。发现它的依赖是data，运行
-.. _fig_0601:
-
-
-
 
 For the purpose of preservation, I recommend to force users to use git lab and write readme.
 The best approach to f
-
-
-
 
 Contents:
 
