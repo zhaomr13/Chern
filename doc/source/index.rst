@@ -57,5 +57,6 @@ Contents:
    installation
    start
    module
+   developerguide
 
 
