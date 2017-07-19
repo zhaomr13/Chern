@@ -36,11 +36,15 @@ Design philosophy of Chern/Chern的设计思想
 
    Workflow of a demo analysis (made by Shunan Zhang)
 
-Workflow:
+Abstract workflow:
 ~~~~~~~~
 An typical analysis is modeled as a flow.
 The data, task and algorithm can be modeled as nodes.
-The node are linked by their 
+The nodes are linked by their relationships.
+The basic idea of Chern is to manage this flow.
+In the figure above, the raw data is processed by a task called.
+
+The algorithm means the code and the compile flow. It seems that snakemake provide a good tool to manage the compile flow.
 
 工作流：
 ~~~~~~~~
