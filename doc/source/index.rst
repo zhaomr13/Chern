@@ -24,7 +24,23 @@ The following is added after ?looking at? the presentation of Sebastian Neubert 
 分析的修改，从抽象的角度来说，分析的修改就是对这样的一个图，删除一些节点，然后再增加一些节点。重新运行的时候，只需要将更改过的节点以及影响到的后续节点重新运行。
 
 物理位置：
+对于数据、算法和任务这些抽象的要素应该放在一些具体的物理位置。我们的抽象节点不可能并列成一排，也应该按一定的逻辑来组织，这个逻辑应该是一些内容的分类。所以我希望把所有的算法、任务和数据都设定成目录。用这种方法来查看。
 
+举个粒子：
+比如说，一个分析是从data经过selection1、selection2和fit得到结果，那么，我们的抽象节点应该有
+data
+selection1_algorithm
+selection2_algorithm
+fit_algorithm
+selection1_task
+data_after_selection1
+selection2_task
+data_after_selection2
+fit_task
+fit_result
+并且在分析之前就应该设定好。
+并且指定selection1_task使用selection1_algorithm, 输入文件为data，输出文件为data_after_selection1。
+在运行的时候，从data开始运行，程序发现data应该是一个数据，结束。然后运行selection1_algorithm。发现它的依赖是data，运行
 
 For the purpose of preservation, I recommend to force users to use git lab and write readme.
 The best approach to f
