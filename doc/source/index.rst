@@ -92,6 +92,6 @@ Contents:
    installation
    start
    module
-   developerguide
+   DeveloperGuide
 
 
