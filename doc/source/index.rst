@@ -41,7 +41,7 @@ fit_result
 并且在分析之前就应该设定好。
 并且指定selection1_task使用selection1_algorithm, 输入文件为data，输出文件为data_after_selection1。
 在运行的时候，从data开始运行，程序发现data应该是一个数据，结束。然后运行selection1_algorithm。发现它的依赖是data，运行
-
+![avatar](liuchengtu1.pdf)
 For the purpose of preservation, I recommend to force users to use git lab and write readme.
 The best approach to f
 
