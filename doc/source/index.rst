@@ -42,7 +42,8 @@ fit_result
 并且指定selection1_task使用selection1_algorithm, 输入文件为data，输出文件为data_after_selection1。
 在运行的时候，从data开始运行，程序发现data应该是一个数据，结束。然后运行selection1_algorithm。发现它的依赖是data，运行
 .. _fig_0601:
-.. figure:: liuchengtu1.png
+
+.. figure:: fig/liuchengtu1.png
 
 fig1
 
