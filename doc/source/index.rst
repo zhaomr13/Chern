@@ -28,6 +28,9 @@ The following is added after ?looking at? the presentation of Sebastian Neubert 
 
 举个粒子：
 比如说，一个分析是从data经过selection1、selection2和fit得到结果，那么，我们的抽象节点应该有
+.. figure:: fig/fig2.png
+demo analysis structure (mad by Shunan Zhang)
+
 data
 selection1_algorithm
 selection2_algorithm
