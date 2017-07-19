@@ -10,7 +10,7 @@ export PYTHONPATH="${CHERNSYSROOT}:${PYTHONPATH}"
 #export PYTHONDONTWRITEBYTECODE=1
 
 Chern() {
-    ${CHERNSYSROOT}/bin/Chern "$@"
+    ${CHERNSYSROOT}/bin/ChernMain "$@"
     #--std_command_path="${HOME}/.Chern/tmp/execuable"
     #while read line ; do
         #eval $line

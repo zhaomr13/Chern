@@ -1,0 +1,24 @@
+#!/usr/bin/python3
+"""
+Created by Mingrui Zhao 2017
+Script to start a IPython
+Use profile $CHERNROOTSYS/profile
+"""
+
+import os
+import Chern
+from IPython import start_ipython, get_ipython
+
+# ------------------------------------------------------------
+if __name__ == "__main__":
+    # Get the CHERNSYSROOT variable from system
+    CHERNSYSROOT = Chern.utils.strip_path_string(os.environ["CHERNSYSROOT"])
+    # Start ipython
+    try:
+        start_ipython(argv=["--profile=chern", "--ipython-dir="+CHERNSYSROOT+"/profile"])
+    except:
+        raise Exception("Error while starting ipython")
+    # Delete the magic ls and mv in order to avoid error
+    ip = get_ipython()
+    del ip.magics_manager.magics["line"]["ls"]
+    del ip.magics_manager.magics["line"]["mv"]
