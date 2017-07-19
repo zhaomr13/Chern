@@ -4,16 +4,27 @@
    contain the root `toctree` directive.
 
 
-Chern documentation
+Chern documentation/Chern说明文档
 =================================
+In the data analysis, the usual case is that we should process the data using different program one by one.
+However, with the progress of the experiment, we need to contienous update the models and the parameters.
+The update usually makes our program and our data more dirty and more messeous.
+This project is intended to provide a tool to manage the projects and make our analysis and make a more comfortable life.
+
 在高能物理实验的数据分析工作中，我们常常需要面对的是对于数据采用不同的方法进行处理。
-然而，随着实验的进展，我们需要不断地进行参数和模型的更新等工作。这时，不断的更新会
-导致我们的程序与数据越发凌乱。我们在此希望提供的是一个帮助大家对分析进行项目管理的
+然而，随着实验的进展，我们需要不断地进行参数和模型的更新等工作。
+这时，不断的更新会导致我们的程序与数据越发凌乱。我们在此希望提供的是一个帮助大家对分析进行项目管理的
 软件框架，使大家的数据分析工作更加条理清楚。
 
-The following is added after ?looking at? the presentation of Sebastian Neubert at LHCb Analysis and Software Week, on July 18th, 2017.
+The following is added after the presentation of Sebastian Neubert at LHCb Analysis and Software Week, on July 18th, 2017. The purpose is to explain the idea and the design of this project and invite more human power to the project.
+
 下面的部分是在听了Sebastian Neubert 6月18日在LHCb Analysis and Software Week上的报告后添加的。目的是为了说明这个软件设计的功能和方法。
 使更多的人尽快参与到这个项目中来。
+
+As for analysis preservation, I recommend to force the users to use git and write readme of their analysis.
+The best way to force them to do so is to rewrite the shell. And make every shell command recorded by git.
+However, it is impossible to create a new shell use for HEP. I recommend to use IPython as the shell and modify 
+the functions of `mkdir`, `mv`, `rm`, `cp` etc.
 
 对于保存分析来说，我建议强制用户使用git并且写readme。
 最好的方法来强制用户做我们想要他们做的事是重写shell，把shell的每一步都设定成强制记录等等。在这里，我建议采取的方法是修改ipython。即使用ipython作为shell，并且修改mkdir mv rm等等命令的功能。
