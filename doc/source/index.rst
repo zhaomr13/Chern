@@ -34,7 +34,17 @@ the functions of `mkdir`, `mv`, `rm`, `cp` etc.
 Design philosophy of Chern/Chern的设计思想
 ---------
 
+.. figure:: fig/liuchengtu1.png
+
+   Workflow of a demo analysis (made by Shunan Zhang)
+
+Workflow:
+~~~~~~~~
+
+
+fig1
 工作流：
+~~~~~~~~
 首先我想把在分析中需要的一些要素抽象成一些点。这些点包括数据、算法和任务。
 我把工作流的元素分为如下几种：算法，任务和数据。算法的意思是要运行的程序代码和编译命令，snakemake似乎提供了一个很好的工具。任务表示算法的运行，它提供算法所要求的参数和输入输出文件。data表示数据，但是不是真实存在的数据，而是表示一个应该存在的数据。在分析运行之前，指定好每一个任务所需要的输入数据，输出数据和参数、算法。这样，数据和算法一定会形成一个有向无环图，这个图通过指定的顺序或者什么顺序等等就能运行。
 分析的修改，从抽象的角度来说，分析的修改就是对这样的一个图，删除一些节点，然后再增加一些节点。重新运行的时候，只需要将更改过的节点以及影响到的后续节点重新运行。
@@ -64,9 +74,6 @@ fit_result
 在运行的时候，从data开始运行，程序发现data应该是一个数据，结束。然后运行selection1_algorithm。发现它的依赖是data，运行
 .. _fig_0601:
 
-.. figure:: fig/liuchengtu1.png
-
-fig1
 
 
 
