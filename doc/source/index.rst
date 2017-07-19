@@ -26,8 +26,13 @@ The best way to force them to do so is to rewrite the shell. And make every shel
 However, it is impossible to create a new shell use for HEP. I recommend to use IPython as the shell and modify 
 the functions of `mkdir`, `mv`, `rm`, `cp` etc.
 
+
+
 对于保存分析来说，我建议强制用户使用git并且写readme。
 最好的方法来强制用户做我们想要他们做的事是重写shell，把shell的每一步都设定成强制记录等等。在这里，我建议采取的方法是修改ipython。即使用ipython作为shell，并且修改mkdir mv rm等等命令的功能。
+
+Design philosophy of Chern/Chern的设计思想
+---------
 
 工作流：
 首先我想把在分析中需要的一些要素抽象成一些点。这些点包括数据、算法和任务。
