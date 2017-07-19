@@ -27,3 +27,11 @@ Chern软件包里包括bin,Chern,doc,profile,templates,test,tmp几个目录
 + ChernManager.py: 单例类，在启动ipython之后事例化，用来管理project
 + 其他的东西暂时是废弃的，应该是我之前做的一个版本的想法。
 
+## profile: ipython设置
+其他的部分都是ipython自动生成的，只有profile/profile_chern/startup里面有干货。
+
++ 010-startup.py: 事例化ChernManager
++ 020-prompt.py: 定义prompt
++ 030-magic.py: 定义一些line magic命令
++ 040-mkobject.py: 上一个脚本的延续
++ 10-starupmessage: 输出启动信息
