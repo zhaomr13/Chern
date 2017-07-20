@@ -1,9 +1,44 @@
+"""
+Created by Mingrui Zhao @ 2017
+define some classes and functions used throughout the project
+"""
 # Load module
 import os
-import sys
 import shutil
 
+def strip_path_string(path_string):
+    """
+    Remove the "/" in the end of the string
+    and the " " in the begin and the end of the string.
+    """
+    path_string = path_string.strip(" ")
+    path_string = path_string.rstrip("/")
+    return path_string
+
+def colorize(string, color):
+    """
+    Make the string have color
+    """
+    if color == "debug":
+        return "\033[31m" + string + "\033[m"
+    return string
+
+def debug(*arg):
+    """
+    Print debug string
+    """
+    print(colorize("debug >> ", "debug"), end="")
+    for s in arg:
+        print(colorize(s.__str__(), "debug"), end=" ")
+    print("*")
+
 def remove_cache(file_path):
+    """
+    Remove the python cache file *.pyc *.pyo *.__pycache
+    file_path = somewhere/somename.py
+            or  somename.py
+    """
+    file_path = strip_path_string(file_path)
     if os.path.exists(file_path+"c"):
         os.remove(file_path+"c")
     if os.path.exists(file_path+"o"):
@@ -15,19 +50,28 @@ def remove_cache(file_path):
         shutil.rmtree(file_path[:index] + "/__pycache__")
 
 class ConfigFile(object):
+    """
+    ConfigFile class
+    ConfigFile(somefile.py) can define a config file,
+    where you can read and write python variables
+    """
     def __init__(self, file_path):
+        """
+        Initialize the class use a path
+        Create a file if it is not initially exists
+        """
         self.file_path = file_path
-        pass
-
-    def read_variable(self, variable_name):
-        # if the requested module is not here at the beginning
-        file_path = self.file_path
         if not os.path.exists(file_path):
             open(file_path, "w").close()
 
+    def read_variable(self, variable_name):
+        """
+        Get the content of some variable
+        """
         # read the module
         from imp import load_source
         # print(file_path)
+        file_path = self.file_path
         module = load_source("tmp_module", file_path)
         value = module.__dict__.get(variable_name)
         # print(value)
@@ -41,8 +85,9 @@ class ConfigFile(object):
         file_path = self.file_path
         try_times = 10 ** 4
         for i in range(try_times):
-            if not os.path.exists(file_path + ".lock") : break
-        if os.path.exists(file_path + ".lock") :
+            if not os.path.exists(file_path + ".lock"):
+                break
+        if os.path.exists(file_path + ".lock"):
             raise os.error
 
         open(file_path+".lock", "a").close()
@@ -66,13 +111,13 @@ class ConfigFile(object):
 
         # Save to file
         for key in old_variables:
-            if not key.startswith("__") and not key.startswith("-") :
+            if not key.startswith("__") and not key.startswith("-"):
                 if type(dic[key]) == str:
                     f.write("%s=u'%s'\n"%(key, str(dic[key])))
                 elif type(dic[key]) == str:
-                    f.write("%s='%s'\n"%(key, str(dic[key])) )
-                else :
-                    f.write("%s=%s\n"%(key, str(dic[key])) )
+                    f.write("%s='%s'\n"%(key, str(dic[key])))
+                else:
+                    f.write("%s=%s\n"%(key, str(dic[key])))
         # DELETED print "written"
         f.close()
         os.remove(file_path+".lock")
@@ -80,68 +125,8 @@ class ConfigFile(object):
         remove_cache(file_path)
 
     def modify_variable(self):
+        """
+        Might be used in the future
+        FIXME
+        """
         pass
-
-def write_variables(module, path, variables):
-
-    try_times = 10 ** 4
-    for i in xrange(try_times):
-        if not os.path.exists(path + ".lock") : break
-    if os.path.exists(path + ".lock") :
-        raise os.error
-
-    open(path+".lock", "a").close()
-    f = open(path, "write")
-
-    # Module variables, key value mapping
-    dic = {key:value for key,value in module.__dict__.iteritems()}
-
-    # Add new variables to the list
-    old_variables = dir(module)
-    # DELETE print old_variables
-    for key, value in variables:
-        if key not in old_variables:
-            old_variables.append(key)
-
-    # Change values
-    for key, value in variables:
-        dic[key] = value
-
-    # Save to file
-    for key in old_variables:
-        if not key.startswith("__") and not key.startswith("-") :
-            if type(dic[key]) == unicode:
-                f.write("%s=u'%s'\n"%(key, unicode(dic[key])))
-            elif type(dic[key]) == str :
-                f.write("%s='%s'\n"%(key, str(dic[key])) )
-            else :
-                f.write("%s=%s\n"%(key, str(dic[key])) )
-    # DELETED print "written"
-    f.close()
-    os.remove(path+".lock")
-    print("lock removed")
-    if os.path.exists(path+"c"): os.remove(path+"c")
-
-def get_global_config():
-    global_config = read_variables("global_config", os.environ["HOME"]+"/.Chern/config.py")
-    return global_config
-
-def get_project_config(global_config, project):
-    project_path = global_config.projects_path[project]
-    project_config = read_variables("project_config", project_path+"/.config/config.py")
-    return project_config
-
-
-
-def strip_path_string(path_string):
-    path_string = path_string.strip(" ")
-    if path_string.endswith("/"):
-        return path_string[:-1]
-    else:
-        return path_string
-
-# DELETED c = read_variables("configuration", os.environ["HOME"]+"/.Chern/configuration.py")
-# DELETED write_variables(c, os.environ["HOME"]+"/.Chern/configuration.py", [("hello", [3124567])])
-def debug(*arg):
-    for s in arg:
-        print(s,)
