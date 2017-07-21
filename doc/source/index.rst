@@ -38,7 +38,8 @@ Design philosophy of Chern/Chern的设计思想
 
 Abstract workflow:
 ~~~~~~~~
-An typical analysis is modeled as a flow.
+The concept of workflow is similar with that of the most pipeline tools. 
+An typical analysis is modeled as a workflow.
 The data, task and algorithm can be modeled as some virtual object called VObject.
 The VObjects are linked by their relationships.
 The basic idea of Chern is to manage this flow.

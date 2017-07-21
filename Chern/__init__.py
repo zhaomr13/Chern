@@ -1,13 +1,6 @@
 """
 Chern
 """
-__author__ = 'Mingrui Zhao'
-__version__ = '3'
-__version_info = ()
-__revision__ = ''
-__license__ = ''
-__date__ = ''
-
 from Chern import utils
 from Chern.VObject import VObject
 from Chern.VAlgorithm import VAlgorithm #as _VAlgorithm
@@ -17,6 +10,12 @@ from Chern.VDirectory import VDirectory
 from Chern.VProject import VProject
 
 # VObject.sub_types = {"Algorithm":VAlgorithm, "Task":VTask, "Data":VData, "Directory":VDirectory}
+__author__ = 'Mingrui Zhao'
+__version__ = '3'
+__version_info = ()
+__revision__ = ''
+__license__ = ''
+__date__ = ''
 
 def create_object_instance(path):
     """ Create an object instance
