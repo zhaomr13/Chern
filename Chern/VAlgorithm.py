@@ -3,11 +3,15 @@ class VAlgorithm(VObject):
     def __init__(self, file_name):
         super(VAlgorithm, self).__init__(file_name)
 
-    def load_object(self):
-        super(VAlgorithm, self).load_object()
+    def related_tasks():
 
-    def mk_algorithm(self, file_name):
-        super(VObject, self).mk_object(file_name)
+    def ls(self):
+        """
+        Option to
+        """
+        super(VAlgorithm, self).ls()
+
+
 
 def create_algorithm(path):
     path = utils.strip_path_string(path)
@@ -22,5 +26,3 @@ def create_algorithm(path):
         f.write("Please write the main file for this algorithm")
     subprocess.call("vim %s/main.py"%path, shell=True)
 
-def load_parameter(name):
-    pass

@@ -14,7 +14,6 @@ def strip_path_string(path_string):
     """
     path_string = path_string.strip(" ")
     path_string = path_string.rstrip("/")
-    path_string = path_string.replace(".", "/")
     return path_string
 
 def colorize(string, color):
