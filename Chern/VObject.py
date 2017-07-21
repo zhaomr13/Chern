@@ -95,12 +95,12 @@ class VObject(object):
         """
         config_file = utils.ConfigFile(path+"/.config.py")
         succ_str = config_file.read_variable("successors")
-        succ_str.append(self.path)
+        succ_str.remove(self.path)
         config_file.write_variable("successors", succ_str)
         config_file = utils.ConfigFile(self.path+"/.config.py")
-        pred_str = config_file.read_variable("")
-        pred_str.append(self.path)
-        config_file.write_variable("pre")
+        pred_str = config_file.read_variable("predecessors")
+        pred_str.remove(self.path)
+        config_file.write_variable("predecessors", pred_str)
 
     def add_arc_to(self, path):
         """
@@ -108,13 +108,13 @@ class VObject(object):
         Add a link from this object to the path object
         """
         config_file = utils.ConfigFile(path+"/.config.py")
+        pred_str = config_file.read_variable("predecessors")
+        pred_str.append(self.path)
+        config_file.write_variable("predecessors", pred_str)
+        config_file = utils.ConfigFile(self.path+"/.config.py")
         succ_str = config_file.read_variable("successors")
         succ_str.append(self.path)
         config_file.write_variable("successors", succ_str)
-        config_file = utils.ConfigFile(self.path+"/.config.py")
-        pred_str = config_file.read_variable("")
-        pred_str.append(self.path)
-        config_file.write_variable("pre")
 
     def remove_path_to(self, path):
         """
@@ -122,17 +122,15 @@ class VObject(object):
         remove the path to the path
         """
         config_file = utils.ConfigFile(path+"/.config.py")
-        succ_str = config_file.read_variable("successors")
-        succ_str.append(self.path)
-        config_file.write_variable("successors", succ_str)
+        pred_str = config_file.read_variable("predecessors")
+        pred_str.remove(self.path)
+        config_file.write_variable("predecessors", pred_str)
         config_file = utils.ConfigFile(self.path+"/.config.py")
-        pred_str = config_file.read_variable("")
-        pred_str.append(self.path)
-        config_file.write_variable("pre")
+        succ_str = config_file.read_variable("successors")
+        succ_str.remove(self.path)
+        config_file.write_variable("successors", succ_str)
 
-
-
-    def get_successors():
+    def get_successors(self):
         config_file = utils.ConfigFile(self.path+"/.config.py")
         succ_str = config_file.read_variable("successors")
         successors = []
@@ -140,7 +138,7 @@ class VObject(object):
             successors.append(path)
         return successors
 
-    def get_predecessors():
+    def get_predecessors(self):
         config_file = utils.ConfigFile(self.path+"/.config.py")
         pred_str = config_file.read_variable("predecessors")
         predecessors = []
@@ -154,11 +152,17 @@ class VObject(object):
         """
         queue = self.sub_objects_respectively()
         for obj in queue:
-            new_project = VObject(new_path +"/"+ self.relative_path(obj.path))
-            for arc in arc.in_arcs():
-                if arc not in queue: new_project.add_from(arc)
+            new_object = VObject(new_path +"/"+ self.relative_path(obj.path))
+            for pred_object in obj.get_predecessors():
+                # if in the same tree
+                if self.relative_path(pred_object.path).startwith(".."):
+                    new_object.add_in_arc(pred_object.path)
                 else:
-                    new_project.add_from(path+relative_arc path)
+                    relative_path = self.relative_path(pred_object.path)
+                    new_object.add_in_arc(new_path+"/"+relative_path)
+            for succ_object in obj.get_successors():
+                if self.relative_path(succ_object.path).startwith(".."):
+                    new_object.add_out_arc(succ_object.path)
 
     def mv(self, new_path):
         """
@@ -171,12 +175,16 @@ class VObject(object):
 
     def remove(self):
         """
-        queue
-        remove_from
-        remove_to
-        """
-        pass
 
+        """
+        queue = self.sub_objects_respectively()
+        for obj in queue:
+            for pred_object in obj.get_predecessors():
+                if self.relative_path(pred_object.path).startwith(".."):
+                    obj.remove_in_arc(pred_object.path)
+            for pred_object in obj.get_successors():
+                if self.relative_path(pred_object.path).startwith(".."):
+                    obj.remove_out_arc(succ_object.path)
 
     def sub_objects(self):
         """
@@ -227,6 +235,7 @@ class VObject(object):
     def __getitem__(self, index):
         """
         FIXME
-        This method should be written to realize the function of
+        This method should be written to realize the function like
+        a.b.c
         """
         pass
