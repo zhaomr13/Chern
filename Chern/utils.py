@@ -10,9 +10,11 @@ def strip_path_string(path_string):
     """
     Remove the "/" in the end of the string
     and the " " in the begin and the end of the string.
+    replace the "." in the string to "/"
     """
     path_string = path_string.strip(" ")
     path_string = path_string.rstrip("/")
+    path_string = path_string.replace(".", "/")
     return path_string
 
 def colorize(string, color):
