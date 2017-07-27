@@ -4,11 +4,24 @@ This is the top class for project manager
 import os
 from subprocess import call, PIPE
 from Chern import utils
-# from Chern.VAlgorithm import VAlgorithm
-# from Chern.VTask import VTask
-# from Chern.VData import VData
-# from Chern.VDirectory import VDirectory
-# from Chern.VProject import VProject
+from Chern.VAlgorithm import VAlgorithm #as _VAlgorithm
+from Chern.VTask import VTask #as _VTask
+from Chern.VData import VData #as _VData
+from Chern.VDirectory import VDirectory
+from Chern.VProject import VProject
+
+def create_object_instance(path):
+    """ Create an object instance
+    """
+    path = utils.strip_path_string(path)
+    object_config_file = utils.ConfigFile(path+"/.config.py")
+    object_type = object_config_file.read_variable("object_type")
+    vobject_class = {"algorithm":VAlgorithm,
+                     "task":VTask,
+                     "data":VData,
+                     "directory":VDirectory,
+                     "project":VProject}
+    return vobject_class[object_type](path)
 
 class ChernManager(object):
     """ ChernManager class
@@ -27,6 +40,9 @@ class ChernManager(object):
     def __init__(self):
         self.init_global_config()
 
+    def construct_tree(self):
+        pass
+
     def root_object(self):
         """ Get the root object
         """
@@ -38,6 +54,10 @@ class ChernManager(object):
         # os.get_current_directory()
         # return create_object_instance()
         pass
+
+    def switch_current_object(self, path):
+        self.c = create_object_instance(path)
+
 
     def init_global_config(self):
         chern_config_path = os.environ.get("CHERNCONFIGPATH")
@@ -132,7 +152,6 @@ class ChernManager(object):
         projects_path[project_name] = project_path
         global_config_file.write_variable("projects_path", projects_path)
         global_config_file.write_variable("current_project", project_name)
-        print(project_path)
         os.chdir(project_path)
         call("git init", shell=True, stdout=PIPE, stderr=PIPE)
         call("git add .config.py", shell=True, stdout=PIPE, stderr=PIPE)
