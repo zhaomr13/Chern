@@ -5,6 +5,8 @@ define some classes and functions used throughout the project
 # Load module
 import os
 import shutil
+import uuid
+from colored import fg, bg, attr
 
 def strip_path_string(path_string):
     """
@@ -16,12 +18,30 @@ def strip_path_string(path_string):
     path_string = path_string.rstrip("/")
     return path_string
 
+def special_path_string(path_string):
+    """
+    Replace the path string . -> /
+    rather than the following cases
+    .
+    ..
+    path/./../
+    """
+    if path_string.startswith("."):
+        return path_string
+    if path_string.find("/.") != -1:
+        return path_string
+    return path_string.replace(".", "/")
+
 def colorize(string, color):
     """
     Make the string have color
     """
     if color == "debug":
         return "\033[31m" + string + "\033[m"
+    elif color == "comment":
+        return fg("blue")+ string +attr("reset")
+    elif color == "title0":
+        return fg("red")+attr("bold")+string+attr("reset")
     return string
 
 def debug(*arg):
@@ -73,7 +93,7 @@ class ConfigFile(object):
         from imp import load_source
         # print(file_path)
         file_path = self.file_path
-        module = load_source("tmp_module", file_path)
+        module = load_source("tmp_module_{0}".format(uuid.uuid4().hex), file_path)
         value = module.__dict__.get(variable_name)
         # print(value)
 
@@ -92,13 +112,10 @@ class ConfigFile(object):
             raise os.error
 
         open(file_path+".lock", "a").close()
-        debug("write to", file_path)
-        f = open(file_path, "w")
 
         # Module variables, key value mapping
-        # dic = {key:value for key,value in module.__dict__.iteritems()}
         from imp import load_source
-        module = load_source("tmp_module_{0}".format(file_path), file_path)
+        module = load_source("tmp_module_{0}".format(uuid.uuid4().hex), file_path)
         dic = module.__dict__
 
         # Add new variables to the list
@@ -107,6 +124,7 @@ class ConfigFile(object):
         if variable_name not in old_variables:
             old_variables.append(variable_name)
 
+        f = open(file_path, "w")
         # Change values
         dic[variable_name] = value
 
