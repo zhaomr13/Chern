@@ -1,40 +1,127 @@
-from Chern.VObject import VObject
-from Chern import utils
-import subprocess
+"""
+VData module, contains a class and a function.
+The class VData is the VObject whose type is data.
+The function will create a VData from a path.
+"""
 import os
+import uuid
+import time
+import subprocess
+from Chern import utils
+from Chern.VObject import VObject
+from Chern.utils import colorize
 class VData(VObject):
-    def __init__(self, file_name):
-        print("load success")
-        super(VData, self).__init__(file_name)
+    """
+    Virtual Data.
+    """
+    def ls(self):
+        """
+        First use the VObject ls, and then print the supported sites of this data
+        FIXME: list the files in the local site
+        """
+        super(VData, self).ls()
+        sites = self.get_sites()
+        print(colorize("---- Supported sites of this data:", "title0"))
+        for site in sites:
+            print(site, end=" ")
+        print("\n")
 
-    def load_object(self):
-        super(VData, self).load_object()
-
-    def mk_data(self, file_name):
-        pass
-
-    def data(self):
+    def get_sites(self):
+        """
+        Read the sites variable from the config file of this data.
+        """
         config_file = utils.ConfigFile(self.path+"/.config.py")
-        return config_file.read_variable("data")
+        sites = config_file.read_variable("sites")
+        if sites is None:
+            return []
+        return sites
 
-    def set_data(self, path):
+    def add_site(self, site):
+        """
+        Add a site for the current data.
+        """
         config_file = utils.ConfigFile(self.path+"/.config.py")
-        config_file.write_variable("data", path)
+        sites = config_file.read_variable("sites")
+        if sites is None:
+            sites = []
+        sites.append(site)
+        config_file.write_variable("sites", sites)
 
-    def add_task(self, path):
+    def remove_site(self, site):
+        """
+        Remove a site from the current data. If the site is not in the data, do nothing.
+        """
         config_file = utils.ConfigFile(self.path+"/.config.py")
-        tasks = config_file.read_variable("tasks", path)
-        tasks.append(task)
-        config_file.write_variable("data", )
+        sites = config_file.read_variable("sites")
+        if sites is None:
+            return
+        if site in sites:
+            sites.remove(site)
+        config_file.write_variable("sites", site)
+
+    def new_version(self, site):
+        """
+        Create a new version of the data.
+        And the new version will replace the old one.
+        The old one can be found through git.
+        """
+        config_file = utils.ConfigFile(self.path+"/.config.py")
+        versions = config_file.read_variable("versions")
+        if versions is None:
+            versions = {}
+        versions[site] = uuid.uuid4().hex
+        config_file.write_variable("versions", versions)
+        chern_config_path = os.environ["CHERNCONFIGPATH"]+"/config.py"
+        config_file = utils.ConfigFile(chern_config_path)
+        sites = config_file.read_variable("sites")
+        os.mkdir(sites[site] + "/" + versions[site])
+
+    def latest_version(self, site):
+        """
+        Get the latest version.
+        """
+        config_file = utils.ConfigFile(self.path+"/.config.py")
+        versions = config_file.read_variable("versions")
+        return versions[site]
+
+    def set_updated_time(self, site):
+        """
+        Setup the time.
+        """
+        config_file = utils.ConfigFile(self.path+"/.config.py")
+        update_times = config_file.read_variable("update_times")
+        update_times[site] = time.time()
+
+    def get_updated_time(self, site):
+        """
+        Read the update time of a site.
+        """
+        config_file = utils.ConfigFile(self.path+"/.config.py")
+        update_times = config_file.read_variable("update_times")
+        if update_times is None:
+            return 0
+        return update_times.get(site, 0)
+
+    def get_physics_position(self, site):
+        """
+        Read the physics position of a site of a data.
+        """
+        chern_config_path = utils.strip_path_string(os.environ.get("CHERNCONFIGPATH"))
+        global_config_path = chern_config_path+"/config.py"
+        config_file = utils.ConfigFile(global_config_path)
+        sites = config_file.read_variable("sites")
+        return sites[site]
 
 
-def create_data(path):
+def create_data(path, inloop=False):
+    """
+    Make a new data and its update time should be 0.
+    """
     path = utils.strip_path_string(path)
     os.mkdir(path)
-    with open(path + "/.config.py", "w") as f:
-        f.write("object_type = \"data\"")
-    with open(path + "/.README.md", "w") as f:
-        f.write("Please write a specific README!")
-    subprocess.call("vim %s/.README.md"%path, shell=True)
-
-
+    with open(path + "/.config.py", "w") as config_file:
+        config_file.write("object_type = \"data\"")
+    with open(path + "/.README.md", "w") as readme_file:
+        readme_file.write("Please write a specific README!")
+    if not inloop:
+        subprocess.call("vim %s/.README.md"%path, shell=True)
