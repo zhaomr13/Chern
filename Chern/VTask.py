@@ -116,9 +116,6 @@ class VTask(VObject):
         config_file = utils.ConfigFile(self.path+"/.config.py")
         version = uuid.uuid4().hex
         config_file.write_variable("version", version)
-        chern_config_path = os.environ["HOME"] + "/.Chern"
-        config_file = utils.ConfigFile(chern_config_path +"/config.py")
-        sites = config_file.read_variable("sites")
         os.mkdir(self.get_physics_position())
         os.mkdir(self.get_physics_position(site))
 
@@ -205,8 +202,7 @@ class VTask(VObject):
         Standalone run the project
         """
         chern_config_path = os.environ["HOME"] + "/.Chern"
-        config_file = utils.ConfigFile(chern_config_path +"/config.py")
-        site_module = imp.load_source("site", "/home/zhaomr/.Chern"+"/"+site+".py")
+        site_module = imp.load_source("site", chern_config_path+"/"+site+".py")
         site_module.run_standalone(self.get_physics_position(site))
 
     def get_physics_position(self, site="local"):
@@ -225,9 +221,7 @@ class VTask(VObject):
         Upload the dependence file
         """
         chern_config_path = os.environ["HOME"] + "/.Chern"
-        config_file = utils.ConfigFile(chern_config_path +"/config.py")
-        sites = config_file.read_variable("sites")
-        site_module = imp.load_source("site", "/home/zhaomr/.Chern"+"/"+site+".py")
+        site_module = imp.load_source("site", chern_config_path+"/"+site+".py")
         site_module.upload(source, destination)
 
     def add_input(self, path, alias):
@@ -253,10 +247,10 @@ class VTask(VObject):
         self.set_update_time()
 
     def remove_output(self, alias):
-        if VObject(path).get_predecessors() == []:
-            print("The output is empty")
-            return
         path = self.alias_to_path(alias)
+        if path is None:
+            print("Alias not found")
+            return
         self.remove_arc_to(path)
         self.remove_alias(alias)
         self.set_update_time()
@@ -312,6 +306,7 @@ class VTask(VObject):
 def create_task(path, inloop=False):
     path = utils.strip_path_string(path)
     os.mkdir(path)
+    open(path + "/parameters.py", "w").close()
     with open(path + "/.config.py", "w") as f:
         f.write("object_type = \"task\"")
     with open(path + "/.README.md", "w") as f:

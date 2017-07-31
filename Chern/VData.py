@@ -6,6 +6,7 @@ The function will create a VData from a path.
 import os
 import uuid
 import time
+import imp
 import subprocess
 from Chern import utils
 from Chern.VObject import VObject
@@ -64,9 +65,19 @@ class VData(VObject):
         Create a rawdata.
         """
         self.new_version(site)
-        subprocess.call("ln -s {} {}".format(path, self.get_physics_position(site)), shell=True)
+        config_file = utils.ConfigFile(self.path+"/.config.py")
+        rawdata = config_file.read_variable("rawdata")
+        if rawdata is None:
+            rawdata = []
+        rawdata.append((site, rawdata))
+        config_file.write_variable("rawdata")
+        self.link(path, self.get_physics_position(site), site)
         self.set_update_time(site)
 
+    def link(self, source, destination, site):
+        chern_config_path = os.environ["HOME"] + "/.Chern"
+        site_module = imp.load_source("site", chern_config_path+"/"+site+".py")
+        site_module.link(source, destination)
 
     def new_version(self, site):
         """
