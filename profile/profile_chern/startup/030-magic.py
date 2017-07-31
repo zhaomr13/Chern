@@ -221,7 +221,8 @@ del readme
 
 @register_line_magic
 def configuration(line):
-    subprocess.call("vim /home/zhaomr/.Chern/config.py", shell=True)
+    chern_config_path = os.environ["HOME"]
+    subprocess.call("vim " + chern_config_path+"/config.py", shell=True)
 del configuration
 
 @register_line_magic
