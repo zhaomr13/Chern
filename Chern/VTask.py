@@ -240,16 +240,25 @@ class VTask(VObject):
 
     def remove_input(self, alias):
         path = self.alias_to_path(alias)
+        if path == "":
+            print("Alias not found")
+            return
         self.remove_arc_from(path)
         self.remove_alias(alias)
         self.set_update_time()
 
     def add_output(self, path, alias):
+        if VObject(path).get_predecessors() != []:
+            print("An output should only have only one input")
+            return
         self.add_arc_to(path)
         self.set_alias(alias, path)
         self.set_update_time()
 
     def remove_output(self, alias):
+        if VObject(path).get_predecessors() == []:
+            print("The output is empty")
+            return
         path = self.alias_to_path(alias)
         self.remove_arc_to(path)
         self.remove_alias(alias)

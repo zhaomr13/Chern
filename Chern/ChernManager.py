@@ -71,7 +71,24 @@ class ChernManager(object):
         """
         global_config_file = utils.ConfigFile(self.global_config_path)
         current_project = global_config_file.read_variable("current_project")
-        return current_project
+        if current_project is None:
+            return None
+        else:
+            projects_path = global_config_file.read_variable("projects_path")
+            path = projects_path.get(current_project, "no_place|")
+            if path == "no_place|":
+                projects_path[current_project] = "no_place|"
+            if not os.path.exists(path):
+                projects_path.pop(current_project)
+                if projects_path != {}:
+                    current_project = list(projects_path.keys())[0]
+                else:
+                    current_project = None
+                global_config_file.write_variable("current_project", current_project)
+                global_config_file.write_variable("projects_path", projects_path)
+                return self.get_current_project()
+            else:
+                return current_project
 
     def get_all_projects(self):
         """ Get the list of all the projects.
@@ -79,7 +96,7 @@ class ChernManager(object):
         """
         global_config_file = utils.ConfigFile(self.global_config_path)
         projects_path = global_config_file.read_variable("projects_path")
-        return projects_path.keys()
+        return list(projects_path.keys())
 
     def ls_projects(self):
         """
@@ -103,12 +120,64 @@ class ChernManager(object):
         """ Switch the current project
 
         """
+        projects_list = self.get_all_projects()
+        print(projects_list)
+        print(project_name)
+        if project_name not in projects_list:
+            print("No such a project")
+            return
         global_config_file = utils.ConfigFile(self.global_config_path)
         global_config_file.write_variable("current_project", project_name)
-        # global global_vproject
-        # del global_vproject
-        # global_vproject = VProject()
+        path = self.get_project_path(project_name)
+        if not os.path.exists(path):
+            print("Project deleted")
+            return
+        self.c = create_object_instance(path)
 
+    def init_project(self):
+        """ Create a new project from the existing folder
+        """
+        pwd = os.getcwd()
+        project_name = pwd[pwd.rfind("/")+1:]
+        print("The project name is ", project_name)
+
+        # Check the forbidden name
+        forbidden_names = ["config", "new", "projects", "start", "", "."]
+        def check_project_failed(project_name, forbidden_names):
+            message = "The following project names are forbidden:"
+            message += "\n    "
+            for name in forbidden_names:
+                message += name + ", "
+            raise Exception(message)
+        if project_name in forbidden_names:
+            check_project_failed(project_name, forbidden_names)
+
+        ncpus = int(input("Please input the number of cpus to use for this project: "))
+        user_name = input("Please input your name: ")
+        user_mail = input("Please input your email: ")
+
+        project_path = pwd
+        config_file = utils.ConfigFile(project_path+"/.config.py")
+        config_file.write_variable("object_type", "project")
+        config_file.write_variable("ncpus", ncpus)
+        config_file.write_variable("user_name", user_name)
+        config_file.write_variable("user_mail", user_mail)
+        with open(project_path + ".README.md", "w") as f:
+            f.write("Please write README for this project")
+        call("vim %s/.README.md"%project_path, shell=True)
+        global_config_file = utils.ConfigFile(self.global_config_path)
+        projects_path = global_config_file.read_variable("projects_path")
+        if projects_path is None:
+            projects_path = {}
+        projects_path[project_name] = project_path
+        global_config_file.write_variable("projects_path", projects_path)
+        global_config_file.write_variable("current_project", project_name)
+        os.chdir(project_path)
+        call("git init", shell=True, stdout=PIPE, stderr=PIPE)
+        call("git add .config.py", shell=True, stdout=PIPE, stderr=PIPE)
+        call("git commit -m \" Create config file for the project\"", shell=True, stdout=PIPE, stderr=PIPE)
+        call("git add .README.md", shell=True, stdout=PIPE, stderr=PIPE)
+        call("git commit -m \" Create README file for the project\"", shell=True, stdout=PIPE, stderr=PIPE)
 
     def new_project(self, project_name):
         """ Create a new project
@@ -128,8 +197,8 @@ class ChernManager(object):
             check_project_failed(project_name, forbidden_names)
 
         ncpus = int(input("Please input the number of cpus to use for this project: "))
-        user_name = input("Please input your name:")
-        user_mail = input("Please input your email:")
+        user_name = input("Please input your name: ")
+        user_mail = input("Please input your email: ")
 
         pwd = os.getcwd()
         project_path = pwd + "/" + project_name

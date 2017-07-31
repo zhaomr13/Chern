@@ -22,10 +22,12 @@ if __name__ == "__main__":
             start_ipython(argv=["--profile=chern", "--ipython-dir="+CHERNSYSROOT+"/profile"])
         elif sys.argv[1] == "config":
             start_ipython(argv=["--profile=config", "--ipython-dir="+CHERNSYSROOT+"/profile"])
+        elif sys.argv[1] == "init":
+            manager = Chern.ChernManager.get_manager()
+            manager.init_project()
+            start_ipython(argv=["--profile=chern", "--ipython-dir="+CHERNSYSROOT+"/profile"])
         else:
-            print("""USAGE:
-Chern
-or Chern config""")
+            print("""USAGE:Chernor Chern config""")
     except:
         raise Exception("Error while starting ipython")
     # Delete the magic ls and mv in order to avoid error

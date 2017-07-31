@@ -21,9 +21,12 @@ def cd(line, inloop=True):
         if inloop:
             print("cd to a project in the script is not allowed")
             return
-        line = utils.strip_path_string(line.strip("project"))
+        debug(line)
+        line = utils.strip_path_string(line.lstrip("project"))
+        debug(line)
         manager.switch_project(line)
         os.chdir(manager.c.path)
+        manager.p = manager.c
         return
 
     # cd can be used to change directory using absolute path
