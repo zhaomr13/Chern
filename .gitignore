@@ -1,5 +1,6 @@
 test
 trash
+profile/profile_chern/history.sqlite
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
