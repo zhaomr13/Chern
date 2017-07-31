@@ -37,10 +37,8 @@ class ChernConfigManager(object):
             cls.instance = ChernConfigManager()
         return cls.instance
 
-    def __init__(self):\
-        chern_config_path = os.environ["HOME"] + "/.Chern"
-        if not os.path.exists(chern_config_path):
-            os.mkdir(chern_config_path)
+    def __init__(self):
+        pass
 
     def construct_tree(self):
         pass
@@ -62,9 +60,9 @@ class ChernConfigManager(object):
 
 
     def init_global_config(self):
-        chern_config_path = os.environ.get("CHERNCONFIGPATH")
-        if chern_config_path is None:
-            raise Exception("CHERNCONFIGPATH is not set")
+        chern_config_path = os.environ.get("HOME") +"/.Chern"
+        if not os.path.exists(chern_config_path):
+            os.mkdir(chern_config_path)
         self.global_config_path = utils.strip_path_string(chern_config_path) + "/config.py"
 
     def get_current_project(self):

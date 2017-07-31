@@ -2,7 +2,6 @@
 
 # Setting the environment for this project
 export CHERNSYSROOT=/home/zhaomr/workdir/Chern
-export CHERNCONFIGPATH=/home/zhaomr/.Chern/
 
 # Setting the enviroment for the binnary file
 export PATH="${CHERNSYSROOT}/bin:${PATH}"

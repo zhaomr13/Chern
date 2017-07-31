@@ -89,8 +89,8 @@ class VTask(VObject):
         """
         Get all the available sites for the project.
         """
-        chern_config_path = os.environ["CHERNCONFIGPATH"] + "/config.py"
-        config_file = utils.ConfigFile(chern_config_path)
+        chern_config_path = os.environ["HOME"] + "/.Chern"
+        config_file = utils.ConfigFile(chern_config_path +"/config.py")
         return config_file.read_variable("sites")
 
     def get_site(self):
@@ -116,8 +116,8 @@ class VTask(VObject):
         config_file = utils.ConfigFile(self.path+"/.config.py")
         version = uuid.uuid4().hex
         config_file.write_variable("version", version)
-        chern_config_path = os.environ["CHERNCONFIGPATH"]+"/config.py"
-        config_file = utils.ConfigFile(chern_config_path)
+        chern_config_path = os.environ["HOME"] + "/.Chern"
+        config_file = utils.ConfigFile(chern_config_path +"/config.py")
         sites = config_file.read_variable("sites")
         os.mkdir(self.get_physics_position())
         os.mkdir(self.get_physics_position(site))
@@ -204,9 +204,8 @@ class VTask(VObject):
         """
         Standalone run the project
         """
-        chern_config_path = utils.strip_path_string(os.environ.get("CHERNCONFIGPATH"))
-        global_config_path = chern_config_path+"/config.py"
-        config_file = utils.ConfigFile(global_config_path)
+        chern_config_path = os.environ["HOME"] + "/.Chern"
+        config_file = utils.ConfigFile(chern_config_path +"/config.py")
         site_module = imp.load_source("site", "/home/zhaomr/.Chern"+"/"+site+".py")
         site_module.run_standalone(self.get_physics_position(site))
 
@@ -214,11 +213,10 @@ class VTask(VObject):
         """
         Calculate the physics position of the last site
         """
-        chern_config_path = utils.strip_path_string(os.environ.get("CHERNCONFIGPATH"))
+        chern_config_path = os.environ["HOME"] + "/.Chern"
         if site == "local":
             return os.path.normpath(chern_config_path+"/local/task/"+self.latest_version())
-        global_config_path = chern_config_path +"/config.py"
-        config_file = utils.ConfigFile(global_config_path)
+        config_file = utils.ConfigFile(chern_config_path +"/config.py")
         sites = config_file.read_variable("sites")
         return os.path.normpath(sites[site]+"/task/"+self.latest_version())
 
@@ -226,9 +224,8 @@ class VTask(VObject):
         """
         Upload the dependence file
         """
-        chern_config_path = utils.strip_path_string(os.environ.get("CHERNCONFIGPATH"))
-        global_config_path = chern_config_path+"/config.py"
-        config_file = utils.ConfigFile(global_config_path)
+        chern_config_path = os.environ["HOME"] + "/.Chern"
+        config_file = utils.ConfigFile(chern_config_path +"/config.py")
         sites = config_file.read_variable("sites")
         site_module = imp.load_source("site", "/home/zhaomr/.Chern"+"/"+site+".py")
         site_module.upload(source, destination)

@@ -121,9 +121,8 @@ class VData(VObject):
         """
         Read the physics position of a site of a data.
         """
-        chern_config_path = utils.strip_path_string(os.environ.get("CHERNCONFIGPATH"))
-        global_config_path = chern_config_path+"/config.py"
-        config_file = utils.ConfigFile(global_config_path)
+        chern_config_path = os.environ.get("HOME") + "/.Chern"
+        config_file = utils.ConfigFile(chern_config_path +"/config.py")
         sites = config_file.read_variable("sites")
         return sites[site] +"/data/"+ self.latest_version(site)
 

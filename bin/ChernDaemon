@@ -9,7 +9,7 @@ from Chern import utils
 import imp
 
 def download_local_files():
-    chern_config_path = os.environ["CHERNCONFIGPATH"]
+    chern_config_path = os.environ["HOME"] + "/.Chern"
     dirs = os.listdir(chern_config_path + "/local/task")
     config_file = utils.ConfigFile(chern_config_path+"/config.py")
     sites = config_file.read_variable("sites")
@@ -26,7 +26,7 @@ def download_local_files():
             pass
 
 def start():
-    chern_config_path = os.environ["CHERNCONFIGPATH"]
+    chern_config_path = os.environ["HOME"] + "/.Chern"
     with daemon.DaemonContext(
         working_directory="/",
         pidfile=pidfile.TimeoutPIDLockFile(chern_config_path + "/daemon.pid")
@@ -36,7 +36,7 @@ def start():
             download_local_files()
 
 def stop():
-    chern_config_path = os.environ["CHERNCONFIGPATH"]
+    chern_config_path = os.environ["HOME"] + "/.Chern"
     subprocess.call("kill {}".format(open(chern_config_path + "/daemon.pid").read()), shell=True)
 
 if sys.argv[1] == "start":
