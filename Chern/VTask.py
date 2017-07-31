@@ -224,6 +224,20 @@ class VTask(VObject):
         site_module = imp.load_source("site", chern_config_path+"/"+site+".py")
         site_module.upload(source, destination)
 
+    def check(self, site="local"):
+        """
+        Upload the dependence file
+        """
+        pwd = os.getcwd()
+        if site == "local":
+            os.chdir(self.get_physics_position())
+            subprocess.call("bash", shell=True)
+        else:
+            chern_config_path = os.environ["HOME"] + "/.Chern"
+            site_module = imp.load_source("site", chern_config_path+"/"+site+".py")
+            site_module.check(self.get_physics_position(site))
+        os.chdir(pwd)
+
     def add_input(self, path, alias):
         self.add_arc_from(path)
         self.set_alias(alias, path)

@@ -37,6 +37,20 @@ class VData(VObject):
             return []
         return sites
 
+    def check(self, site="local"):
+        """
+        Upload the dependence file
+        """
+        pwd = os.getcwd()
+        if site == "local":
+            os.chdir(self.get_physics_position())
+            subprocess.call("bash", shell=True)
+        else:
+            chern_config_path = os.environ["HOME"] + "/.Chern"
+            site_module = imp.load_source("site", chern_config_path+"/"+site+".py")
+            site_module.check(self.get_physics_position(site))
+        os.chdir(pwd)
+
     def add_site(self, site):
         """
         Add a site for the current data.

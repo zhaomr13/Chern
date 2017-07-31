@@ -260,3 +260,10 @@ def bash(line):
     subprocess.call("bash", shell=True)
     Chern.git.commit("edit .".format(line))
 del bash
+
+@register_line_magic
+def check(line):
+    if line == "":
+        line = "local"
+    manager.c.check(line)
+del check
