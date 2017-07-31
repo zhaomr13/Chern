@@ -29,7 +29,8 @@ def start():
     chern_config_path = os.environ["HOME"] + "/.Chern"
     with daemon.DaemonContext(
         working_directory="/",
-        pidfile=pidfile.TimeoutPIDLockFile(chern_config_path + "/daemon.pid")
+        pidfile=pidfile.TimeoutPIDLockFile(chern_config_path + "/daemon.pid"),
+        stderr=open(chern_config_path+"/log", "w+")
         ):
         while True:
             time.sleep(1)

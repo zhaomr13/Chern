@@ -27,7 +27,8 @@ if __name__ == "__main__":
             manager.init_project()
             start_ipython(argv=["--profile=chern", "--ipython-dir="+CHERNSYSROOT+"/profile"])
         else:
-            print("""USAGE:Chernor Chern config""")
+            print("USAGE:Chernor Chern config")
+            exit(0)
     except:
         raise Exception("Error while starting ipython")
     # Delete the magic ls and mv in order to avoid error

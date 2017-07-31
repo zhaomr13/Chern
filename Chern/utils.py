@@ -66,9 +66,15 @@ def remove_cache(file_path):
         os.remove(file_path+"o")
     index = file_path.rfind("/")
     if index == -1:
-        shutil.rmtree("__pycache__")
+        try:
+            shutil.rmtree("__pycache__")
+        except:
+            pass
     else:
-        shutil.rmtree(file_path[:index] + "/__pycache__")
+        try:
+            shutil.rmtree(file_path[:index] + "/__pycache__")
+        except:
+            pass
 
 class ConfigFile(object):
     """

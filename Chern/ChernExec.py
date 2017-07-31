@@ -1,10 +1,9 @@
-import subprocess
 from subprocess import Popen
 from subprocess import PIPE
 
 class ChernExec(Popen):
     def __init__(self, cmd, path):
-        super(ChernExec, self).__init__(cmd, shell=True, stdin=PIPE, stderr=PIPE)
+        super(ChernExec, self).__init__(cmd.format(path=path), shell=True, stdin=PIPE)
 
     def send(self, cmd):
         self.stdin.write(cmd+" ")

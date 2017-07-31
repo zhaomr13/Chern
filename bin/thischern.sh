@@ -16,5 +16,21 @@ Chern() {
     #done < "${HOME}/.Chern/tmp/execuable"
 }
 
+ChernDaemon() {
+    ${CHERNSYSROOT}/bin/ChernDaemon "$@"
+    #--std_command_path="${HOME}/.Chern/tmp/execuable"
+    #while read line ; do
+        #eval $line
+    #done < "${HOME}/.Chern/tmp/execuable"
+}
+
+ServerDaemon() {
+    ${CHERNSYSROOT}/bin/ServerDaemon "$@"
+    #--std_command_path="${HOME}/.Chern/tmp/execuable"
+    #while read line ; do
+        #eval $line
+    #done < "${HOME}/.Chern/tmp/execuable"
+}
+
 alias chern=Chern
 alias chen=Chern

@@ -59,8 +59,10 @@ def run_standalone():
                 satisfied = False
                 break
         if satisfied:
+            os.chdir(path)
             pid = subprocess.Popen("python {0}/run_standalone.py {0}".format(path), shell=True)
             job = Job(pid, path)
+            job.start()
             running_jobs.append(job)
 
 def start():

@@ -11,8 +11,10 @@ from Chern.utils import debug
 import subprocess
 
 manager = get_manager()
-c = manager.c
-p = manager.p
+@register_line_magic
+def c(line):
+    return manager.c
+del c
 
 @register_line_magic
 def mkp(line):
