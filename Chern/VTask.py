@@ -19,20 +19,37 @@ class VTask(VObject):
         for parameter in parameters:
             print(parameter, end=" = ")
             print(parameters_file.read_variable(parameter))
+        print(colorize("**** STATUS:", "title0"), self.status())
 
     def get_inputs(self):
         """
         Input data.
         """
-        inputs = filter(lambda x: x.object_type() == "data", self.get_successors())
+        inputs = filter(lambda x: x.object_type() == "data", self.get_predecessors())
         return list(map(lambda x: Chern.VData.VData(x.path), inputs))
 
     def get_outputs(self):
         """
         Output data.
         """
-        outputs = filter(lambda x: x.object_type() == "data", self.get_predecessors())
+        outputs = filter(lambda x: x.object_type() == "data", self.get_successors())
         return list(map(lambda x: Chern.VData.VData(x.path), outputs))
+
+    def status(self):
+        """
+        Get the status of the current task.
+        """
+        version = self.latest_version()
+        if version is None:
+            return "new"
+        else:
+            physics_position = self.get_physics_position()
+            if os.path.exists(physics_position+"/finished"):
+                return "finished"
+            elif os.path.exists(physics_position+"/started"):
+                return "started"
+            else:
+                return "submitted"
 
     def add_algorithm(self, path):
         """
@@ -61,6 +78,7 @@ class VTask(VObject):
         Return the algorithm
         """
         predecessors = self.get_predecessors()
+        debug(predecessors)
         for pred_object in predecessors:
             if pred_object.object_type() == "algorithm":
                 return pred_object
@@ -101,7 +119,28 @@ class VTask(VObject):
         chern_config_path = os.environ["CHERNCONFIGPATH"]+"/config.py"
         config_file = utils.ConfigFile(chern_config_path)
         sites = config_file.read_variable("sites")
-        os.mkdir(sites[site]+"/"+version)
+        os.mkdir(self.get_physics_position())
+        os.mkdir(self.get_physics_position(site))
+
+    def prepare_task_file(self, site):
+        io_file = utils.ConfigFile(self.get_physics_position() + "/inputs_outputs.py")
+        debug("The io file is", io_file)
+        inputs = self.get_inputs()
+        debug(inputs)
+        outputs = self.get_outputs()
+        input_files = {}
+        output_files = {}
+        for input_data in inputs:
+            alias = self.path_to_alias(input_data.path)
+            input_files[alias] = input_data.get_physics_position(site)
+        for output_data in outputs:
+            alias = self.path_to_alias(output_data.path)
+            output_files[alias] = output_data.get_physics_position(site)
+        output_files["stdout"] = self.get_physics_position(site)+"/stdout"
+        output_files["stderr"] = self.get_physics_position(site)+"/stderr"
+        io_file.write_variable("inputs", input_files)
+        io_file.write_variable("outputs", output_files)
+        io_file.write_variable("path", self.get_physics_position(site))
 
     def latest_version(self):
         """
@@ -115,37 +154,51 @@ class VTask(VObject):
         """
         Submit the task to a site.
         """
+        site = self.get_site()
+        if site is None:
+            print("No available site found!")
+            return
         # Calculate the dependence
         max_input_time = self.get_update_time()
         inputs = self.get_inputs()
         for input_data in inputs:
-            update_time = input_data.get_update_time()
+            update_time = input_data.get_update_time(site)
             max_input_time = max(max_input_time, update_time)
         algorithm = self.get_algorithm()
         if algorithm is not None:
             max_input_time = max(max_input_time, algorithm.get_update_time())
         outputs = self.get_outputs()
-        site = self.get_site()
-        if site is None:
-            print("No available site found!")
-            return
         update = False
+        debug("max_input_time", max_input_time)
         for output_data in outputs:
-            if output_data.get_update_time() < max_input_time:
+            debug("output")
+            debug(output_data)
+            debug(output_data.get_update_time(site))
+            if output_data.get_update_time(site) < max_input_time:
                 update = True
-                return
+                break
         if not update:
+            print("Nothing to update")
             return
         for output_data in outputs:
+            debug(output_data)
+            debug("set output version")
             output_data.new_version(site)
+            output_data.set_update_time(site)
         self.new_version(site)
+        self.prepare_task_file(site)
 
         physics_position = self.get_physics_position(site)
         self.upload(self.path+"/*", physics_position, site)
-        self.upload(algorithm.path+"/*", physics_position, site)
-        self.upload("/home/zhaomr/workdir/Chern/bin/run_standalone.py", physics_position, site)
-        self.run_standalone(site)
-        git.commit("run task")
+
+        io_file = self.get_physics_position() + "/inputs_outputs.py"
+        self.upload(io_file, physics_position, site)
+        debug(algorithm)
+        if algorithm is not None:
+            self.upload(algorithm.path+"/*", physics_position, site)
+        run_file = os.environ["CHERNSYSROOT"] +"/bin/run_standalone.py"
+        self.upload(run_file, physics_position, site)
+        # self.run_standalone(site)
 
     def run_standalone(self, site):
         """
@@ -157,18 +210,17 @@ class VTask(VObject):
         site_module = imp.load_source("site", "/home/zhaomr/.Chern"+"/"+site+".py")
         site_module.run_standalone(self.get_physics_position(site))
 
-    def get_physics_position(self, site):
+    def get_physics_position(self, site="local"):
         """
         Calculate the physics position of the last site
         """
-        """
-        Get the physics position of this task
-        """
         chern_config_path = utils.strip_path_string(os.environ.get("CHERNCONFIGPATH"))
+        if site == "local":
+            return os.path.normpath(chern_config_path+"/local/task/"+self.latest_version())
         global_config_path = chern_config_path +"/config.py"
         config_file = utils.ConfigFile(global_config_path)
         sites = config_file.read_variable("sites")
-        return os.path.normpath(sites[site]+"/"+self.latest_version())
+        return os.path.normpath(sites[site]+"/task/"+self.latest_version())
 
     def upload(self, source, destination, site):
         """
@@ -232,6 +284,7 @@ class VTask(VObject):
             parameters = []
         parameters.append(parameter)
         parameters_file.write_variable("parameters", parameters)
+        self.set_update_time()
 
     def remove_parameter(self, parameter):
         """
@@ -242,14 +295,13 @@ class VTask(VObject):
             return
         parameters_file = utils.ConfigFile(self.path+"/parameters.py")
         parameters = parameters_file.read_variable("parameters")
-        debug(parameter)
-        debug(parameters)
         if parameter not in parameters:
             print("Parameter not found")
             return
         parameters.remove(parameter)
         parameters_file.write_variable(parameter, None)
         parameters_file.write_variable("parameters", parameters)
+        self.set_update_time()
 
 def create_task(path, inloop=False):
     path = utils.strip_path_string(path)

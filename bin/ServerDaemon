@@ -1,0 +1,84 @@
+#!/usr/bin/python3
+import os
+import daemon
+import time
+from daemon import pidfile
+import subprocess
+import sys
+from Chern import utils
+
+core = 2
+running_jobs = []
+class Job(object):
+    def __init__(self, pid, path):
+        self.pid = pid
+        self.path = path
+
+    def start(self):
+        open(self.path+"/started", "w").close()
+
+    def finished(self):
+        self.returncode = self.pid.poll()
+        if self.returncode is None:
+            return False
+        else:
+            return True
+
+    def finish(self):
+        f = open(self.path+"/finished", "w")
+        f.write(str(self.returncode))
+        f.close()
+        config_file = utils.ConfigFile(self.path+"/inputs_outputs.py")
+        outputs = config_file.read_variable("outputs")
+        if outputs is None:
+            return
+        for output_data in outputs:
+            if output_data != "stdout" and output_data != "stderr":
+                open(outputs[output_data]+"/finished", "w").close()
+
+def run_standalone():
+    task_path = "/home/zhaomr/site1/task"
+    for job in running_jobs:
+        if job.finished():
+            job.finish()
+            running_jobs.remove(job)
+    dirs = os.listdir(task_path)
+    for subdir in dirs:
+        if len(running_jobs) >= core:
+            break
+        path = task_path+"/"+subdir
+        if os.path.exists(path+"/started"):
+            continue
+        config_file = utils.ConfigFile(path+"/inputs_outputs.py")
+        inputs = config_file.read_variable("inputs")
+        satisfied = True
+        if inputs is None:
+            continue
+        for input_data in inputs:
+            if os.path.exists(input_data+"/finished"):
+                satisfied = False
+                break
+        if satisfied:
+            pid = subprocess.Popen("python {0}/run_standalone.py {0}".format(path), shell=True)
+            job = Job(pid, path)
+            running_jobs.append(job)
+
+def start():
+    with daemon.DaemonContext(
+        working_directory="/",
+        pidfile=pidfile.TimeoutPIDLockFile("/home/zhaomr/site1/daemon.pid"),
+        stderr=open("/home/zhaomr/site1/log", "w+")
+        ):
+        while True:
+            time.sleep(1)
+            run_standalone()
+
+def stop():
+    subprocess.call("kill {}".format(open("/home/zhaomr/site1/daemon.pid").read()), shell=True)
+
+if sys.argv[1] == "start":
+    start()
+if sys.argv[1] == "stop":
+    stop()
+
+

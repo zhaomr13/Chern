@@ -82,17 +82,17 @@ class ConfigFile(object):
         Create a file if it is not initially exists
         """
         self.file_path = file_path
-        if not os.path.exists(file_path):
-            open(file_path, "w").close()
 
     def read_variable(self, variable_name):
         """
         Get the content of some variable
         """
+        file_path = self.file_path
+        if not os.path.exists(file_path):
+            return None
         # read the module
         from imp import load_source
         # print(file_path)
-        file_path = self.file_path
         module = load_source("tmp_module_{0}".format(uuid.uuid4().hex), file_path)
         value = module.__dict__.get(variable_name)
         # print(value)
@@ -104,6 +104,8 @@ class ConfigFile(object):
 
     def write_variable(self, variable_name, value):
         file_path = self.file_path
+        if not os.path.exists(file_path):
+            open(file_path, "w").close()
         try_times = 10 ** 4
         for i in range(try_times):
             if not os.path.exists(file_path + ".lock"):

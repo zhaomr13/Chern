@@ -59,6 +59,15 @@ class VData(VObject):
             sites.remove(site)
         config_file.write_variable("sites", site)
 
+    def add_rawdata(self, path, site):
+        """
+        Create a rawdata.
+        """
+        self.new_version(site)
+        subprocess.call("ln -s {} {}".format(path, self.get_physics_position(site)), shell=True)
+        self.set_update_time(site)
+
+
     def new_version(self, site):
         """
         Create a new version of the data.
@@ -71,10 +80,13 @@ class VData(VObject):
             versions = {}
         versions[site] = uuid.uuid4().hex
         config_file.write_variable("versions", versions)
-        chern_config_path = os.environ["CHERNCONFIGPATH"]+"/config.py"
-        config_file = utils.ConfigFile(chern_config_path)
-        sites = config_file.read_variable("sites")
-        os.mkdir(sites[site] + "/" + versions[site])
+        os.mkdir(self.get_physics_position(site))
+
+    def status(self, site):
+        """
+        Read the run status
+        """
+        pass
 
     def latest_version(self, site):
         """
@@ -84,15 +96,18 @@ class VData(VObject):
         versions = config_file.read_variable("versions")
         return versions[site]
 
-    def set_updated_time(self, site):
+    def set_update_time(self, site):
         """
         Setup the time.
         """
         config_file = utils.ConfigFile(self.path+"/.config.py")
         update_times = config_file.read_variable("update_times")
+        if update_times is None:
+            update_times = {}
         update_times[site] = time.time()
+        config_file.write_variable("update_times", update_times)
 
-    def get_updated_time(self, site):
+    def get_update_time(self, site):
         """
         Read the update time of a site.
         """
@@ -110,7 +125,7 @@ class VData(VObject):
         global_config_path = chern_config_path+"/config.py"
         config_file = utils.ConfigFile(global_config_path)
         sites = config_file.read_variable("sites")
-        return sites[site]
+        return sites[site] +"/data/"+ self.latest_version(site)
 
 
 def create_data(path, inloop=False):
@@ -125,3 +140,4 @@ def create_data(path, inloop=False):
         readme_file.write("Please write a specific README!")
     if not inloop:
         subprocess.call("vim %s/.README.md"%path, shell=True)
+

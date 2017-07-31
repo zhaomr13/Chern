@@ -1,0 +1,47 @@
+#!/usr/bin/python3
+import os
+import daemon
+import time
+from daemon import pidfile
+import subprocess
+import sys
+from Chern import utils
+import imp
+
+def download_local_files():
+    chern_config_path = os.environ["CHERNCONFIGPATH"]
+    dirs = os.listdir(chern_config_path + "/local/task")
+    config_file = utils.ConfigFile(chern_config_path+"/config.py")
+    sites = config_file.read_variable("sites")
+    path = sites["site1"]
+    for subdir in dirs:
+        module = imp.load_source("module", chern_config_path+"/site1.py")
+        try:
+            module.download(path+"/task/"+subdir+"/started", chern_config_path+"/local/task/"+subdir)
+        except:
+            pass
+        try:
+            module.download(path+"/task/"+subdir+"/finished", chern_config_path+"/local/task/"+subdir)
+        except:
+            pass
+
+def start():
+    chern_config_path = os.environ["CHERNCONFIGPATH"]
+    with daemon.DaemonContext(
+        working_directory="/",
+        pidfile=pidfile.TimeoutPIDLockFile(chern_config_path + "/daemon.pid")
+        ):
+        while True:
+            time.sleep(1)
+            download_local_files()
+
+def stop():
+    chern_config_path = os.environ["CHERNCONFIGPATH"]
+    subprocess.call("kill {}".format(open(chern_config_path + "/daemon.pid").read()), shell=True)
+
+if sys.argv[1] == "start":
+    start()
+if sys.argv[1] == "stop":
+    stop()
+
+

@@ -18,7 +18,7 @@ class VObject(object):
         The created time should be used for check available of the instance
         """
         self.path = utils.strip_path_string(path)
-        self.created_time = None
+        self.created_time = time.time()
 
     def __str__(self):
         """
@@ -43,7 +43,7 @@ class VObject(object):
         Return whether this object object is modified.
         Check should be done before every use.
         """
-        pass
+        return False
 
     def set_update_time(self):
         """
@@ -57,7 +57,11 @@ class VObject(object):
         Return the updated time of the object
         """
         config_file = utils.ConfigFile(self.path+"/.config.py")
-        return config_file.read_variable("update_time")
+        update_time = config_file.read_variable("update_time")
+        if update_time is None:
+            return 0
+        else:
+            return update_time
 
     def object_type(self, path=None):
         """
@@ -67,8 +71,6 @@ class VObject(object):
         if path is None:
             path = self.path
         # simply read object_type in .config.py
-        if not os.path.exists(path+"/.config.py"):
-                return None
         config_file = utils.ConfigFile(path + "/.config.py")
         return config_file.read_variable("object_type")
 
@@ -91,17 +93,18 @@ class VObject(object):
         for index, sub_object in enumerate(sub_objects):
             print("{2} {0:<12} {1:>20}".format("("+sub_object.object_type()+")", self.relative_path(sub_object.path), "[{}]".format(index)))
         total = len(sub_objects)
-        successors = self.get_successors()
-        if successors:
-            print(colorize("---- Successors:", "title0"))
-        for index, succ_object in enumerate(successors):
-            print("{2} {0:<12} {1:>20}".format("("+succ_object.object_type()+")", self.relative_path(succ_object.path), "[{}]".format(total+index)))
-        total += len(successors)
         predecessors = self.get_predecessors()
         if predecessors:
-            print(colorize("---- Predecessors:", "title0"))
+            print(colorize("o--> Predecessors:", "title0"))
         for index, pred_object in enumerate(predecessors):
-            print("{2} {0:<12} {1:>20}".format("("+pred_object.object_type()+")", self.relative_path(pred_object.path), "[{}]".format(total+index)))
+            print("{2} {0:<12} {3:>10}: {1:<20}".format("("+pred_object.object_type()+")", self.relative_path(pred_object.path), "[{}]".format(total+index), self.path_to_alias(pred_object.path)))
+        total += len(predecessors)
+        successors = self.get_successors()
+        if successors:
+            print(colorize("-->o Successors:", "title0"))
+        for index, succ_object in enumerate(successors):
+            print("{2} {0:<12} {3:>10}: {1:<20}".format("("+succ_object.object_type()+")", self.relative_path(succ_object.path), "[{}]".format(total+index), self.path_to_alias(succ_object.path)))
+
 
     def add_arc_from(self, path):
         """
@@ -169,6 +172,9 @@ class VObject(object):
         config_file.write_variable("successors", succ_str)
 
     def get_successors(self):
+        """
+        The successors of the current object
+        """
         config_file = utils.ConfigFile(self.path+"/.config.py")
         succ_str = config_file.read_variable("successors")
         if succ_str is None:
@@ -220,8 +226,6 @@ class VObject(object):
         config_file.write_variable("alias_to_path", alias_to_path)
         config_file.write_variable("path_to_alias", path_to_alias)
 
-
-
     def set_alias(self, alias, path):
         if alias == "":
             return
@@ -238,12 +242,14 @@ class VObject(object):
         config_file.write_variable("alias_to_path", alias_to_path)
 
     def clean(self):
+        """
+        Clean all the alias, predecessors and successors
+        """
         config_file = utils.ConfigFile(self.path +"/.config.py")
         config_file.write_variable("alias_to_path", {})
         config_file.write_variable("path_to_alias", {})
         config_file.write_variable("predecessors", [])
         config_file.write_variable("successors", [])
-
 
     def mv(self, new_path):
         """
@@ -336,7 +342,6 @@ class VObject(object):
         """
         FIXME
         need more editor support
-
         """
         call("vim {0}".format(self.path+"/.README.md"), shell=True)
 
@@ -347,7 +352,7 @@ class VObject(object):
         I'd like it to support more
         """
         with open(self.path+"/.README.md") as f:
-            return f.read()
+            return f.read().strip("\n")
 
     def __getitem__(self, index):
         """

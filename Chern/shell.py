@@ -5,7 +5,6 @@ from Chern import utils
 from Chern.utils import debug
 from Chern.ChernManager import get_manager
 import shutil
-from Chern import git
 from Chern.VTask import create_task
 from Chern.VAlgorithm import create_algorithm
 from Chern.VData import create_data
@@ -41,7 +40,6 @@ def cd(line, inloop=True):
     if not os.path.exists(line):
         print("Directory not exists")
         return
-
     manager.switch_current_object(line)
     os.chdir(manager.c.path)
 
@@ -74,11 +72,11 @@ def mv(line, inloop=True):
         source = os.path.abspath(source)
 
     shutil.copytree(source, destination)
-    git.add(destination)
+    Chern.git.add(destination)
     VObject(source).mv(destination)
     shutil.rmtree(source)
-    git.rm(source)
-    git.commit("mv {} to {}".format(manager.p.relative_path(source), manager.p.relative_path(destination)))
+    Chern.git.rm(source)
+    Chern.git.commit("mv {} to {}".format(manager.p.relative_path(source), manager.p.relative_path(destination)))
 
 def cp(line):
     line = line.split(" ")
@@ -106,8 +104,8 @@ def mkdata(line, inloop=True):
     if not inloop:
         manager.switch_current_object(line)
         os.chdir(manager.c.path)
-    git.add(line)
-    git.commit("Create data at {}".format(line))
+    Chern.git.add(line)
+    Chern.git.commit("Create data at {}".format(manager.p.relative_path(line)))
 
 def mkalgorithm(line, inloop=True):
     line = utils.special_path_string(line)
@@ -119,8 +117,8 @@ def mkalgorithm(line, inloop=True):
     if not inloop:
         manager.switch_current_object(line)
         os.chdir(manager.c.path)
-    git.add(line)
-    git.commit("Create algorithm at {}".format(line))
+    Chern.git.add(line)
+    Chern.git.commit("Create algorithm at {}".format(manager.p.relative_path(line)))
 
 def mktask(line, inloop=True):
     line = utils.special_path_string(line)
@@ -134,8 +132,8 @@ def mktask(line, inloop=True):
     if not inloop:
         manager.switch_current_object(line)
         os.chdir(manager.c.path)
-    git.add(line)
-    git.commit("Create task at {}".format(line))
+    Chern.git.add(line)
+    Chern.git.commit("Create task at {}".format(manager.p.relative_path(line)))
 
 def mkdir(line, inloop=True):
     line = utils.special_path_string(line)
@@ -149,5 +147,5 @@ def mkdir(line, inloop=True):
     if not inloop:
         manager.switch_current_object(line)
         os.chdir(manager.c.path)
-    git.add(line)
-    git.commit("Create directory at {}".format(line))
+    Chern.git.add(line)
+    Chern.git.commit("Create directory at {}".format(manager.p.relative_path(line)))
