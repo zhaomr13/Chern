@@ -6,10 +6,10 @@ class ChernExec(Popen):
         super(ChernExec, self).__init__(cmd.format(path=path), shell=True, stdin=PIPE)
 
     def send(self, cmd):
-        self.stdin.write(cmd+" ")
+        self.stdin.write((cmd+" ").encode())
 
     def sendline(self, cmd):
-        self.stdin.write(cmd+"\n")
+        self.stdin.write((cmd+"\n").encode())
 
     def exit(self):
         self.wait()
