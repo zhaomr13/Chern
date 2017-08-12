@@ -7,9 +7,11 @@ class ChernExec(Popen):
 
     def send(self, cmd):
         self.stdin.write((cmd+" ").encode())
+        self.stdin.flush()
 
     def sendline(self, cmd):
         self.stdin.write((cmd+"\n").encode())
+        self.stdin.flush()
 
     def exit(self):
         self.wait()
