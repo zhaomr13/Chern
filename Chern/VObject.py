@@ -49,14 +49,14 @@ class VObject(object):
         """
         Set the updated time of the object
         """
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         config_file.write_variable("update_time", time.time())
 
     def get_update_time(self):
         """
         Return the updated time of the object
         """
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         update_time = config_file.read_variable("update_time")
         if update_time is None:
             return 0
@@ -70,8 +70,8 @@ class VObject(object):
         """
         if path is None:
             path = self.path
-        # simply read object_type in .config.py
-        config_file = utils.ConfigFile(path + "/.config.py")
+        # simply read object_type in .chern/config.py
+        config_file = utils.ConfigFile(path + "/.chern/config.py")
         return config_file.read_variable("object_type")
 
     def ls(self):
@@ -110,14 +110,14 @@ class VObject(object):
         """
         Add an link from the path object to this object
         """
-        config_file = utils.ConfigFile(path+"/.config.py")
+        config_file = utils.ConfigFile(path+"/.chern/config.py")
         succ_str = config_file.read_variable("successors")
         if succ_str is None:
             succ_str = []
         succ_str.append(self.path)
         config_file.write_variable("successors", succ_str)
 
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         pred_str = config_file.read_variable("predecessors")
         if pred_str is None:
             pred_str = []
@@ -130,11 +130,11 @@ class VObject(object):
         Remove link from the path
         Just copied from "remove_arc_from"
         """
-        config_file = utils.ConfigFile(path+"/.config.py")
+        config_file = utils.ConfigFile(path+"/.chern/config.py")
         succ_str = config_file.read_variable("successors")
         succ_str.remove(self.path)
         config_file.write_variable("successors", succ_str)
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         pred_str = config_file.read_variable("predecessors")
         pred_str.remove(path)
         config_file.write_variable("predecessors", pred_str)
@@ -144,13 +144,13 @@ class VObject(object):
         FIXME
         Add a link from this object to the path object
         """
-        config_file = utils.ConfigFile(path+"/.config.py")
+        config_file = utils.ConfigFile(path+"/.chern/config.py")
         pred_str = config_file.read_variable("predecessors")
         if pred_str is None:
             pred_str = []
         pred_str.append(self.path)
         config_file.write_variable("predecessors", pred_str)
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         succ_str = config_file.read_variable("successors")
         if succ_str is None:
             succ_str = []
@@ -162,11 +162,11 @@ class VObject(object):
         FIXME
         remove the path to the path
         """
-        config_file = utils.ConfigFile(path+"/.config.py")
+        config_file = utils.ConfigFile(path+"/.chern/config.py")
         pred_str = config_file.read_variable("predecessors")
         pred_str.remove(self.path)
         config_file.write_variable("predecessors", pred_str)
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         succ_str = config_file.read_variable("successors")
         succ_str.remove(path)
         config_file.write_variable("successors", succ_str)
@@ -175,7 +175,7 @@ class VObject(object):
         """
         The successors of the current object
         """
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         succ_str = config_file.read_variable("successors")
         if succ_str is None:
             return []
@@ -185,7 +185,7 @@ class VObject(object):
         return successors
 
     def get_predecessors(self):
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         pred_str = config_file.read_variable("predecessors")
         if pred_str is None:
             return []
@@ -203,21 +203,21 @@ class VObject(object):
             new_object = VObject(new_path +"/"+ self.relative_path(obj.path))
 
     def path_to_alias(self, path):
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         path_to_alias = config_file.read_variable("path_to_alias")
         if path_to_alias is None:
             return ""
         return path_to_alias.get(path, "")
 
     def alias_to_path(self, alias):
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         alias_to_path = config_file.read_variable("alias_to_path")
         return alias_to_path[alias]
 
     def remove_alias(self, alias):
         if alias == "":
             return
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         alias_to_path = config_file.read_variable("alias_to_path")
         path_to_alias = config_file.read_variable("path_to_alias")
         path = alias_to_path[alias]
@@ -229,7 +229,7 @@ class VObject(object):
     def set_alias(self, alias, path):
         if alias == "":
             return
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         path_to_alias = config_file.read_variable("path_to_alias")
         alias_to_path = config_file.read_variable("alias_to_path")
         if path_to_alias is None:
@@ -245,7 +245,7 @@ class VObject(object):
         """
         Clean all the alias, predecessors and successors
         """
-        config_file = utils.ConfigFile(self.path +"/.config.py")
+        config_file = utils.ConfigFile(self.path +"/.chern/config.py")
         config_file.write_variable("alias_to_path", {})
         config_file.write_variable("path_to_alias", {})
         config_file.write_variable("predecessors", [])

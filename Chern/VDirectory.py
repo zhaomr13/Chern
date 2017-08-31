@@ -46,7 +46,7 @@ class VDirectory(VObject):
 def create_directory(path, inloop=False):
     path = utils.strip_path_string(path)
     os.mkdir(path)
-    with open(path + "/.config.py", "w") as f:
+    with open(path + "/.chern/config.py", "w") as f:
         f.write("object_type = \"directory\"")
     with open(path + "/README.md", "w") as f:
         f.write("Please write README for this directory")

@@ -31,7 +31,7 @@ class VData(VObject):
         """
         Read the sites variable from the config file of this data.
         """
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         sites = config_file.read_variable("sites")
         if sites is None:
             return []
@@ -55,7 +55,7 @@ class VData(VObject):
         """
         Add a site for the current data.
         """
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         sites = config_file.read_variable("sites")
         if sites is None:
             sites = []
@@ -66,7 +66,7 @@ class VData(VObject):
         """
         Remove a site from the current data. If the site is not in the data, do nothing.
         """
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         sites = config_file.read_variable("sites")
         if sites is None:
             return
@@ -79,7 +79,7 @@ class VData(VObject):
         Create a rawdata.
         """
         self.new_version(site)
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         rawdata = config_file.read_variable("rawdata")
         if rawdata is None:
             rawdata = []
@@ -99,7 +99,7 @@ class VData(VObject):
         And the new version will replace the old one.
         The old one can be found through git.
         """
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         versions = config_file.read_variable("versions")
         if versions is None:
             versions = {}
@@ -117,7 +117,7 @@ class VData(VObject):
         """
         Get the latest version.
         """
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         versions = config_file.read_variable("versions")
         return versions[site]
 
@@ -125,7 +125,7 @@ class VData(VObject):
         """
         Setup the time.
         """
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         update_times = config_file.read_variable("update_times")
         if update_times is None:
             update_times = {}
@@ -136,7 +136,7 @@ class VData(VObject):
         """
         Read the update time of a site.
         """
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         update_times = config_file.read_variable("update_times")
         if update_times is None:
             return 0
@@ -158,7 +158,8 @@ def create_data(path, inloop=False):
     """
     path = utils.strip_path_string(path)
     os.mkdir(path)
-    with open(path + "/.config.py", "w") as config_file:
+    os.mkdir(path+"/.chern")
+    with open(path + "/.chern/config.py", "w") as config_file:
         config_file.write("object_type = \"data\"")
     with open(path + "/README.md", "w") as readme_file:
         readme_file.write("Please write a specific README!")

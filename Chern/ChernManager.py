@@ -14,7 +14,7 @@ def create_object_instance(path):
     """ Create an object instance
     """
     path = utils.strip_path_string(path)
-    object_config_file = utils.ConfigFile(path+"/.config.py")
+    object_config_file = utils.ConfigFile(path+"/.chern/config.py")
     object_type = object_config_file.read_variable("object_type")
     vobject_class = {"algorithm":VAlgorithm,
                      "task":VTask,
@@ -157,7 +157,7 @@ class ChernManager(object):
         user_mail = input("Please input your email: ")
 
         project_path = pwd
-        config_file = utils.ConfigFile(project_path+"/.config.py")
+        config_file = utils.ConfigFile(project_path+"/.chern/config.py")
         config_file.write_variable("object_type", "project")
         config_file.write_variable("ncpus", ncpus)
         config_file.write_variable("user_name", user_name)
@@ -174,7 +174,7 @@ class ChernManager(object):
         global_config_file.write_variable("current_project", project_name)
         os.chdir(project_path)
         call("git init", shell=True, stdout=PIPE, stderr=PIPE)
-        call("git add .config.py", shell=True, stdout=PIPE, stderr=PIPE)
+        call("git add .chern/config.py", shell=True, stdout=PIPE, stderr=PIPE)
         call("git commit -m \" Create config file for the project\"", shell=True, stdout=PIPE, stderr=PIPE)
         call("git add README.md", shell=True, stdout=PIPE, stderr=PIPE)
         call("git commit -m \" Create README file for the project\"", shell=True, stdout=PIPE, stderr=PIPE)
@@ -206,7 +206,7 @@ class ChernManager(object):
             os.mkdir(project_path)
         else:
             raise Exception("Project exist")
-        config_file = utils.ConfigFile(project_path+"/.config.py")
+        config_file = utils.ConfigFile(project_path+"/.chern/config.py")
         config_file.write_variable("object_type", "project")
         config_file.write_variable("ncpus", ncpus)
         config_file.write_variable("user_name", user_name)
@@ -223,7 +223,7 @@ class ChernManager(object):
         global_config_file.write_variable("current_project", project_name)
         os.chdir(project_path)
         call("git init", shell=True, stdout=PIPE, stderr=PIPE)
-        call("git add .config.py", shell=True, stdout=PIPE, stderr=PIPE)
+        call("git add .chern/config.py", shell=True, stdout=PIPE, stderr=PIPE)
         call("git commit -m \" Create config file for the project\"", shell=True, stdout=PIPE, stderr=PIPE)
         call("git add README.md", shell=True, stdout=PIPE, stderr=PIPE)
         call("git commit -m \" Create README file for the project\"", shell=True, stdout=PIPE, stderr=PIPE)

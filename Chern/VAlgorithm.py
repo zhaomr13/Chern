@@ -18,7 +18,8 @@ class VAlgorithm(VObject):
 def create_algorithm(path, inloop=False):
     path = utils.strip_path_string(path)
     os.mkdir(path)
-    with open(path + "/.config.py", "w") as f:
+    os.mkdir(path+"/.chern")
+    with open(path + "/.chern/config.py", "w") as f:
         f.write("object_type = \"algorithm\"\n")
         f.write("main_file = \"main.py\"\n")
     with open(path + "/README.md", "w") as f:

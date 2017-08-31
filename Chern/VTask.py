@@ -113,7 +113,7 @@ class VTask(VObject):
         """
         Create a new version of the task.
         """
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         version = uuid.uuid4().hex
         config_file.write_variable("version", version)
         os.mkdir(self.get_physics_position())
@@ -143,7 +143,7 @@ class VTask(VObject):
         """
         Get the last version of the task.
         """
-        config_file = utils.ConfigFile(self.path+"/.config.py")
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         version = config_file.read_variable("version")
         return version
 
@@ -212,7 +212,7 @@ class VTask(VObject):
         chern_config_path = os.environ["HOME"] + "/.Chern"
         if site == "local":
             return os.path.normpath(chern_config_path+"/local/task/"+self.latest_version())
-        config_file = utils.ConfigFile(chern_config_path +"/config.py")
+        config_file = utils.ConfigFile(chern_config_path +"/chern/config.py")
         sites = config_file.read_variable("sites")
         return os.path.normpath(sites[site]+"/task/"+self.latest_version())
 
@@ -270,7 +270,7 @@ class VTask(VObject):
         self.set_update_time()
 
     def has_super_task(self):
-        config_file = utils.ConfigFile(self.path + "/../.config.py")
+        config_file = utils.ConfigFile(self.path + "/../.chern/config.py")
         return config_file.read_variable("object_type") == "task"
 
     def get_parameters(self):
@@ -321,7 +321,7 @@ def create_task(path, inloop=False):
     path = utils.strip_path_string(path)
     os.mkdir(path)
     open(path + "/parameters.py", "w").close()
-    with open(path + "/.config.py", "w") as f:
+    with open(path + "/.chern/config.py", "w") as f:
         f.write("object_type = \"task\"")
     with open(path + "/README.md", "w") as f:
         f.write("Please write README for this task")
