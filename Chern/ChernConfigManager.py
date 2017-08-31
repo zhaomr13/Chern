@@ -142,9 +142,9 @@ class ChernConfigManager(object):
         config_file.write_variable("ncpus", ncpus)
         config_file.write_variable("user_name", user_name)
         config_file.write_variable("user_mail", user_mail)
-        with open(project_path + ".README.md", "w") as f:
+        with open(project_path + "README.md", "w") as f:
             f.write("Please write README for this project")
-        call("vim %s/.README.md"%project_path, shell=True)
+        call("vim %s/README.md"%project_path, shell=True)
         global_config_file = utils.ConfigFile(self.global_config_path)
         projects_path = global_config_file.read_variable("projects_path")
         if projects_path is None:
@@ -156,7 +156,7 @@ class ChernConfigManager(object):
         call("git init", shell=True, stdout=PIPE, stderr=PIPE)
         call("git add .config.py", shell=True, stdout=PIPE, stderr=PIPE)
         call("git commit -m \" Create config file for the project\"", shell=True, stdout=PIPE, stderr=PIPE)
-        call("git add .README.md", shell=True, stdout=PIPE, stderr=PIPE)
+        call("git add README.md", shell=True, stdout=PIPE, stderr=PIPE)
         call("git commit -m \" Create README file for the project\"", shell=True, stdout=PIPE, stderr=PIPE)
 
         # global global_vproject

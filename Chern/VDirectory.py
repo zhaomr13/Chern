@@ -48,6 +48,6 @@ def create_directory(path, inloop=False):
     os.mkdir(path)
     with open(path + "/.config.py", "w") as f:
         f.write("object_type = \"directory\"")
-    with open(path + "/.README.md", "w") as f:
+    with open(path + "/README.md", "w") as f:
         f.write("Please write README for this directory")
-    subprocess.call("vim %s/.README.md"%path, shell=True)
+    subprocess.call("vim %s/README.md"%path, shell=True)

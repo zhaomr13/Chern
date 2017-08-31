@@ -323,6 +323,6 @@ def create_task(path, inloop=False):
     open(path + "/parameters.py", "w").close()
     with open(path + "/.config.py", "w") as f:
         f.write("object_type = \"task\"")
-    with open(path + "/.README.md", "w") as f:
+    with open(path + "/README.md", "w") as f:
         f.write("Please write README for this task")
-    subprocess.call("vim %s/.README.md"%path, shell=True)
+    subprocess.call("vim %s/README.md"%path, shell=True)

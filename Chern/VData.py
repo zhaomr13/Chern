@@ -160,8 +160,8 @@ def create_data(path, inloop=False):
     os.mkdir(path)
     with open(path + "/.config.py", "w") as config_file:
         config_file.write("object_type = \"data\"")
-    with open(path + "/.README.md", "w") as readme_file:
+    with open(path + "/README.md", "w") as readme_file:
         readme_file.write("Please write a specific README!")
     if not inloop:
-        subprocess.call("vim %s/.README.md"%path, shell=True)
+        subprocess.call("vim %s/README.md"%path, shell=True)
 

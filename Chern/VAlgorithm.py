@@ -21,9 +21,9 @@ def create_algorithm(path, inloop=False):
     with open(path + "/.config.py", "w") as f:
         f.write("object_type = \"algorithm\"\n")
         f.write("main_file = \"main.py\"\n")
-    with open(path + "/.README.md", "w") as f:
+    with open(path + "/README.md", "w") as f:
         f.write("Please write README for this algorithm")
-    subprocess.call("vim %s/.README.md"%path, shell=True)
+    subprocess.call("vim %s/README.md"%path, shell=True)
     with open(path + "/main.py", "w") as f:
         f.write("""# Please write the main file for this algorithm
 # A demo is:

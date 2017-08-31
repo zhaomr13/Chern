@@ -343,7 +343,7 @@ class VObject(object):
         FIXME
         need more editor support
         """
-        call("vim {0}".format(self.path+"/.README.md"), shell=True)
+        call("vim {0}".format(self.path+"/README.md"), shell=True)
 
     def readme(self):
         """
@@ -351,7 +351,7 @@ class VObject(object):
         Get the README String.
         I'd like it to support more
         """
-        with open(self.path+"/.README.md") as f:
+        with open(self.path+"/README.md") as f:
             return f.read().strip("\n")
 
     def __getitem__(self, index):
