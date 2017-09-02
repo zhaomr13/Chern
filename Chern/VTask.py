@@ -320,6 +320,7 @@ class VTask(VObject):
 def create_task(path, inloop=False):
     path = utils.strip_path_string(path)
     os.mkdir(path)
+    os.mkdir(path+"/.chern")
     open(path + "/parameters.py", "w").close()
     with open(path + "/.chern/config.py", "w") as f:
         f.write("object_type = \"task\"")
