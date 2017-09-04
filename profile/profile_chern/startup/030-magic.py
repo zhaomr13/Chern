@@ -85,6 +85,11 @@ def rm(line):
 del rm
 
 @register_line_magic
+def helpme(line):
+    manager.c.helpme(line)
+del helpme
+
+@register_line_magic
 def ls(line):
     if line == "projects":
         manager.ls_projects()
@@ -102,7 +107,7 @@ def set_algorithm(line):
 def add_rawdata(line):
     line = utils.strip_path_string(line)
     if manager.c.object_type() != "data":
-        print("You can only add raw data if you are a data.")
+        print("""You would like to add raw data but you are not in a data object""")
         return
     line = line.split(" ")
     path = os.path.abspath(line[0])
