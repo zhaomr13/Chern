@@ -78,14 +78,16 @@ class VData(VObject):
         """
         Create a rawdata.
         """
-        self.new_version(site)
+        new_version = self.new_version()
+        self.new_version()
         config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         rawdata = config_file.read_variable("rawdata")
         if rawdata is None:
             rawdata = []
-        rawdata.append((site, rawdata))
-        config_file.write_variable("rawdata")
-        self.link(path, self.get_physics_position(site), site)
+        rawdata.append((new_version, "+" + rawdata))
+        config_file.write_variable("site", site)
+        config_file.write_variable("rawdata", rawdata)
+        # self.link(path, self.get_physics_position(site), site)
         self.set_update_time(site)
 
     def link(self, source, destination, site):

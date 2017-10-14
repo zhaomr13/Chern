@@ -90,6 +90,11 @@ def cp(line):
     os.copy(old_object, destination)
     VObject(old_object).cp(destination)
 
+def remote(line):
+    line = line.split(" ")
+    manager.p.remote(line)
+
+
 def ls(line):
     """
     The function ls should not be defined here

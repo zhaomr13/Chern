@@ -104,12 +104,28 @@ def set_algorithm(line):
     manager.c.set_algorithm(line)
     Chern.git.commit("{}:set algorithm {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(line)))
 
+def search_remote(line):
+    manager.p.search_remote(line)
+
+def add_remote(line):
+    manager.p.add_remote(line)
+
+def remove_remote(line):
+    manager.p.remove_remote(line)
+
 def add_rawdata(line):
     line = utils.strip_path_string(line)
     if manager.c.object_type() != "data":
         print("""You would like to add raw data but you are not in a data object""")
         return
     line = line.split(" ")
+    if len(line) != 2:
+        print("""The correct usage of add raw data should be:
+    add rawdata [datapath] [site]
+If you need to add a lot of rawdata, please use the following command:
+    for i in range([number]):
+        c.add_rawdata([i-th datapath], [site])""")
+        return
     path = os.path.abspath(line[0])
     site = line[1]
     manager.c.add_rawdata(path, site)
@@ -199,6 +215,8 @@ def add(line):
         add_site(line.lstrip("site").strip())
     elif line.startswith("parameter"):
         add_parameter(line.lstrip("parameter").strip())
+    elif line.startswith("rawdata"):
+        add_rawdata(line.lstrip("rawdata").strip())
 del add
 
 @register_line_magic
@@ -237,6 +255,11 @@ def submit(line):
         return
     manager.c.submit()
 del submit
+
+@register_line_magic
+def remote(line):
+    manager.p.remote(line)
+del remote
 
 from datetime import datetime
 from time import time

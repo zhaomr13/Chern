@@ -1,4 +1,5 @@
 from Chern.VObject import VObject
+from Chern import utils
 from Chern.utils import debug
 class VProject(VObject):
     pass
@@ -17,4 +18,16 @@ The commands to use:
             print("""The usage of cd:
     cd [object]
                   """)
+
+
+    def remote(self, command):
+        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
+        sites = config_file.read_variable("sites")
+        if sites is None:
+            sites = []
+        for site in sites:
+            print(site)
+        pass
+
+
 
