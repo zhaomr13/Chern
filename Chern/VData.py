@@ -15,6 +15,56 @@ class VData(VObject):
     """
     Virtual Data.
     """
+    @classmethod
+    def create_data(cls, path, inloop=False):
+        """
+        Make a new data and its update time should be 0.
+        """
+        path = utils.strip_path_string(path)
+        os.mkdir(path)
+        os.mkdir(path+"/.chern")
+        with open(path + "/.chern/config.py", "w") as config_file:
+            config_file.write("object_type = \"data\"")
+        with open(path + "/README.md", "w") as readme_file:
+            readme_file.write("Please write a specific README!")
+        if not inloop:
+            subprocess.call("vim %s/README.md"%path, shell=True)
+
+    def set_source(name, path, site, inloop=False):
+        """
+        Create a new rawdata
+        """
+        path = utils.strip_path_string(self.path)
+        with open(path + "/.chern/config.py", "w") as config_file:
+            config_file.write("site = %s"%site)
+            config_file.write("path = %s"%path)
+        with open(path + "/README.md", "w") as readme_file:
+            readme_file.write("Please write a specific README!")
+        if not inloop:
+            subprocess.call("vim %s/README.md"%path, shell=True)
+
+    def upload(self, site):
+        """
+        upload this file to the site
+        """
+        pass
+
+    def helpme(self, line):
+        print("""You are in the internal of a data project""")
+        pass
+
+    def download(self, site):
+        """
+        download this file to the site
+        """
+        pass
+
+    def setmd5(self):
+        """
+        Set the md5 code of this data
+        """
+        pass
+
     def ls(self):
         """
         First use the VObject ls, and then print the supported sites of this data
@@ -74,7 +124,7 @@ class VData(VObject):
             sites.remove(site)
         config_file.write_variable("sites", site)
 
-    def add_rawdata(self, path, site):
+    def add_rawdata(self, name, path, site):
         """
         Create a rawdata.
         """
@@ -154,17 +204,20 @@ class VData(VObject):
         return sites[site] +"/data/"+ self.latest_version(site)
 
 
+
+
 def create_data(path, inloop=False):
-    """
-    Make a new data and its update time should be 0.
-    """
-    path = utils.strip_path_string(path)
-    os.mkdir(path)
-    os.mkdir(path+"/.chern")
-    with open(path + "/.chern/config.py", "w") as config_file:
-        config_file.write("object_type = \"data\"")
-    with open(path + "/README.md", "w") as readme_file:
-        readme_file.write("Please write a specific README!")
-    if not inloop:
-        subprocess.call("vim %s/README.md"%path, shell=True)
+        """
+        Make a new data and its update time should be 0.
+        """
+        path = utils.strip_path_string(path)
+        os.mkdir(path)
+        os.mkdir(path+"/.chern")
+        with open(path + "/.chern/config.py", "w") as config_file:
+            config_file.write("object_type = \"data\"")
+        with open(path + "/README.md", "w") as readme_file:
+            readme_file.write("Please write a specific README!")
+        if not inloop:
+            subprocess.call("vim %s/README.md"%path, shell=True)
+
 
