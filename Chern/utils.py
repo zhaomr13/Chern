@@ -26,6 +26,8 @@ def special_path_string(path_string):
     ..
     path/./../
     """
+    ## FIXME!!
+    return path_string
     if path_string.startswith("."):
         return path_string
     if path_string.find("/.") != -1:
