@@ -6,6 +6,7 @@ from Chern import utils
 import os
 from Chern import git
 import subprocess
+from helpme import helpme_func
 class VDirectory(VObject):
     """
     Nothing more to do for this VDirectory.
@@ -26,6 +27,19 @@ class VDirectory(VObject):
         parameters.append(parameter)
         parameters_file.write_variable("parameters", parameters)
 
+    def helpme(self, line):
+        sub_objects = self.sub_objects()
+        helpme_func["hello"]()
+        types = {}
+        types["directory"] = 0
+        types["data"] = 0
+        types["task"] = 0
+        types["directory"] = 0
+        for sub_object in sub_objects:
+            types[sub_object.object_type()] += 1
+        print("What would you like to do?")
+        print("I see that you have data in your directory, try helpme data")
+
     def remove_parameter(self, parameter):
         """
         Remove a parameter to the parameters file
@@ -45,7 +59,7 @@ class VDirectory(VObject):
 
 def create_directory(path, inloop=False):
     path = utils.strip_path_string(path)
-    os.mkdir(path)
+    os.mkdir(path+"/.chern")
     with open(path + "/.chern/config.py", "w") as f:
         f.write("object_type = \"directory\"")
     with open(path + "/README.md", "w") as f:
