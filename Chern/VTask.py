@@ -55,6 +55,8 @@ class VTask(VObject):
         """
         Add a algorithm
         """
+        if self.object_type(path) != "algorithm":
+            print("The target must be a algorithm")
         algorithm = self.get_algorithm()
         if algorithm is not None:
             print("Already have algorithm, will replace it")
@@ -239,6 +241,9 @@ class VTask(VObject):
         os.chdir(pwd)
 
     def add_input(self, path, alias):
+        """
+        Add the input file
+        """
         self.add_arc_from(path)
         self.set_alias(alias, path)
         self.set_update_time()
