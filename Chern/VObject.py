@@ -32,6 +32,25 @@ class VObject(object):
         """
         return self.path
 
+    def lock(self):
+        pass
+
+    def unlock(self):
+        pass
+
+    def islocked(self):
+        pass
+
+    def stripped_path(self):
+        return utils.strip_path_string(self.path)
+
+    def config_file(self):
+        """
+        Helper function, return the config file hold by this object
+        """
+        path = self.stripped_path()
+        return utils.ConfigFile(self.path+"/.chern/config.py")
+
     def relative_path(self, path):
         """
         Return a path relative to the path of this object
