@@ -245,12 +245,18 @@ class VTask(VObject):
         """
         Add the input file
         """
+        if self.object_type(path) != "data":
+            print("The target should be a data")
+            return
         self.add_arc_from(path)
         self.set_alias(alias, path)
         self.set_update_time()
 
     def remove_input(self, alias):
         path = self.alias_to_path(alias)
+        if self.object_type(path) != "data":
+            print("The target should be a data")
+            return
         if path == "":
             print("Alias not found")
             return
