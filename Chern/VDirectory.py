@@ -6,7 +6,7 @@ from Chern import utils
 import os
 from Chern import git
 import subprocess
-from helpme import helpme_func
+from Chern.helpme import helpme_func
 class VDirectory(VObject):
     """
     Nothing more to do for this VDirectory.
