@@ -57,6 +57,7 @@ class VTask(VObject):
         """
         if self.object_type(path) != "algorithm":
             print("The target must be a algorithm")
+            return
         algorithm = self.get_algorithm()
         if algorithm is not None:
             print("Already have algorithm, will replace it")
