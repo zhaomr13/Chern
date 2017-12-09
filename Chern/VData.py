@@ -30,25 +30,30 @@ class VData(VObject):
         if not inloop:
             subprocess.call("vim %s/README.md"%path, shell=True)
 
-    def set_source(name, path, site, inloop=False):
+    def add_source(self, path, site, inloop=True):
         """
-        Create a new rawdata
+        Add the source to the data
         """
-        path = utils.strip_path_string(self.path)
-        with open(path + "/.chern/config.py", "w") as config_file:
-            config_file.write("site = %s"%site)
-            config_file.write("path = %s"%path)
-        with open(path + "/README.md", "w") as readme_file:
-            readme_file.write("Please write a specific README!")
-        if not inloop:
-            subprocess.call("vim %s/README.md"%path, shell=True)
+        config_file = self.config_file()
+        config_file.write_variable("site", site)
+        config_file.write_variable("path", path)
+        config_file.write_variable("status", "new")
+
 
     def upload(self, site):
         """
         upload this file to the site
         """
+        # FIXME stripped path function should be defined in VObject and path = strip_path_string should be replaced with this
+        config_file = self.config_file()
+        site = config_file.read_variable("site")
+        # FIXME should we have a VSite class?
+        site = VSite(site)
+        site.upload(self.name)
+
         pass
 
+    # FIXME should give more infomation
     def helpme(self, line):
         print("""You are in the internal of a data project""")
         pass
@@ -57,6 +62,10 @@ class VData(VObject):
         """
         download this file to the site
         """
+        config_file = self.config_file()
+        site = config_file.read_variable("site")
+        site = VSite(site)
+        site.download(self.name)
         pass
 
     def setmd5(self):
@@ -65,6 +74,7 @@ class VData(VObject):
         """
         pass
 
+    # In README, the creation time of this book should be given
     def ls(self):
         """
         First use the VObject ls, and then print the supported sites of this data

@@ -23,6 +23,13 @@ def mkp(line):
 del mkp
 
 @register_line_magic
+def chen(line):
+    print("""This project started at the summer of 2016, when Sidan Chen was not my girl friend.
+At that time, I was a summer student for LHCb group and tired of the messey job.""")
+del chen
+
+
+@register_line_magic
 def cd(line):
     # The extended cd function: cd number
     if line.isdigit():
@@ -85,6 +92,139 @@ def rm(line):
 del rm
 
 @register_line_magic
+def add(line):
+    line = line.strip()
+    add_functions = {
+        "input":add_input,
+        "output":add_output,
+        "algorithm":add_algorithm,
+        "site":add_site,
+        "parameter":add_parameter,
+        "source":add_source,
+        "remote":add_remote,
+    }
+    args = line.split()
+    print(args)
+    print(add_functions[args[0]])
+    add_functions[args[0]](line.lstrip(args[0]) )
+del add
+
+# FIXME write it
+def add_source(line):
+    """
+    Add the source to the rawdata
+    """
+    if manager.c.object_type() != "data":
+        print("You would like to add source to this but is is not a VData")
+        return
+    line = utils.strip_path_string(line)
+    line = line.split(" ")
+    if len(line) != 2:
+        return
+    site = line[0]
+    path = line[1]
+    manager.c.add_source(site, path, inloop=False)
+    Chern.git.commit("{}:add source {} on site {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(path), site))
+
+def add_input(line):
+    """
+    Add input file associated with a task
+    """
+    line = utils.strip_path_string(line)
+    # if line.startswith()
+    if manager.c.object_type() != "task":
+        print("Can not set the algorithm if you are not a task")
+        return
+    line = line.split(" ")
+    path = os.path.abspath(line[0])
+    alias = line[1]
+    manager.c.add_input(path, alias)
+    Chern.git.commit("{}:add input {} named {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(path), alias))
+
+def add_output(line):
+    """
+    Add output file associated with a task, the undefined files will be omitted.
+    """
+    line = utils.strip_path_string(line)
+    # if line.startswith()
+    if manager.c.object_type() != "task":
+        print("Can not set the algorithm if you are not a task")
+        return
+    line = line.split(" ")
+    path = os.path.abspath(line[0])
+    alias = line[1]
+    manager.c.add_output(path, alias)
+    Chern.git.commit("{}:add output {} named {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(path), alias))
+
+def add_site(line):
+    """
+    Only the task object should have the feature: site
+    """
+    line = utils.strip_path_string(line)
+    if manager.c.object_type() != "data":
+        print("Can not add site if you are not a data")
+        return
+    manager.c.add_site(line)
+    Chern.git.commit("add site")
+
+def remove_site(line):
+    """
+    Remove the site of a object
+    """
+    pass
+
+def add_parameter(line):
+    """
+    Add the parameters
+    """
+    if manager.c.object_type() != "task" and manager.c.object_type() != "directory":
+        print("Can not add parameter if you are not a task or a directory")
+        return
+    line = line.split(" ")
+    manager.c.add_parameter(line[0], line[1])
+
+def add_algorithm(line):
+    """
+    Add the algorithm associated with a task
+    """
+    line = utils.strip_path_string(line)
+    if manager.c.object_type() != "task":
+        print("Can not set the algorithm if you are not a task or a directory")
+        return
+    line = os.path.abspath(line)
+    manager.c.add_algorithm(line)
+    Chern.git.commit("")
+
+def remove_input(line):
+    pass
+
+def remove_output(line):
+    pass
+
+def remove_parameter(line):
+    if manager.c.object_type() != "task":
+        print("Can not remove parameter if you are not a task")
+        return
+    manager.c.remove_parameter(line)
+
+
+@register_line_magic
+def remove(line):
+    line = line.strip()
+    if line.startswith("input"):
+        remove_input(line.lstrip("input").strip())
+    elif line.startswith("output"):
+        remove_output(line.lstrip("output").strip())
+    elif line.startswith("algorithm"):
+        remove_algorithm(line.lstrip("algorithm").strip())
+    elif line.startswith("site"):
+        remove_site(line.lstrip("site").strip())
+    elif line.startswith("parameter"):
+        remove_parameter(line.lstrip("parameter").strip())
+del remove
+
+
+@register_line_magic
 def helpme(line):
     manager.c.helpme(line)
 del helpme
@@ -106,133 +246,6 @@ def set_algorithm(line):
 
 def search_remote(line):
     manager.p.search_remote(line)
-
-def add_remote(line):
-    manager.p.add_remote(line)
-
-def remove_remote(line):
-    manager.p.remove_remote(line)
-
-def add_rawdata(line):
-    line = utils.strip_path_string(line)
-    if manager.c.object_type() != "data":
-        print("""You would like to add raw data but you are not in a data object""")
-        return
-    line = line.split(" ")
-    if len(line) != 2:
-        print("""The correct usage of add raw data should be:
-    add rawdata [datapath] [site]
-If you need to add a lot of rawdata, please use the following command:
-    for i in range([number]):
-        c.add_rawdata([i-th datapath], [site])""")
-        return
-    path = os.path.abspath(line[0])
-    site = line[1]
-    manager.c.add_rawdata(path, site)
-    Chern.git.commit("{}:add raw data {} on site {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(path), site))
-
-def add_input(line):
-    line = utils.strip_path_string(line)
-    # if line.startswith()
-    if manager.c.object_type() != "task":
-        print("Can not set the algorithm if you are not a task")
-        return
-    line = line.split(" ")
-    path = os.path.abspath(line[0])
-    alias = line[1]
-    manager.c.add_input(path, alias)
-    Chern.git.commit("{}:add input {} named {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(path), alias))
-
-def add_output(line):
-    line = utils.strip_path_string(line)
-    # if line.startswith()
-    if manager.c.object_type() != "task":
-        print("Can not set the algorithm if you are not a task")
-        return
-    line = line.split(" ")
-    path = os.path.abspath(line[0])
-    alias = line[1]
-    manager.c.add_output(path, alias)
-    Chern.git.commit("{}:add output {} named {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(path), alias))
-
-def add_site(line):
-    line = utils.strip_path_string(line)
-    if manager.c.object_type() != "data":
-        print("Can not add site if you are not a data")
-        return
-    manager.c.add_site(line)
-    Chern.git.commit("add site")
-
-def remove_site(line):
-    pass
-
-def add_parameter(line):
-    if manager.c.object_type() != "task" and manager.c.object_type() != "directory":
-        print("Can not add parameter if you are not a task or a directory")
-        return
-    line = line.split(" ")
-    manager.c.add_parameter(line[0], line[1])
-
-def add_algorithm(line):
-    line = utils.strip_path_string(line)
-    if manager.c.object_type() != "task":
-        print("Can not set the algorithm if you are not a task or a directory")
-        return
-    line = os.path.abspath(line)
-    manager.c.add_algorithm(line)
-    Chern.git.commit("")
-
-def remove_input(line):
-    pass
-
-def remove_output(line):
-    pass
-
-def remove_parameter(line):
-    if manager.c.object_type() != "task":
-        print("Can not remove parameter if you are not a task")
-        return
-    manager.c.remove_parameter(line)
-
-@register_line_magic
-def define(line):
-    line = line.strip()
-    if line.startswith("algorithm"):
-        set_algorithm(line.lstrip("algorithm").strip())
-    elif line.startswith(""):
-        pass
-
-@register_line_magic
-def add(line):
-    line = line.strip()
-    if line.startswith("input"):
-        add_input(line.lstrip("input").strip())
-    elif line.startswith("output"):
-        add_output(line.lstrip("output").strip())
-    elif line.startswith("algorithm"):
-        add_algorithm(line.lstrip("algorithm").strip())
-    elif line.startswith("site"):
-        add_site(line.lstrip("site").strip())
-    elif line.startswith("parameter"):
-        add_parameter(line.lstrip("parameter").strip())
-    elif line.startswith("rawdata"):
-        add_rawdata(line.lstrip("rawdata").strip())
-del add
-
-@register_line_magic
-def remove(line):
-    line = line.strip()
-    if line.startswith("input"):
-        remove_input(line.lstrip("input").strip())
-    elif line.startswith("output"):
-        remove_output(line.lstrip("output").strip())
-    elif line.startswith("algorithm"):
-        remove_algorithm(line.lstrip("algorithm").strip())
-    elif line.startswith("site"):
-        remove_site(line.lstrip("site").strip())
-    elif line.startswith("parameter"):
-        remove_parameter(line.lstrip("parameter").strip())
-del remove
 
 @register_line_magic
 def readme(line):
@@ -295,3 +308,18 @@ def check(line):
         line = "local"
     manager.c.check(line)
 del check
+
+# Trash:
+
+# FIXME what is this?
+def add_remote(line):
+    """
+    Add a remote site for the rawdata
+    """
+    manager.p.add_remote(line)
+
+# FIXME remove what?
+def remove_remote(line):
+    manager.p.remove_remote(line)
+
+

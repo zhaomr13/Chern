@@ -1,0 +1,5 @@
+V02r00 
++ We make a major change of the behavior of VData, A VData should be treated as a Data now, rather than a directory.
+
+v01r00p01 Fix bugs in VTask
+v01r00 The initial version
