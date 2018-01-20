@@ -110,6 +110,7 @@ class ConfigFile(object):
 
     def write_variable(self, variable_name, value):
         file_path = self.file_path
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
         if not os.path.exists(file_path):
             open(file_path, "w").close()
         try_times = 10 ** 4
