@@ -35,9 +35,52 @@ class VTask(VObject):
         outputs = filter(lambda x: x.object_type() == "data", self.get_successors())
         return list(map(lambda x: Chern.VData.VData(x.path), outputs))
 
+    def run(self):
+        """
+        change the task status from new to started.
+        The status are:
+            1. Check the connection between the algorithm and the task
+            2. Check the status of the algorithm
+            3. Check the parameter and the connection between the input data, output data and the task.
+            4. Check the existence of the input volume.
+            5. Create the output volume.
+            4. Create a container.
+            6. connect the input data, output data and the volume.
+            7. start the run
+        """
+        pass
+        algorithm = self.get_algorithm()
+        if algorithm is None:
+            algorithm = EmptyAlgorithm
+        if algorithm.status() != "built":
+            print("The algorithm is not built yet")
+            return
+            # FIXME: The unbuilt algorithm should be built automatically
+        if ! check_parameter(algorithm):
+            print("The algorithm has different parameters with the task")
+            return
+        if ! check_data(algorithm):
+            print("The data is not correspond")
+            return
+        inputs = self.get_inputs()
+        for input_data in inputs:
+            if input_data.status() != finished:
+                print("not finished")
+                return
+        outputs = self.get_outptus()
+        for output_data in outputs:
+            self.connect()
+
     def status(self):
         """
         Get the status of the current task.
+        The possible status are:
+            some intermediate needed?
+            new: if the algorithm to generate the data is newer than the data update time.
+            started:
+            submitted:
+            success: obtain two three numbers: input md5, output md5
+            failed
         """
         version = self.latest_version()
         if version is None:
