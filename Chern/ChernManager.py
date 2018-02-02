@@ -51,8 +51,6 @@ class ChernManager(object):
     def current_object(self):
         """ Get the current object
         """
-        # os.get_current_directory()
-        # return create_object_instance()
         pass
 
     def switch_current_object(self, path):

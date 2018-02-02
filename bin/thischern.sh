@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Setting the environment for this project
-export CHERNSYSROOT=/home/zhaomr/workdir/Chern
+export CHERNSYSROOT=/Users/zhaomr/workdir/Chern
 
 # Setting the enviroment for the binnary file
 export PATH="${CHERNSYSROOT}/bin:${PATH}"
@@ -9,7 +9,7 @@ export PYTHONPATH="${CHERNSYSROOT}:${PYTHONPATH}"
 #export PYTHONDONTWRITEBYTECODE=1
 
 Chern() {
-    ${CHERNSYSROOT}/bin/ChernMain "$@"
+    python3 ${CHERNSYSROOT}/bin/ChernMain "$@"
     #--std_command_path="${HOME}/.Chern/tmp/execuable"
     #while read line ; do
         #eval $line

@@ -3,6 +3,9 @@ from Chern import utils
 import os
 import subprocess
 from Chern import ChernManager
+from Chern.utils import debug
+from Chern.utils import colorize
+
 class VAlgorithm(VObject):
     def __init__(self, file_name):
         super(VAlgorithm, self).__init__(file_name)
@@ -22,20 +25,68 @@ class VAlgorithm(VObject):
         if the lastest built time is less than the update time, the project should be marked as "new".
         If the project is not new, there should be the latest built md5. try to find whether the md5 of the.
         """
-        pass
+        image_id = self.config_file.read_variable("image_id")
+        if image_id is None:
+            return "new"
+        if image_id == "error":
+            return "error"
+        image = self.image()
+        if image.status == "missing":
+            return "missing"
+        if self.update_time() > image.update_time():
+            return "new"
+        return "built"
 
     def build(self):
         """
         Build the image to change the status of the Algorithm to builded.
         It will create a unique VImage object and the md5 of the VImage will be saved.
         """
-        pass
+        """
+            What to do:
+            first: copy all the files to a temporary file directory and next
+            write a docker file
+            then, you should build the docker file
+        """
+        tmp_dir = "/tmp{0}".format(uuid.uuid4().hex)
+        utils.mkdir(tmp_dir)
+        cwd = self.path
+        os.chdir(tmp_dir)
+        utils.copy(cwd+"/*", tmp_dir)
+        start_file = open("start.py", "w")
+        start_file.write("""from Chern import ChernAlgorithm
+algorithm = ChernAlgorithm.get_instance()
+ChernAlgorithm.host_path = {0}
+imp.load_module()
+algorithm.generate_docker_file()
+""".format(tmp_dir))
+        subprocess.Popen("python start.py")
+        if ps:
+            print("Error Build the image, please check your configuration")
+        ps = subprocess.Popen("docker build {}")
+        self.config_file.write("image_id", image_id)
+        self.set_update_time()
+
+    def image(self):
+        image_id = self.config_file.read_variable("image_id")
+        return VImage.consult_image(image_id)
 
     def ls(self):
         """
         Option to
         """
         super(VAlgorithm, self).ls()
+        parameters_file = utils.ConfigFile(self.path+"/parameters.py")
+        parameters = parameters_file.read_variable("parameters")
+        if parameters is None:
+            parameters = []
+        print(colorize("---- Parameters:", "title0"))
+        for parameter in parameters:
+            print(parameter, end=" = ")
+            print(parameters_file.read_variable(parameter))
+        print(colorize("**** STATUS:", "title0"), self.status())
+
+
 
 
 

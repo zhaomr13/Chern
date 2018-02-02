@@ -9,6 +9,7 @@ class VObject(object):
     """
     Virtual class of the objects, including VData, VAlgorithm, VData and VDirectory
     """
+
     def __init__(self, path):
         """
         Initialize the project the only **information** of a object instance
@@ -19,6 +20,7 @@ class VObject(object):
         """
         self.path = utils.strip_path_string(path)
         self.created_time = time.time()
+        self.config_file = utils.ConfigFile(self.path+"/.chern/config.py")
 
     def __str__(self):
         """
@@ -49,15 +51,14 @@ class VObject(object):
         """
         Set the updated time of the object
         """
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        config_file.write_variable("update_time", time.time())
+        self.config_file = utils.ConfigFile(self.path+"/.chern/config.py")
+        self.config_file.write_variable("update_time", time.time())
 
-    def get_update_time(self):
+    def update_time(self):
         """
         Return the updated time of the object
         """
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        update_time = config_file.read_variable("update_time")
+        update_time = self.config_file.read_variable("update_time")
         if update_time is None:
             return 0
         else:
@@ -71,7 +72,7 @@ class VObject(object):
         if path is None:
             path = self.path
         # simply read object_type in .chern/config.py
-        config_file = utils.ConfigFile(path + "/.chern/config.py")
+        config_file = utils.ConfigFile(path+"/.chern/config.py")
         return config_file.read_variable("object_type")
 
     def ls(self):
@@ -93,13 +94,13 @@ class VObject(object):
         for index, sub_object in enumerate(sub_objects):
             print("{2} {0:<12} {1:>20}".format("("+sub_object.object_type()+")", self.relative_path(sub_object.path), "[{}]".format(index)))
         total = len(sub_objects)
-        predecessors = self.get_predecessors()
+        predecessors = self.predecessors()
         if predecessors:
             print(colorize("o--> Predecessors:", "title0"))
         for index, pred_object in enumerate(predecessors):
             print("{2} {0:<12} {3:>10}: {1:<20}".format("("+pred_object.object_type()+")", self.relative_path(pred_object.path), "[{}]".format(total+index), self.path_to_alias(pred_object.path)))
         total += len(predecessors)
-        successors = self.get_successors()
+        successors = self.successors()
         if successors:
             print(colorize("-->o Successors:", "title0"))
         for index, succ_object in enumerate(successors):
@@ -117,12 +118,11 @@ class VObject(object):
         succ_str.append(self.path)
         config_file.write_variable("successors", succ_str)
 
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        pred_str = config_file.read_variable("predecessors")
+        pred_str = self.config_file.read_variable("predecessors")
         if pred_str is None:
             pred_str = []
         pred_str.append(path)
-        config_file.write_variable("predecessors", pred_str)
+        self.config_file.write_variable("predecessors", pred_str)
 
     def remove_arc_from(self, path):
         """
@@ -171,12 +171,11 @@ class VObject(object):
         succ_str.remove(path)
         config_file.write_variable("successors", succ_str)
 
-    def get_successors(self):
+    def successors(self):
         """
         The successors of the current object
         """
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        succ_str = config_file.read_variable("successors")
+        succ_str = self.config_file.read_variable("successors")
         if succ_str is None:
             return []
         successors = []
@@ -184,9 +183,8 @@ class VObject(object):
             successors.append(VObject(path))
         return successors
 
-    def get_predecessors(self):
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        pred_str = config_file.read_variable("predecessors")
+    def predecessors(self):
+        pred_str = self.config_file.read_variable("predecessors")
         if pred_str is None:
             return []
         predecessors = []
@@ -203,53 +201,48 @@ class VObject(object):
             new_object = VObject(new_path +"/"+ self.relative_path(obj.path))
 
     def path_to_alias(self, path):
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        path_to_alias = config_file.read_variable("path_to_alias")
+        path_to_alias = self.config_file.read_variable("path_to_alias")
         if path_to_alias is None:
             return ""
         return path_to_alias.get(path, "")
 
     def alias_to_path(self, alias):
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        alias_to_path = config_file.read_variable("alias_to_path")
+        alias_to_path = self.config_file.read_variable("alias_to_path")
         return alias_to_path[alias]
 
     def remove_alias(self, alias):
         if alias == "":
             return
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        alias_to_path = config_file.read_variable("alias_to_path")
-        path_to_alias = config_file.read_variable("path_to_alias")
+        alias_to_path = self.config_file.read_variable("alias_to_path")
+        path_to_alias = self.config_file.read_variable("path_to_alias")
         path = alias_to_path[alias]
         path_to_alias.pop(path)
         alias_to_path.pop(alias)
-        config_file.write_variable("alias_to_path", alias_to_path)
-        config_file.write_variable("path_to_alias", path_to_alias)
+        self.config_file.write_variable("alias_to_path", alias_to_path)
+        self.config_file.write_variable("path_to_alias", path_to_alias)
 
     def set_alias(self, alias, path):
         if alias == "":
             return
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        path_to_alias = config_file.read_variable("path_to_alias")
-        alias_to_path = config_file.read_variable("alias_to_path")
+        path_to_alias = self.config_file.read_variable("path_to_alias")
+        alias_to_path = self.config_file.read_variable("alias_to_path")
         if path_to_alias is None:
             path_to_alias = {}
         if alias_to_path is None:
             alias_to_path = {}
         path_to_alias[path] = alias
         alias_to_path[alias] = path
-        config_file.write_variable("path_to_alias", path_to_alias)
-        config_file.write_variable("alias_to_path", alias_to_path)
+        self.config_file.write_variable("path_to_alias", path_to_alias)
+        self.config_file.write_variable("alias_to_path", alias_to_path)
 
     def clean(self):
         """
         Clean all the alias, predecessors and successors
         """
-        config_file = utils.ConfigFile(self.path +"/.chern/config.py")
-        config_file.write_variable("alias_to_path", {})
-        config_file.write_variable("path_to_alias", {})
-        config_file.write_variable("predecessors", [])
-        config_file.write_variable("successors", [])
+        self.config_file.write_variable("alias_to_path", {})
+        self.config_file.write_variable("path_to_alias", {})
+        self.config_file.write_variable("predecessors", [])
+        self.config_file.write_variable("successors", [])
 
     def mv(self, new_path):
         """
@@ -261,7 +254,7 @@ class VObject(object):
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
             new_object.clean()
-            for pred_object in obj.get_predecessors():
+            for pred_object in obj.predecessors():
                 if self.relative_path(pred_object.path).startswith(".."):
                     new_object.add_arc_from(pred_object.path)
                     alias1 = obj.path_to_alias(pred_object.path)
@@ -278,7 +271,7 @@ class VObject(object):
                     new_object.set_alias(alias1, new_path+"/"+relative_path)
                     norm_path = os.path.normpath(new_path +"/"+ relative_path)
                     VObject(norm_path).set_alias(alias2, new_object.path)
-            for succ_object in obj.get_successors():
+            for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     new_object.add_arc_to(succ_object.path)
                     alias1 = obj.path_to_alias(succ_object.path)
@@ -287,10 +280,10 @@ class VObject(object):
                     succ_object.remove_alias(alias2)
                     succ_object.set_alias(alias2, new_object.path)
         for obj in queue:
-            for pred_object in obj.get_predecessors():
+            for pred_object in obj.predecessors():
                 if self.relative_path(pred_object.path).startswith(".."):
                     obj.remove_arc_from(pred_object.path)
-            for succ_object in obj.get_successors():
+            for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object.path)
 
@@ -301,12 +294,12 @@ class VObject(object):
         """
         queue = self.sub_objects_recursively()
         for obj in queue:
-            for pred_object in obj.get_predecessors():
+            for pred_object in obj.predecessors():
                 if self.relative_path(pred_object.path).startswith(".."):
                     obj.remove_arc_from(pred_object.path)
                     alias = pred_object.path_to_alias(pred_object.path)
                     pred_object.remove_alias(alias)
-            for succ_object in obj.get_successors():
+            for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object.path)
                     alias = succ_object.path_to_alias(succ_object.path)

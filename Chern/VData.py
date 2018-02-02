@@ -110,8 +110,17 @@ class VData(VObject):
     def status(self, site):
         """
         Read the run status
+        The status of the data should be:
+            1. empty
+            2. filling
+            3. filled
+            The problem is to determine, when is the data container is filled?
+            If the preceding task is running, the data status should be filling
+            If the preceding task is finished, the data status should be filled
+            What should a contaier do?
         """
-        pass
+
+
 
     def latest_version(self, site):
         """

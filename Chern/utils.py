@@ -8,6 +8,21 @@ import shutil
 import uuid
 from colored import fg, bg, attr
 
+def mkdir(directory):
+    """
+    Safely make directory
+    """
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+def copy(src, dst):
+    """
+    Saftly copy file
+    """
+    directory = os.path.dirname(dst)
+    mkdir(directory)
+    shutil.copy2(src, dst)
+
 def strip_path_string(path_string):
     """
     Remove the "/" in the end of the string
