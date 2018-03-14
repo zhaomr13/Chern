@@ -46,7 +46,7 @@ class ChernAlgorithm(object):
         self.commands.append(arg)
 
     def write_docker_file(self):
-        docker_file = open("{0}/DockerFile".format(self.host_path), "w")
+        docker_file = open("{0}/Dockerfile".format(self.host_path), "w")
         docker_file.write("FROM {0}\n".format(self.base))
         docker_file.write("USER root\n")
         docker_file.write("ENV HOME /root\n")

@@ -4,19 +4,16 @@ from Chern import utils
 from Chern.utils import debug
 from Chern.utils import colorize
 from subprocess import call
+import subprocess
+from Chern import git
 
 class VObject(object):
-    """
-    Virtual class of the objects, including VData, VAlgorithm, VData and VDirectory
+    """ Virtual class of the objects, including VData, VAlgorithm, VData and VDirectory
     """
 
     def __init__(self, path):
-        """
-        Initialize the project the only **information** of a object instance
-        is its path, the other things are all stored in the disk.
-        FIXME
-        The created time of the directory should also be stored.
-        The created time should be used for check available of the instance
+        """ Initialize a instance of the object.
+        All the infomation is directly read from and write to the disk.
         """
         self.path = utils.strip_path_string(path)
         self.created_time = time.time()
@@ -34,6 +31,15 @@ class VObject(object):
         """
         return self.path
 
+    def is_git_committed(self, is_global=False):
+        if is_global:
+            ps = subprocess.Popen("git status", shell=True, stdout=subprocess.PIPE)
+        else:
+            ps = subprocess.Popen("git status -- {0}".format(self.path), shell=True, stdout=subprocess.PIPE)
+        ps.wait()
+        output = ps.stdout.read()
+        return output.decode().find("nothing to commit") != -1
+
     def relative_path(self, path):
         """
         Return a path relative to the path of this object
@@ -47,12 +53,14 @@ class VObject(object):
         """
         return False
 
-    def set_update_time(self):
+    def set_update_time(self, force_time=None):
         """
         Set the updated time of the object
         """
-        self.config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        self.config_file.write_variable("update_time", time.time())
+        if force_time is None:
+            self.config_file.write_variable("update_time", time.time())
+        else:
+            self.config_file.write_variable("update_time", force_time)
 
     def update_time(self):
         """
@@ -331,12 +339,23 @@ class VObject(object):
             index += 1
         return queue
 
+    def latest_commit_message(self, is_global=False):
+        if is_global:
+            log = git.log('-n 1 --format="%s"').split("\n")
+        else:
+            log = git.log('-n 1 --format="%s" -- {}'.format(self.path)).split("\n")
+        return log[0]
+
     def edit_readme(self):
         """
         FIXME
         need more editor support
         """
         call("vim {0}".format(self.path+"/README.md"), shell=True)
+
+    def impression(self):
+        impression = self.config_file.read_variable("impression")
+        return impression
 
     def readme(self):
         """

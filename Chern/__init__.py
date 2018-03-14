@@ -1,11 +1,14 @@
 """
 Chern
 """
+import os
 from Chern import utils
 from Chern.shell import mv, cd
 from Chern.shell import mkdir, mktask, mkdata, mkalgorithm
 
-# VObject.sub_types = {"Algorithm":VAlgorithm, "Task":VTask, "Data":VData, "Directory":VDirectory}
+from Chern.main import main
+# here = os.path.abspath(os.path.dirname(__file__) + "/../profile_chern")
+
 __author__ = 'Mingrui Zhao'
 __version__ = 'v1r0p0'
 __version_info = ()

@@ -11,82 +11,81 @@ import subprocess
 from Chern import utils
 from Chern.VObject import VObject
 from Chern.utils import colorize
+from Chern import git
+
 class VData(VObject):
     """
     Virtual Data.
     """
     def ls(self):
-        """
-        First use the VObject ls, and then print the supported sites of this data
+        """ First use the VObject ls, and then print the supported sites of this data
         FIXME: list the files in the local site
         """
         super(VData, self).ls()
-        sites = self.get_sites()
-        print(colorize("---- Supported sites of this data:", "title0"))
-        for site in sites:
-            print(site, end=" ")
-        print("\n")
+        print("Status: {0}".format(self.status()))
 
-    def get_sites(self):
+    def is_committed(self):
         """
-        Read the sites variable from the config file of this data.
         """
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        sites = config_file.read_variable("sites")
-        if sites is None:
-            return []
-        return sites
-
-    def check(self, site="local"):
-        """
-        Upload the dependence file
-        """
-        pwd = os.getcwd()
-        if site == "local":
-            os.chdir(self.get_physics_position())
-            subprocess.call("bash", shell=True)
+        if not self.is_git_committed():
+            return False
+        if self.task() == None:
+            return True
+        task_commit_id = self.config_file.read_variable("task_commit_id")
+        if self.task().is_committed() and self.commit_id() == task_commit_id:
+            return True
         else:
-            chern_config_path = os.environ["HOME"] + "/.Chern"
-            site_module = imp.load_source("site", chern_config_path+"/"+site+".py")
-            site_module.check(self.get_physics_position(site))
-        os.chdir(pwd)
+            return False
 
-    def add_site(self, site):
-        """
-        Add a site for the current data.
-        """
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        sites = config_file.read_variable("sites")
-        if sites is None:
-            sites = []
-        sites.append(site)
-        config_file.write_variable("sites", sites)
+    def impress(self):
+        pred = []
+        task = self.task()
+        if task is not None and (not task.is_impressed()):
+            task.impress()
+        if task is not None:
+            pred.append(task.impression())
+        self.config_file.write_variable("pred_impression", pred)
+        impression = uuid.uuid4().hex
+        self.config_file.write_variable("impression", impression)
+        git.add(self.path)
+        git.commit("Impress: {0}".format(impression))
 
-    def remove_site(self, site):
+    def is_impressed(self, is_global=False):
+        """ Judge whether the file is impressed
         """
-        Remove a site from the current data. If the site is not in the data, do nothing.
-        """
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        sites = config_file.read_variable("sites")
-        if sites is None:
-            return
-        if site in sites:
-            sites.remove(site)
-        config_file.write_variable("sites", site)
+        if not self.is_git_committed():
+            return False
+        latest_commit_message = self.latest_commit_message()
+        if "Impress:" not in latest_commit_message:
+            return False
+        task = self.task()
+        if task is None:
+            return True
+        if not task.is_impressed():
+            return False
+        else:
+            pred.append(task.impression())
+        if pred == sorted(self.config_file.read_variable("pred_impression")):
+            return True
+        else:
+            return False
 
-    def add_rawdata(self, path, site):
+
+    def is_submitted(self):
+        return False
+
+    def add(self, file_name):
+        """ add expected data to this file.
         """
-        Create a rawdata.
-        """
-        self.new_version(site)
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        rawdata = config_file.read_variable("rawdata")
-        if rawdata is None:
-            rawdata = []
-        rawdata.append((site, rawdata))
-        config_file.write_variable("rawdata")
-        self.link(path, self.get_physics_position(site), site)
-        self.set_update_time(site)
+        self.config_file.write()
+        git.add(self.path)
+
+    def task(self):
+        predecessors = self.predecessors()
+        if predecessors == []:
+            return None
+        else:
+            return Chern.VTask.VTask(predecessors[0].path)
 
     def link(self, source, destination, site):
         chern_config_path = os.environ["HOME"] + "/.Chern"
@@ -107,8 +106,14 @@ class VData(VObject):
         config_file.write_variable("versions", versions)
         os.mkdir(self.get_physics_position(site))
 
-    def status(self, site):
+    def check_output(self):
+        return self.volume().exists()
+
+    def status(self, site=None):
         """
+        The status of the VData should be quite complicated:
+            On remote: Generated, Downloaded
+            Local empty: don't match,
         Read the run status
         The status of the data should be:
             1. empty
@@ -119,6 +124,16 @@ class VData(VObject):
             If the preceding task is finished, the data status should be filled
             What should a contaier do?
         """
+        if not self.is_impressed():
+            return "new"
+        if not self.is_submitted():
+            return "impressed"
+        if self.volume().filled():
+            return "downloaded"
+        if self.task().status() == "finished":
+            return "generated"
+        return "generating"
+
 
 
 

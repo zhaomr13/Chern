@@ -8,24 +8,46 @@ import shutil
 import uuid
 from colored import fg, bg, attr
 
+def daemon_path():
+    path = os.environ["HOME"] + "/.Chern/daemon"
+    mkdir(path)
+    return path
+
+def profile_path():
+    # FIXME
+    return ""
+
+def storage_path():
+    # FIXME
+    path = os.environ["HOME"] + "/.Chern/Storage"
+    mkdir(path)
+    return path
+
+def local_config_path():
+    # FIXME
+    os.environ["HOME"] + "/.Chern/config.py"
+
 def mkdir(directory):
-    """
-    Safely make directory
+    """ Safely make directory
     """
     if not os.path.exists(directory):
         os.makedirs(directory)
 
 def copy(src, dst):
-    """
-    Saftly copy file
+    """ Saftly copy file
     """
     directory = os.path.dirname(dst)
     mkdir(directory)
     shutil.copy2(src, dst)
 
+def list_dir(src):
+    files = os.listdir(src)
+
+def copy_tree(src, dst):
+    shutil.copytree(src, dst)
+
 def strip_path_string(path_string):
-    """
-    Remove the "/" in the end of the string
+    """ Remove the "/" in the end of the string
     and the " " in the begin and the end of the string.
     replace the "." in the string to "/"
     """
@@ -34,8 +56,7 @@ def strip_path_string(path_string):
     return path_string
 
 def special_path_string(path_string):
-    """
-    Replace the path string . -> /
+    """ Replace the path string . -> /
     rather than the following cases
     .
     ..
@@ -48,8 +69,7 @@ def special_path_string(path_string):
     return path_string.replace(".", "/")
 
 def colorize(string, color):
-    """
-    Make the string have color
+    """ Make the string have color
     """
     if color == "debug":
         return "\033[31m" + string + "\033[m"
@@ -60,8 +80,7 @@ def colorize(string, color):
     return string
 
 def debug(*arg):
-    """
-    Print debug string
+    """ Print debug string
     """
     print(colorize("debug >> ", "debug"), end="")
     for s in arg:
@@ -69,8 +88,7 @@ def debug(*arg):
     print("*")
 
 def remove_cache(file_path):
-    """
-    Remove the python cache file *.pyc *.pyo *.__pycache
+    """ Remove the python cache file *.pyc *.pyo *.__pycache
     file_path = somewhere/somename.py
             or  somename.py
     """
@@ -92,31 +110,26 @@ def remove_cache(file_path):
             pass
 
 class ConfigFile(object):
-    """
-    ConfigFile class
+    """ ConfigFile class
     ConfigFile(somefile.py) can define a config file,
     where you can read and write python variables
     """
     def __init__(self, file_path):
-        """
-        Initialize the class use a path
+        """ Initialize the class use a path
         Create a file if it is not initially exists
         """
         self.file_path = file_path
 
     def read_variable(self, variable_name):
-        """
-        Get the content of some variable
+        """ Get the content of some variable
         """
         file_path = self.file_path
         if not os.path.exists(file_path):
             return None
         # read the module
         from imp import load_source
-        # print(file_path)
         module = load_source("tmp_module_{0}".format(uuid.uuid4().hex), file_path)
         value = module.__dict__.get(variable_name)
-        # print(value)
 
         # remove pyc file and module instance
         remove_cache(file_path)
