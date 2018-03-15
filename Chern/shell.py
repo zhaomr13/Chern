@@ -131,7 +131,6 @@ def mktask(line, inloop=True):
         line = os.path.abspath(line)
     create_task(line, inloop)
     manager.switch_current_object(line)
-    manager.c.set_update_time()
     if not inloop:
         manager.switch_current_object(line)
         os.chdir(manager.c.path)
@@ -146,7 +145,6 @@ def mkdir(line, inloop=True):
         line = os.path.abspath(line)
     create_directory(line, inloop)
     manager.switch_current_object(line)
-    manager.c.set_update_time()
     if not inloop:
         manager.switch_current_object(line)
         os.chdir(manager.c.path)

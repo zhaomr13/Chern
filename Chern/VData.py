@@ -9,6 +9,7 @@ import time
 import imp
 import subprocess
 from Chern import utils
+import Chern
 from Chern.VObject import VObject
 from Chern.utils import colorize
 from Chern import git
@@ -61,6 +62,7 @@ class VData(VObject):
         task = self.task()
         if task is None:
             return True
+        pred = []
         if not task.is_impressed():
             return False
         else:
@@ -70,6 +72,14 @@ class VData(VObject):
         else:
             return False
 
+    def submit(self):
+        if self.is_submitted():
+            return
+        if not self.is_impressed():
+            self.impress()
+        path = utils.storage_path() + "/" + self.impression()
+        cwd = self.path
+        utils.copy_tree(cwd, path)
 
     def is_submitted(self):
         return False
@@ -134,9 +144,6 @@ class VData(VObject):
             return "generated"
         return "generating"
 
-
-
-
     def latest_version(self, site):
         """
         Get the latest version.
@@ -144,27 +151,6 @@ class VData(VObject):
         config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         versions = config_file.read_variable("versions")
         return versions[site]
-
-    def set_update_time(self, site):
-        """
-        Setup the time.
-        """
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        update_times = config_file.read_variable("update_times")
-        if update_times is None:
-            update_times = {}
-        update_times[site] = time.time()
-        config_file.write_variable("update_times", update_times)
-
-    def get_update_time(self, site):
-        """
-        Read the update time of a site.
-        """
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        update_times = config_file.read_variable("update_times")
-        if update_times is None:
-            return 0
-        return update_times.get(site, 0)
 
     def get_physics_position(self, site):
         """

@@ -88,14 +88,18 @@ class VAlgorithm(VObject):
         Option to
         """
         super(VAlgorithm, self).ls()
-        parameters_file = utils.ConfigFile(self.path+"/parameters.py")
+        parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
         parameters = parameters_file.read_variable("parameters")
         if parameters is None:
             parameters = []
         print(colorize("---- Parameters:", "title0"))
         for parameter in parameters:
-            print(parameters_file.read_variable(parameter))
+            print(parameter)
         print(colorize("**** STATUS:", "title0"), self.status())
+        files = os.listdir(self.path)
+        for f in files:
+            if not f.startswith(".") and f != "README.md":
+                print(f)
 
     def add_parameter(self, parameter):
         """
@@ -104,13 +108,12 @@ class VAlgorithm(VObject):
         if parameter == "parameters":
             print("A parameter is not allowed to be called parameters")
             return
-        parameters_file = utils.ConfigFile(self.path+"/parameters.py")
+        parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
         parameters = parameters_file.read_variable("parameters")
         if parameters is None:
             parameters = []
         parameters.append(parameter)
         parameters_file.write_variable("parameters", parameters)
-        self.set_update_time()
 
     def remove_parameter(self, parameter):
         self.config_file.read_variable("parameters")

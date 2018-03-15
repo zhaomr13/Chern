@@ -25,7 +25,7 @@ def storage_path():
 
 def local_config_path():
     # FIXME
-    os.environ["HOME"] + "/.Chern/config.py"
+    return os.environ["HOME"] + "/.Chern/config.py"
 
 def mkdir(directory):
     """ Safely make directory

@@ -4,7 +4,6 @@ import imp
 import subprocess
 import Chern
 from Chern.VObject import VObject
-from Chern.VAlgorithm import VAlgorithm
 from Chern import utils
 from Chern import git
 from Chern.utils import debug
@@ -12,6 +11,7 @@ from Chern.utils import colorize
 
 from Chern.ChernDatabase import ChernDatabase
 cherndb = ChernDatabase.instance()
+
 class VTask(VObject):
     def ls(self):
         super(VTask, self).ls()
@@ -234,7 +234,6 @@ class VTask(VObject):
             print("Already have algorithm, will replace it")
             self.remove_algorithm()
         self.add_arc_from(path)
-        self.set_update_time()
 
     def remove_algorithm(self):
         """
@@ -245,7 +244,6 @@ class VTask(VObject):
             print("Nothing to remove")
         else:
             self.remove_arc_from(algorithm.path)
-        self.set_update_time()
 
     def algorithm(self):
         """
@@ -255,7 +253,7 @@ class VTask(VObject):
         # debug(predecessors)
         for pred_object in predecessors:
             if pred_object.object_type() == "algorithm":
-                return VAlgorithm(pred_object.path)
+                return Chern.VAlgorithm.VAlgorithm(pred_object.path)
         print("No algorithm found")
         return None
 
@@ -276,8 +274,7 @@ class VTask(VObject):
 
     def add_input(self, path, alias):
         self.add_arc_from(path)
-        self.set_alias(alias, path)
-        self.set_update_time()
+        self.set_alias(alias, VObject(path).relative_path())
 
     def remove_input(self, alias):
         path = self.alias_to_path(alias)
@@ -286,15 +283,13 @@ class VTask(VObject):
             return
         self.remove_arc_from(path)
         self.remove_alias(alias)
-        self.set_update_time()
 
     def add_output(self, path, alias):
         if VObject(path).predecessors() != []:
             print("An output should only have only one input")
             return
         self.add_arc_to(path)
-        self.set_alias(alias, path)
-        self.set_update_time()
+        self.set_alias(alias, VObject(path).relative_path())
 
     def remove_output(self, alias):
         path = self.alias_to_path(alias)
@@ -303,7 +298,6 @@ class VTask(VObject):
             return
         self.remove_arc_to(path)
         self.remove_alias(alias)
-        self.set_update_time()
 
     def parameters(self):
         """
@@ -330,7 +324,6 @@ class VTask(VObject):
             parameters = []
         parameters.append(parameter)
         parameters_file.write_variable("parameters", parameters)
-        self.set_update_time()
 
     def remove_parameter(self, parameter):
         """
@@ -347,7 +340,6 @@ class VTask(VObject):
         parameters.remove(parameter)
         parameters_file.write_variable(parameter, None)
         parameters_file.write_variable("parameters", parameters)
-        self.set_update_time()
 
 def create_task(path, inloop=False):
     path = utils.strip_path_string(path)

@@ -6,6 +6,9 @@ from Chern.utils import colorize
 from subprocess import call
 import subprocess
 from Chern import git
+from Chern.ChernDatabase import ChernDatabase
+
+cherndb = ChernDatabase.instance()
 
 class VObject(object):
     """ Virtual class of the objects, including VData, VAlgorithm, VData and VDirectory
@@ -19,19 +22,28 @@ class VObject(object):
         self.created_time = time.time()
         self.config_file = utils.ConfigFile(self.path+"/.chern/config.py")
 
+    def invariant_path(self):
+        """ The path relative to the project root.
+        It is invariant when the project is moved.
+        """
+        project_path = cherndb.project_path()
+        path = os.path.relpath(self.path, project_path)
+        return path
+
     def __str__(self):
+        """ Define the behavior of print(vobject)
         """
-        Define the behavior of print(vobject)
-        """
-        return self.path
+        return self.invariant_path()
 
     def __repr__(self):
+        """ Define the behavior of print(vobject)
         """
-        Define the behavior of print(vobject)
-        """
-        return self.path
+        return self.invariant_path()
 
     def is_git_committed(self, is_global=False):
+        """ Whether the object is recorded by git.
+        FIXME: the is_global flag maybe useless.
+        """
         if is_global:
             ps = subprocess.Popen("git status", shell=True, stdout=subprocess.PIPE)
         else:
@@ -41,36 +53,16 @@ class VObject(object):
         return output.decode().find("nothing to commit") != -1
 
     def relative_path(self, path):
-        """
-        Return a path relative to the path of this object
+        """ Return a path relative to the path of this object
         """
         return os.path.relpath(path, self.path)
 
     def is_modified(self):
-        """
+        """ FIXME: may be replaced by the git commit method.
         Return whether this object object is modified.
         Check should be done before every use.
         """
         return False
-
-    def set_update_time(self, force_time=None):
-        """
-        Set the updated time of the object
-        """
-        if force_time is None:
-            self.config_file.write_variable("update_time", time.time())
-        else:
-            self.config_file.write_variable("update_time", force_time)
-
-    def update_time(self):
-        """
-        Return the updated time of the object
-        """
-        update_time = self.config_file.read_variable("update_time")
-        if update_time is None:
-            return 0
-        else:
-            return update_time
 
     def object_type(self, path=None):
         """
@@ -106,30 +98,29 @@ class VObject(object):
         if predecessors:
             print(colorize("o--> Predecessors:", "title0"))
         for index, pred_object in enumerate(predecessors):
-            print("{2} {0:<12} {3:>10}: {1:<20}".format("("+pred_object.object_type()+")", self.relative_path(pred_object.path), "[{}]".format(total+index), self.path_to_alias(pred_object.path)))
+            print("{2} {0:<12} {3:>10}: {1:<20}".format("("+pred_object.object_type()+")", pred_object.invariant_path(), "[{}]".format(total+index), self.path_to_alias(pred_object.path)))
         total += len(predecessors)
         successors = self.successors()
         if successors:
             print(colorize("-->o Successors:", "title0"))
         for index, succ_object in enumerate(successors):
-            print("{2} {0:<12} {3:>10}: {1:<20}".format("("+succ_object.object_type()+")", self.relative_path(succ_object.path), "[{}]".format(total+index), self.path_to_alias(succ_object.path)))
-
+            print("{2} {0:<12} {3:>10}: {1:<20}".format("("+succ_object.object_type()+")", succ_object.invariant_path(), "[{}]".format(total+index), self.path_to_alias(succ_object.path)))
 
     def add_arc_from(self, path):
-        """
-        Add an link from the path object to this object
+        """ Add an link from the object contains in `path' to this object.
+        FIXME: it directly operate the config_file of other object rather operate through.
         """
         config_file = utils.ConfigFile(path+"/.chern/config.py")
         succ_str = config_file.read_variable("successors")
         if succ_str is None:
             succ_str = []
-        succ_str.append(self.path)
+        succ_str.append(self.invariant_path())
         config_file.write_variable("successors", succ_str)
 
         pred_str = self.config_file.read_variable("predecessors")
         if pred_str is None:
             pred_str = []
-        pred_str.append(path)
+        pred_str.append(VObject(path).invariant_path())
         self.config_file.write_variable("predecessors", pred_str)
 
     def remove_arc_from(self, path):
@@ -140,11 +131,11 @@ class VObject(object):
         """
         config_file = utils.ConfigFile(path+"/.chern/config.py")
         succ_str = config_file.read_variable("successors")
-        succ_str.remove(self.path)
+        succ_str.remove(self.invariant_path())
         config_file.write_variable("successors", succ_str)
         config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         pred_str = config_file.read_variable("predecessors")
-        pred_str.remove(path)
+        pred_str.remove(VObject(path).invariant_path())
         config_file.write_variable("predecessors", pred_str)
 
     def add_arc_to(self, path):
@@ -187,8 +178,9 @@ class VObject(object):
         if succ_str is None:
             return []
         successors = []
+        project_path = cherndb.project_path()
         for path in succ_str:
-            successors.append(VObject(path))
+            successors.append(VObject(project_path+"/"+path))
         return successors
 
     def predecessors(self):
@@ -196,8 +188,9 @@ class VObject(object):
         if pred_str is None:
             return []
         predecessors = []
+        project_path = cherndb.project_path()
         for path in pred_str:
-            predecessors.append(VObject(path))
+            predecessors.append(VObject(project_path+"/"+path))
         return predecessors
 
     def cp(self, new_path):
@@ -267,26 +260,26 @@ class VObject(object):
                     new_object.add_arc_from(pred_object.path)
                     alias1 = obj.path_to_alias(pred_object.path)
                     alias2 = pred_object.path_to_alias(obj.path)
-                    new_object.set_alias(alias1, pred_object.path)
+                    new_object.set_alias(alias1, pred_object.invariant_path())
                     pred_object.remove_alias(alias2)
-                    pred_object.set_alias(alias2, new_object.path)
+                    pred_object.set_alias(alias2, new_object.invariant_path())
                 else:
                 # if in the same tree
                     relative_path = self.relative_path(pred_object.path)
                     new_object.add_arc_from(new_path+"/"+relative_path)
                     alias1 = obj.path_to_alias(pred_object.path)
                     alias2 = pred_object.path_to_alias(obj.path)
-                    new_object.set_alias(alias1, new_path+"/"+relative_path)
                     norm_path = os.path.normpath(new_path +"/"+ relative_path)
-                    VObject(norm_path).set_alias(alias2, new_object.path)
+                    new_object.set_alias(alias1, VObject(norm_path).invariant_path())
+                    VObject(norm_path).set_alias(alias2, new_object.invariant_path())
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     new_object.add_arc_to(succ_object.path)
                     alias1 = obj.path_to_alias(succ_object.path)
                     alias2 = succ_object.path_to_alias(obj.path)
-                    new_object.set_alias(alias1, succ_object.path)
+                    new_object.set_alias(alias1, succ_object.invariant_path())
                     succ_object.remove_alias(alias2)
-                    succ_object.set_alias(alias2, new_object.path)
+                    succ_object.set_alias(alias2, new_object.invariant_path())
         for obj in queue:
             for pred_object in obj.predecessors():
                 if self.relative_path(pred_object.path).startswith(".."):
@@ -314,8 +307,7 @@ class VObject(object):
                     succ_object.remove_alias(alias)
 
     def sub_objects(self):
-        """
-        return a list of the sub_objects
+        """ return a list of the sub_objects
         """
         sub_directories = os.listdir(self.path)
         sub_object_list = []

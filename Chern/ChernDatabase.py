@@ -9,6 +9,9 @@ from Chern.VImage import VImage
 
 class ChernDatabase(object):
     ins = None
+    def __init__(self):
+        self.global_config_path = utils.local_config_path()
+
     @classmethod
     def instance(cls):
         if cls.ins is None:
@@ -40,4 +43,43 @@ class ChernDatabase(object):
             if job.status() == condition:
                 job_list.append(job)
         return job_list
+
+
+    def get_current_project(self):
+        """ Get the name of the current working project.
+        If there isn't a working project, return None
+        """
+        global_config_file = utils.ConfigFile(self.global_config_path)
+        current_project = global_config_file.read_variable("current_project")
+        if current_project is None:
+            return None
+        else:
+            projects_path = global_config_file.read_variable("projects_path")
+            path = projects_path.get(current_project, "no_place|")
+            if path == "no_place|":
+                projects_path[current_project] = "no_place|"
+            if not os.path.exists(path):
+                projects_path.pop(current_project)
+                if projects_path != {}:
+                    current_project = list(projects_path.keys())[0]
+                else:
+                    current_project = None
+                global_config_file.write_variable("current_project", current_project)
+                global_config_file.write_variable("projects_path", projects_path)
+                return self.get_current_project()
+            else:
+                return current_project
+
+
+    def project_path(self):
+        """ Get The path of a specific project.
+        You must be sure that the project exists.
+        This function don't check it.
+        """
+        project_name = self.get_current_project()
+        global_config_file = utils.ConfigFile(self.global_config_path)
+        projects_path = global_config_file.read_variable("projects_path")
+        return projects_path[project_name]
+
+
 
