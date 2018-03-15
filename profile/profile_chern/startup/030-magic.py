@@ -11,10 +11,6 @@ from Chern.utils import debug
 import subprocess
 
 manager = get_manager()
-@register_line_magic
-def c(line):
-    return manager.c
-del c
 
 @register_line_magic
 def mkp(line):
@@ -24,12 +20,13 @@ del mkp
 
 @register_line_magic
 def cd(line):
-    # The extended cd function: cd number
+    """ The extended cd function: cd number
+    """
     if line.isdigit():
         index = int(line)
         sub_objects = manager.c.sub_objects()
-        successors = manager.c.get_successors()
-        predecessors = manager.c.get_predecessors()
+        successors = manager.c.successors()
+        predecessors = manager.c.predecessors()
         total = len(sub_objects)
         if index < total:
             sub_objects.sort(key=lambda x:(x.object_type(), x.path))
@@ -49,7 +46,6 @@ def cd(line):
             print("Out out index")
             return
     else:
-    # The normal cd function
         Chern.cd(line, inloop=False)
 del cd
 
@@ -57,8 +53,7 @@ del cd
 # old_mv = ip.magics_manager.magics["line"]["mv"]
 @register_line_magic
 def mv(line):
-    """
-    Move a object to another object
+    """ Move a object to another object
     """
     Chern.mv(line, inloop=False)
 del mv
@@ -232,11 +227,13 @@ del configuration
 
 @register_line_magic
 def submit(line):
-    if manager.c.object_type() != "task":
-        print("A job can not run if it is not a task")
-        return
     manager.c.submit()
 del submit
+
+@register_line_magic
+def impress(line):
+    manager.c.impress()
+del impress
 
 from datetime import datetime
 from time import time
@@ -256,7 +253,7 @@ del git
 
 @register_line_magic
 def vim(line):
-    subprocesss.call("vim {}".format(line), shell=True)
+    subprocess.call("vim {}".format(line), shell=True)
     Chern.git.commit("edit file {}".format(line))
 del vim
 

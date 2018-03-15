@@ -5,14 +5,17 @@ The function will create a VData from a path.
 """
 import os
 import uuid
-import time
 import imp
 import subprocess
 from Chern import utils
 import Chern
 from Chern.VObject import VObject
+from Chern.VVolume import VVolume
 from Chern.utils import colorize
 from Chern import git
+
+from Chern.ChernDatabase import ChernDatabase
+cherndb = ChernDatabase.instance()
 
 class VData(VObject):
     """
@@ -82,7 +85,12 @@ class VData(VObject):
         utils.copy_tree(cwd, path)
 
     def is_submitted(self):
-        return False
+        if not self.is_impressed():
+            return False
+        if cherndb.job(self.impression()) is not None:
+            return True
+        else:
+            return False
 
     def add(self, file_name):
         """ add expected data to this file.
@@ -116,6 +124,13 @@ class VData(VObject):
         config_file.write_variable("versions", versions)
         os.mkdir(self.get_physics_position(site))
 
+    def volume(self):
+        container_id = self.config_file.read_variable("container_id")
+        if container_id is None:
+            return None
+        return VContainer(self.container_id)
+
+
     def check_output(self):
         return self.volume().exists()
 
@@ -138,6 +153,7 @@ class VData(VObject):
             return "new"
         if not self.is_submitted():
             return "impressed"
+        return "submitted"
         if self.volume().filled():
             return "downloaded"
         if self.task().status() == "finished":

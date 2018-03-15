@@ -1,4 +1,8 @@
-from distutils.core import setup
+from distutils.coimport sys
+import os
+
+from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
 
 PACKAGE = "Chern"
 NAME = "Chern"
@@ -18,7 +22,26 @@ setup(
     url = URL,
     packages=["Chern"],
     classifiers = [
+        'Development Status :: 5 - Production/Stable',
+
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Physics',
+        'Topic :: System :: Software Distribution',
+
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: Implementation :: CPython',
 
     ],
-    zip_safe=False
+    zip_safe=False,
+    keywords = "Analysis Perservation",
+    packages = find_packages(exclude=[])
+    install_requires = [
+        "click", "colored"
+    ]
+    include_package_data = True,
+    entry_points = {
+        'console_scripts': [
+            'Chern = main:main'
+        ]
+    }
 )
