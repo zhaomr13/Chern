@@ -1,22 +1,28 @@
 """
 """
 import os
-import Chern.utils as utils
-from Chern.VJob import VJob
-from Chern.VVolume import VVolume
-from Chern.VContainer import VContainer
-from Chern.VImage import VImage
+import subprocess
+from Chern.utils import utils
+from Chern.kernel.VJob import VJob
+from Chern.kernel.VContainer import VContainer
+from Chern.kernel.VImage import VImage
 
 class ChernDatabase(object):
     ins = None
     def __init__(self):
-        self.global_config_path = utils.local_config_path()
+        self.local_config_path = utils.local_config_path()
 
     @classmethod
     def instance(cls):
         if cls.ins is None:
             cls.ins = ChernDatabase()
         return cls.ins
+
+    def is_docker_started(self):
+        ps = subprocess.Popen("docker ps", shell=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ps.wait()
+        return (ps.poll() == 0)
 
     def job(self, id):
         storage_path = utils.storage_path()
@@ -25,18 +31,21 @@ class ChernDatabase(object):
         else:
             return None
 
+    def add_job(self, job_id):
+        storage_path = utils.storage_path()
+        jobs_list_file = utils.ConfigFile(storage_path+"/jobs.py")
+        job_id_list = jobs_list_file.read_variable("jobs_list", [])
+        job_id_list.append(job_id)
+        jobs_list_file.write_variable("jobs_list", job_id_list)
+
     def jobs(self, condition):
         storage_path = utils.storage_path()
         jobs_list_file = utils.ConfigFile(storage_path+"/jobs.py")
-        job_id_list = jobs_list_file.read_variable("jobs_list")
-        if job_id_list is None:
-            job_id_list = []
+        job_id_list = jobs_list_file.read_variable("jobs_list", [])
         job_list = []
         for job_id in job_id_list:
             job = VJob(storage_path + "/" + job_id)
-            if job.job_type() == "volume":
-                job = VVolume(job.path)
-            elif job.job_type() == "container":
+            if job.job_type() == "container":
                 job = VContainer(job.path)
             elif job.job_type() == "image":
                 job = VImage(job.path)
@@ -49,12 +58,12 @@ class ChernDatabase(object):
         """ Get the name of the current working project.
         If there isn't a working project, return None
         """
-        global_config_file = utils.ConfigFile(self.global_config_path)
-        current_project = global_config_file.read_variable("current_project")
+        local_config_file = utils.ConfigFile(self.local_config_path)
+        current_project = local_config_file.read_variable("current_project", None)
         if current_project is None:
             return None
         else:
-            projects_path = global_config_file.read_variable("projects_path")
+            projects_path = local_config_file.read_variable("projects_path")
             path = projects_path.get(current_project, "no_place|")
             if path == "no_place|":
                 projects_path[current_project] = "no_place|"
@@ -64,8 +73,8 @@ class ChernDatabase(object):
                     current_project = list(projects_path.keys())[0]
                 else:
                     current_project = None
-                global_config_file.write_variable("current_project", current_project)
-                global_config_file.write_variable("projects_path", projects_path)
+                local_config_file.write_variable("current_project", current_project)
+                local_config_file.write_variable("projects_path", projects_path)
                 return self.get_current_project()
             else:
                 return current_project
@@ -77,8 +86,8 @@ class ChernDatabase(object):
         This function don't check it.
         """
         project_name = self.get_current_project()
-        global_config_file = utils.ConfigFile(self.global_config_path)
-        projects_path = global_config_file.read_variable("projects_path")
+        local_config_file = utils.ConfigFile(self.local_config_path)
+        projects_path = local_config_file.read_variable("projects_path")
         return projects_path[project_name]
 
 

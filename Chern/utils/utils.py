@@ -71,6 +71,8 @@ def special_path_string(path_string):
 def colorize(string, color):
     """ Make the string have color
     """
+    if color == "warning":
+        return "\033[31m" + string + "\033[m"
     if color == "debug":
         return "\033[31m" + string + "\033[m"
     elif color == "comment":
@@ -78,6 +80,9 @@ def colorize(string, color):
     elif color == "title0":
         return fg("red")+attr("bold")+string+attr("reset")
     return string
+
+def color_print(string, color):
+    print(colorize(string, color))
 
 def debug(*arg):
     """ Print debug string
@@ -120,16 +125,16 @@ class ConfigFile(object):
         """
         self.file_path = file_path
 
-    def read_variable(self, variable_name):
+    def read_variable(self, variable_name, default=None):
         """ Get the content of some variable
         """
         file_path = self.file_path
         if not os.path.exists(file_path):
-            return None
+            return default
         # read the module
         from imp import load_source
         module = load_source("tmp_module_{0}".format(uuid.uuid4().hex), file_path)
-        value = module.__dict__.get(variable_name)
+        value = module.__dict__.get(variable_name, default)
 
         # remove pyc file and module instance
         remove_cache(file_path)

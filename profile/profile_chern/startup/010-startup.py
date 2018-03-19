@@ -1,5 +1,5 @@
-from Chern.VProject import VProject
-from Chern.ChernManager import get_manager
+from Chern.kernel.VProject import VProject
+from Chern.interface.ChernManager import get_manager
 import os
 
 manager = get_manager()

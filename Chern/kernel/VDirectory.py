@@ -1,11 +1,11 @@
 """
 A module
 """
-from Chern.VObject import VObject
-from Chern import utils
 import os
-from Chern import git
 import subprocess
+from Chern.utils import utils
+from Chern.utils import git
+from Chern.kernel.VObject import VObject
 class VDirectory(VObject):
     """
     Nothing more to do for this VDirectory.
@@ -18,7 +18,7 @@ class VDirectory(VObject):
         """
         if parameter == "parameters":
             print("A parameter is not allowed to be called parameters")
-        parameters_file = utils.CondfigFile(self.path+"/parameters.py")
+        parameters_file = utils.CondfigFile(self.path+"/.chern/parameters.py")
         parameters_file.write_varialbe(parameter, value)
         parameters = parameters_file.read_variable("parameters")
         if parameters is None:
@@ -33,7 +33,7 @@ class VDirectory(VObject):
         if parameter == "parameters":
             print("parameters is not allowed to remove")
             return
-        parameters_file = utils.ConfigFile(self.path+"parameters.py")
+        parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
         parameters = parameters_file.read_variable("parameters")
         if parameter not in parameters:
             print("Parameter not found")

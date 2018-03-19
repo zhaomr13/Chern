@@ -1,4 +1,4 @@
-from distutils.coimport sys
+from distutils import sys
 import os
 
 from setuptools import setup, find_packages
@@ -20,13 +20,11 @@ setup(
     author_email=AUTHOR_EMAIL,
     license="Apache License, Version 2.0",
     url = URL,
-    packages=["Chern"],
     classifiers = [
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 3 - Alpha',
 
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Physics',
-        'Topic :: System :: Software Distribution',
 
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: Implementation :: CPython',
@@ -34,14 +32,21 @@ setup(
     ],
     zip_safe=False,
     keywords = "Analysis Perservation",
-    packages = find_packages(exclude=[])
+    packages = find_packages(exclude=[]),
     install_requires = [
         "click", "colored"
-    ]
-    include_package_data = True,
+    ],
+    # include_package_data = True,
+    data_files = [("profile/profile_chern/startup",
+                   ["profile/profile_chern/startup/010-startup.py",
+                    "profile/profile_chern/startup/020-prompt.py",
+                    "profile/profile_chern/startup/030-magic.py",
+                    "profile/profile_chern/startup/040-mkobject.py", ]
+                   )],
     entry_points = {
         'console_scripts': [
-            'Chern = main:main'
+            'Chern = Chern:main',
+            'chen = Chern:main'
         ]
     }
 )

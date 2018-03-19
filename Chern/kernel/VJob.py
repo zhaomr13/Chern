@@ -36,6 +36,22 @@ class VJob(object):
         config_file = utils.ConfigFile(path+"/.chern/config.py")
         return config_file.read_variable("job_type")
 
+
+    def error(self):
+        if os.path.exists(self.path+"/error"):
+            f = open(self.path+"/error")
+            error = f.read()
+            f.close()
+            return error
+        else:
+            return ""
+
+    def append_error(self, message):
+        with open(self.path+"/error", "w") as f:
+            f.write(message)
+            f.write("\n")
+
+
     def add_arc_from(self, path):
         """ Add an link from the path object to this object
         """
@@ -109,12 +125,12 @@ class VJob(object):
     def predecessors(self):
         """ Predecessors
         """
-        pred_str = self.config_file.read_variable("predecessors")
+        pred_str = self.config_file.read_variable("pred_impression")
         if pred_str is None:
             return []
         predecessors = []
         for path in pred_str:
-            predecessors.append(VJob(path))
+            predecessors.append(VJob(utils.storage_path()+"/"+path))
         return predecessors
 
     def path_to_alias(self, path):

@@ -1,14 +1,13 @@
 import os
 import Chern
-from Chern.VObject import VObject
-from Chern import utils
-from Chern.utils import debug
-from Chern.ChernManager import get_manager
+from Chern.kernel.VObject import VObject
+from Chern.utils import utils
+from Chern.utils.utils import debug
+from Chern.interface.ChernManager import get_manager
 import shutil
-from Chern.VTask import create_task
-from Chern.VAlgorithm import create_algorithm
-from Chern.VData import create_data
-from Chern.VDirectory import create_directory
+from Chern.kernel.VTask import create_task
+from Chern.kernel.VAlgorithm import create_algorithm
+from Chern.kernel.VDirectory import create_directory
 
 manager = get_manager()
 
@@ -134,8 +133,6 @@ def mktask(line, inloop=True):
     if not inloop:
         manager.switch_current_object(line)
         os.chdir(manager.c.path)
-    Chern.git.add(line)
-    Chern.git.commit("Create task at {}".format(manager.p.relative_path(line)))
 
 def mkdir(line, inloop=True):
     line = utils.special_path_string(line)
@@ -150,3 +147,7 @@ def mkdir(line, inloop=True):
         os.chdir(manager.c.path)
     Chern.git.add(line)
     Chern.git.commit("Create directory at {}".format(manager.p.relative_path(line)))
+
+def rm(line):
+    line = os.path.abspath(line)
+    VObject(line).rm()

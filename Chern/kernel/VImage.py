@@ -1,7 +1,8 @@
 import json
 import os
+import sys
 import subprocess
-from Chern.VJob import VJob
+from Chern.kernel.VJob import VJob
 """
 This should have someting
 A image can be determined uniquely by the ?
@@ -11,7 +12,7 @@ class VImage(VJob):
         super(VImage, self).__init__(file_name)
 
     def inspect(self):
-        ps = subprocess.Popen("docker inspect {0}".format(self.image_id.decode()), shell=True, stdout=subprocess.PIPE)
+        ps = subprocess.Popen("docker inspect {0}".format(self.image_id().decode()), shell=True, stdout=subprocess.PIPE)
         info = ps.communicate()
         json_info = json.loads(info[0])
         return json_info[0]
@@ -24,8 +25,22 @@ class VImage(VJob):
             return status
 
     def image_id(self):
-        image_id = self.read_variable("image_id")
-        return image_id
+        image_id = self.config_file.read_variable("image_id")
+        return image_id.decode()
+
+
+    def execute(self):
+        self.config_file.write_variable("status", "building")
+        try:
+            entrypoint = open(self.path+"/entrypoint.sh", "w")
+            entrypoint.write("""#!/bin/bash\n$@\nmd5sum output\n""")
+            entrypoint.close()
+            self.build()
+        except Exception as e:
+            self.append_error("Fail to build the image!\n"+str(e))
+            self.config_file.write_variable("status", "failed")
+            raise e
+        self.config_file.write_variable("status", "built")
 
     def build(self):
         """
@@ -39,11 +54,11 @@ class VImage(VJob):
             then, you should build the docker file
         """
         os.chdir(self.path)
-        ps = subprocess.Popen("python3 start.py", shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        print(ps.communicate())
+        ps = subprocess.Popen("docker build .", shell=True,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ps.wait()
-        ps = subprocess.Popen("docker build .", shell=True, stdout=subprocess.PIPE)
-        ps.wait()
+        if ps.poll() != 0:
+            raise Exception(ps.stderr.read().decode())
         info = ps.communicate()[0]
         image_id = info.split()[-1]
         self.config_file.write_variable("image_id", image_id)

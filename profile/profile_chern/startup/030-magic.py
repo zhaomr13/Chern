@@ -5,9 +5,10 @@ import os
 import Chern
 import shutil
 from Chern import utils
-from Chern.ChernManager import get_manager
-from Chern.VObject import VObject
-from Chern.utils import debug
+from Chern.interface.ChernManager import get_manager
+from Chern.interface import shell
+from Chern.kernel.VObject import VObject
+from Chern.utils.utils import debug
 import subprocess
 
 manager = get_manager()
@@ -30,23 +31,23 @@ def cd(line):
         total = len(sub_objects)
         if index < total:
             sub_objects.sort(key=lambda x:(x.object_type(), x.path))
-            Chern.cd(manager.c.relative_path(sub_objects[index].path))
+            shell.cd(manager.c.relative_path(sub_objects[index].path))
             return
         index -= total
         total = len(predecessors)
         if index < total:
-            Chern.cd(manager.c.relative_path(predecessors[index].path))
+            shell.cd(manager.c.relative_path(predecessors[index].path))
             return
         index -= total
         total = len(successors)
         if index < total:
-            Chern.cd(manager.c.relative_path(successors[index].path))
+            shell.cd(manager.c.relative_path(successors[index].path))
             return
         else:
             print("Out out index")
             return
     else:
-        Chern.cd(line, inloop=False)
+        shell.cd(line, inloop=False)
 del cd
 
 # How to get a line magic
@@ -55,7 +56,7 @@ del cd
 def mv(line):
     """ Move a object to another object
     """
-    Chern.mv(line, inloop=False)
+    shell.mv(line, inloop=False)
 del mv
 
 # Copy object
@@ -72,11 +73,7 @@ del cp
 
 @register_line_magic
 def rm(line):
-    line = os.path.abspath(line)
-    VObject(line).rm()
-    shutil.rmtree(line)
-    Chern.git.rm(line)
-    Chern.git.commit("rm {}".format(manager.p.relative_path(line)))
+    shell.rm(line)
 del rm
 
 @register_line_magic
@@ -97,7 +94,7 @@ def set_algorithm(line):
         print("Can not set the algorithm if you are not a task")
         return
     manager.c.set_algorithm(line)
-    Chern.git.commit("{}:set algorithm {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(line)))
+    git.commit("{}:set algorithm {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(line)))
 
 def add_rawdata(line):
     line = utils.strip_path_string(line)
@@ -194,6 +191,9 @@ def add(line):
         add_site(line.lstrip("site").strip())
     elif line.startswith("parameter"):
         add_parameter(line.lstrip("parameter").strip())
+    else:
+        line = line.split(" ")
+        manager.c.add(line[0], line[1])
 del add
 
 @register_line_magic
@@ -229,6 +229,26 @@ del configuration
 def submit(line):
     manager.c.submit()
 del submit
+
+@register_line_magic
+def stdout(line):
+    print(manager.c.stdout())
+del stdout
+
+@register_line_magic
+def stderr(line):
+    print(manager.c.stderr())
+del stderr
+
+@register_line_magic
+def kill(line):
+    print(manager.c.kill())
+del kill
+
+@register_line_magic
+def resubmit(line):
+    manager.c.resubmit()
+del resubmit
 
 @register_line_magic
 def impress(line):

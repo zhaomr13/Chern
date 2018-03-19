@@ -1,20 +1,17 @@
 """ """
 import click
 import os
+import Chern
 from IPython import start_ipython, get_ipython
-from Chern.ChernDaemon import start as daemon_start
-from Chern.ChernDaemon import stop as daemon_stop
+from Chern.kernel.ChernDaemon import start as daemon_start
+from Chern.kernel.ChernDaemon import stop as daemon_stop
 
 @click.group(invoke_without_command=True)
 @click.pass_context
 def cli(ctx):
-    """ Chern command only is equal to `Chern daemon start` and `Chern ipython`
+    """ Chern command only is equal to `Chern ipython`
     """
     if ctx.invoked_subcommand is None:
-        # try:
-        daemon_start()
-        # except:
-        # print("Fail to start daemon")
         try:
             start_chern_ipython()
         except:
@@ -24,6 +21,25 @@ def cli(ctx):
 def config():
     """ Configue the software"""
     print("Configuration is not supported yet")
+
+@cli.command()
+def ipython():
+    """ Start IPython """
+    try:
+        start_chern_ipython()
+    except:
+        print("Fail to start ipython")
+
+@cli.command()
+def init():
+    """ Add the current directory to project """
+    try:
+        manager = Chern.ChernManager.get_manager()
+        manager.init_project()
+        start_chern_ipython()
+    except:
+        print("Fail to start ipython")
+
 
 @cli.command()
 @click.argument("command", type=str)
@@ -48,4 +64,3 @@ def start_chern_ipython():
 
 def main():
     cli()
-

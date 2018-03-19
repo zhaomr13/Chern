@@ -3,19 +3,20 @@ import uuid
 import imp
 import subprocess
 import Chern
-from Chern.VObject import VObject
-from Chern import utils
-from Chern import git
-from Chern.utils import debug
-from Chern.utils import colorize
+from Chern.kernel.VObject import VObject
+from Chern.kernel.VContainer import VContainer
+from Chern.utils import utils
+from Chern.utils import git
+from Chern.utils.utils import debug
+from Chern.utils.utils import colorize
 
-from Chern.ChernDatabase import ChernDatabase
+from Chern.kernel.ChernDatabase import ChernDatabase
 cherndb = ChernDatabase.instance()
 
 class VTask(VObject):
     def ls(self):
         super(VTask, self).ls()
-        parameters_file = utils.ConfigFile(self.path+"/parameters.py")
+        parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
         parameters = parameters_file.read_variable("parameters")
         if parameters is None:
             parameters = []
@@ -56,7 +57,13 @@ class VTask(VObject):
         git.add(self.path)
         git.commit("Impress: {0}".format(impression))
 
+    def stdout(self):
+        with open(self.container().path+"/stdout") as f:
+            return f.read()
 
+    def stderr(self):
+        with open(self.container().path+"/stderr") as f:
+            return f.read()
 
     def is_impressed(self, is_global=False):
         """ Judge whether the file is impressed
@@ -115,12 +122,17 @@ class VTask(VObject):
 
     def submit(self):
         if self.is_submitted():
+            print("Already submitted")
             return
         if not self.is_impressed():
             self.impress()
+
         path = utils.storage_path() + "/" + self.impression()
         cwd = self.path
         utils.copy_tree(cwd, path)
+        container = VContainer(path)
+        container.config_file.write_variable("job_type", "container")
+        cherndb.add_job(self.impression())
 
     def commit(self):
         """ Commit the object
@@ -220,10 +232,8 @@ class VTask(VObject):
         return self.container().status()
 
     def container(self):
-        container_id = self.config_file.read_variable("container_id")
-        if container_id is None:
-            return None
-        return VContainer(self.container_id)
+        path = utils.storage_path() + "/" + self.impression()
+        return VContainer(path)
 
     def add_algorithm(self, path):
         """
@@ -250,11 +260,9 @@ class VTask(VObject):
         Return the algorithm
         """
         predecessors = self.predecessors()
-        # debug(predecessors)
         for pred_object in predecessors:
             if pred_object.object_type() == "algorithm":
                 return Chern.VAlgorithm.VAlgorithm(pred_object.path)
-        print("No algorithm found")
         return None
 
 
@@ -273,8 +281,10 @@ class VTask(VObject):
         os.chdir(pwd)
 
     def add_input(self, path, alias):
+        """ FIXME: judge the input type
+        """
         self.add_arc_from(path)
-        self.set_alias(alias, VObject(path).relative_path())
+        self.set_alias(alias, VObject(path).invariant_path())
 
     def remove_input(self, alias):
         path = self.alias_to_path(alias)
@@ -284,20 +294,19 @@ class VTask(VObject):
         self.remove_arc_from(path)
         self.remove_alias(alias)
 
-    def add_output(self, path, alias):
-        if VObject(path).predecessors() != []:
-            print("An output should only have only one input")
-            return
-        self.add_arc_to(path)
-        self.set_alias(alias, VObject(path).relative_path())
+    def add_output(self, file_name):
+        """ FIXME: The output is now binding with the task
+        """
+        outputs = self.read_variable("outputs", [])
+        outputs.append(file_name)
+        self.write_variable("outputs", outputs)
 
     def remove_output(self, alias):
-        path = self.alias_to_path(alias)
-        if path is None:
-            print("Alias not found")
-            return
-        self.remove_arc_to(path)
-        self.remove_alias(alias)
+        """ FIXME: check existance
+        """
+        outputs = self.read_variable("outputs", [])
+        outputs.append(file_name)
+        self.write_variable("outputs", outputs)
 
     def parameters(self):
         """
@@ -317,7 +326,7 @@ class VTask(VObject):
         if parameter == "parameters":
             print("A parameter is not allowed to be called parameters")
             return
-        parameters_file = utils.ConfigFile(self.path+"/parameters.py")
+        parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
         parameters_file.write_variable(parameter, value)
         parameters = parameters_file.read_variable("parameters")
         if parameters is None:
@@ -332,7 +341,7 @@ class VTask(VObject):
         if parameter == "parameters":
             print("parameters is not allowed to remove")
             return
-        parameters_file = utils.ConfigFile(self.path+"/parameters.py")
+        parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
         parameters = parameters_file.read_variable("parameters")
         if parameter not in parameters:
             print("Parameter not found")
@@ -345,9 +354,12 @@ def create_task(path, inloop=False):
     path = utils.strip_path_string(path)
     os.mkdir(path)
     os.mkdir(path+"/.chern")
-    open(path + "/parameters.py", "w").close()
+    open(path + "/.chern/parameters.py", "w").close()
     with open(path + "/.chern/config.py", "w") as f:
         f.write("object_type = \"task\"")
+    task = VObject(path)
+    git.add(path+"/.chern")
+    git.commit("Create task at {}".format(task.invariant_path()))
     with open(path + "/README.md", "w") as f:
-        f.write("Please write README for this task")
-    subprocess.call("vim %s/README.md"%path, shell=True)
+        f.write("Please write README for task {}".format(task.invariant_path()))
+    task.edit_readme()

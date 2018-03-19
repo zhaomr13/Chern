@@ -1,12 +1,14 @@
 import os
+import shutil
 import time
-from Chern import utils
-from Chern.utils import debug
-from Chern.utils import colorize
+from Chern.utils import utils
+from Chern.utils.utils import debug
+from Chern.utils.utils import colorize
+from Chern.utils.utils import color_print
 from subprocess import call
 import subprocess
-from Chern import git
-from Chern.ChernDatabase import ChernDatabase
+from Chern.utils import git
+from Chern.kernel.ChernDatabase import ChernDatabase
 
 cherndb = ChernDatabase.instance()
 
@@ -85,6 +87,8 @@ class VObject(object):
         object and therefore, command like cd 1
         can be used
         """
+        if not cherndb.is_docker_started():
+            color_print("!!Warning: docker not started", color="warning")
         print(colorize("README:", "comment"))
         print(colorize(self.readme(), "comment"))
         sub_objects = self.sub_objects()
@@ -98,13 +102,21 @@ class VObject(object):
         if predecessors:
             print(colorize("o--> Predecessors:", "title0"))
         for index, pred_object in enumerate(predecessors):
-            print("{2} {0:<12} {3:>10}: {1:<20}".format("("+pred_object.object_type()+")", pred_object.invariant_path(), "[{}]".format(total+index), self.path_to_alias(pred_object.path)))
+            alias = self.path_to_alias(pred_object.invariant_path())
+            order = "[{}]".format(total+index)
+            pred_path = pred_object.invariant_path()
+            obj_type = "("+pred_object.object_type()+")"
+            print("{2} {0:<12} {3:>10}: {1:<20}".format(obj_type, pred_path, order, alias))
         total += len(predecessors)
         successors = self.successors()
         if successors:
             print(colorize("-->o Successors:", "title0"))
         for index, succ_object in enumerate(successors):
-            print("{2} {0:<12} {3:>10}: {1:<20}".format("("+succ_object.object_type()+")", succ_object.invariant_path(), "[{}]".format(total+index), self.path_to_alias(succ_object.path)))
+            alias = self.path_to_alias(succ_object.invariant_path())
+            order = "[{}]".format(total+index)
+            succ_path = succ_object.invariant_path()
+            obj_type = "("+succ_object.object_type()+")"
+            print("{2} {0:<12} {3:>10}: {1:<20}".format(obj_type, succ_path, order, alias))
 
     def add_arc_from(self, path):
         """ Add an link from the object contains in `path' to this object.
@@ -288,6 +300,13 @@ class VObject(object):
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object.path)
 
+    def add(self, src, dst):
+        if not os.path.exists(src):
+            return
+        utils.copy(src, self.path+"/"+dst)
+        git.add(self.path+"/"+dst)
+        git.commit("Add {}".format(dst))
+
     def rm(self):
         """
         Remove this object.
@@ -305,6 +324,9 @@ class VObject(object):
                     obj.remove_arc_to(succ_object.path)
                     alias = succ_object.path_to_alias(succ_object.path)
                     succ_object.remove_alias(alias)
+        shutil.rmtree(self.path)
+        git.rm(self.path)
+        git.commit("rm {}".format(self.invariant_path()))
 
     def sub_objects(self):
         """ return a list of the sub_objects
@@ -344,6 +366,9 @@ class VObject(object):
         need more editor support
         """
         call("vim {0}".format(self.path+"/README.md"), shell=True)
+        git.add(self.path+"/README.md")
+        message = self.latest_commit_message()
+        git.commit("{} + edit readme".format(message))
 
     def impression(self):
         impression = self.config_file.read_variable("impression")

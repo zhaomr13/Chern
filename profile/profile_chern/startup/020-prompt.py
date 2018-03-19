@@ -9,7 +9,7 @@
 
 from IPython.terminal.prompts import Prompts, Token
 import os
-from Chern.ChernManager import get_manager
+from Chern.interface.ChernManager import get_manager
 
 class ChernPrompt(Prompts):
     def __init__(self, ip):

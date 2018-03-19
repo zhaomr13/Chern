@@ -1,6 +1,6 @@
 import subprocess
 def add(line):
-    subprocess.call("git add {}".format(line), shell=True)
+    subprocess.call("git add {}".format(line), shell=True, stdout=subprocess.PIPE)
 
 def commit(line):
     subprocess.call("git commit -m \"{}\"".format(line), shell=True, stdout=subprocess.PIPE)
@@ -14,4 +14,4 @@ def log(line):
     return ps.stdout.read().decode()
 
 def rm(line):
-    subprocess.call("git rm -r {}".format(line), shell=True)
+    subprocess.call("git rm -rf {}".format(line), shell=True, stdout=subprocess.PIPE)
