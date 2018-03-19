@@ -11,7 +11,7 @@ AUTHOR = "Mingrui Zhao"
 AUTHOR_EMAIL = "mingrui.zhao@mail.labz0.org"
 URL = "https://github.com/zhaomr13/Chern"
 VERSION = __import__(PACKAGE).__version__
-
+here = os.path.dirname(__file__)
 setup(
     name = NAME,
     version = VERSION,
@@ -37,12 +37,6 @@ setup(
         "click", "colored"
     ],
     # include_package_data = True,
-    data_files = [("profile/profile_chern/startup",
-                   ["profile/profile_chern/startup/010-startup.py",
-                    "profile/profile_chern/startup/020-prompt.py",
-                    "profile/profile_chern/startup/030-magic.py",
-                    "profile/profile_chern/startup/040-mkobject.py", ]
-                   )],
     entry_points = {
         'console_scripts': [
             'Chern = Chern:main',

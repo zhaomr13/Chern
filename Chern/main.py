@@ -52,7 +52,7 @@ def daemon(command):
 
 def start_chern_ipython():
     print("started")
-    profile_path = os.path.abspath(os.path.dirname(__file__) + "/../profile")
+    profile_path = os.path.abspath(os.path.dirname(__file__) + "/data")
     print(profile_path)
     start_ipython(argv=["--profile=chern", "--ipython-dir="+profile_path])
     ip = get_ipython()
