@@ -57,6 +57,50 @@ def init_project():
     subprocess.call("git add README.md", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     subprocess.call("git commit -m \" Create README file for the project\"", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+def use_project(path):
+    """ Use an exsiting project
+    """
+    path = os.path.abspath(path)
+    project_name = path[path.rfind("/")+1:]
+    print("The project name is ``{}'', would you like to change it? [y/n]".format(project_name))
+    change = input()
+    if change == "y":
+        project_name = input("Please input the project name")
+
+    # Check the forbidden name
+    forbidden_names = ["config", "new", "projects", "start", "", "."]
+    def check_project_failed(project_name, forbidden_names):
+        message = "The following project names are forbidden:"
+        message += "\n    "
+        for name in forbidden_names:
+            message += name + ", "
+        raise Exception(message)
+    if project_name in forbidden_names:
+        check_project_failed(project_name, forbidden_names)
+
+    project_path = path
+    config_file = utils.ConfigFile(project_path+"/.chern/config.py")
+    object_type = config_file.read_variable("object_type", "")
+    if object_type != "project":
+        print("What!!?")
+        return
+    cwd = os.getcwd()
+    os.chdir(path)
+    project = VObject(path)
+    print(path)
+    if not project.is_git_committed():
+        print("Not committed")
+        os.chdir(cwd)
+        return
+    global_config_file = utils.ConfigFile(csys.local_config_path())
+    projects_path = global_config_file.read_variable("projects_path")
+    if projects_path is None:
+        projects_path = {}
+    projects_path[project_name] = project_path
+    global_config_file.write_variable("projects_path", projects_path)
+    global_config_file.write_variable("current_project", project_name)
+    os.chdir(project_path)
+
 def new_project(project_name):
     """ Create a new project
     """

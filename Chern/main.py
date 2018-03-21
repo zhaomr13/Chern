@@ -7,6 +7,8 @@ from Chern.kernel import VProject
 from Chern.kernel.ChernDaemon import start as daemon_start
 from Chern.kernel.ChernDaemon import stop as daemon_stop
 from Chern.utils import csys
+from Chern.kernel.ChernDatabase import ChernDatabase
+cherndb = ChernDatabase.instance()
 
 @click.group(invoke_without_command=True)
 @click.pass_context
@@ -49,13 +51,10 @@ def init():
 def use(path):
     """ Use a directory as the project"""
     try:
-        manager = Chern.ChernProjectManager.get_manager()
-        manager.use_project(path)
+        VProject.use_project(path)
         start_chern_ipython()
     except:
         print("Fail to start ipython")
-
-
 
 @cli.command()
 @click.argument("command", type=str)
@@ -82,6 +81,8 @@ def is_first_time():
     if not os.path.exists(csys.local_config_dir()):
         return True
     if not os.path.exists(csys.local_config_dir()+"/profile"):
+        return True
+    if cherndb.projects() == []:
         return True
     return False
 

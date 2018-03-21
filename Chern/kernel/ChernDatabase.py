@@ -79,6 +79,15 @@ class ChernDatabase(object):
             else:
                 return current_project
 
+    def projects(self):
+        """ Get the list of all the projects.
+        If there is not a list create one.
+        """
+        local_config_file = utils.ConfigFile(self.local_config_path)
+        projects_path = local_config_file.read_variable("projects_path", {})
+        return list(projects_path.keys())
+
+
 
     def project_path(self):
         """ Get The path of a specific project.

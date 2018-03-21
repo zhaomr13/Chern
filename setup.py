@@ -6,7 +6,7 @@ from setuptools.command.test import test as TestCommand
 
 PACKAGE = "Chern"
 NAME = "Chern"
-DESCRIPTION = "A data analysis framework for High Energy Physics"
+DESCRIPTION = "A data analysis management toolkit for high energy physics"
 AUTHOR = "Mingrui Zhao"
 AUTHOR_EMAIL = "mingrui.zhao@mail.labz0.org"
 URL = "https://github.com/zhaomr13/Chern"
@@ -39,8 +39,8 @@ setup(
     include_package_data = True,
     entry_points = {
         'console_scripts': [
-            'chern = Chern:main',
-            'chen = Chern:main'
+            'chern = Chern.main:main',
+            'chen = Chern.main:main'
         ]
     }
 )
