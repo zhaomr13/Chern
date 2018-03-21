@@ -1,5 +1,7 @@
 import os
 import Chern
+from Chern.utils import git
+from Chern.utils import csys
 from Chern.kernel.VObject import VObject
 from Chern.utils import utils
 from Chern.utils.utils import debug
@@ -8,8 +10,10 @@ import shutil
 from Chern.kernel.VTask import create_task
 from Chern.kernel.VAlgorithm import create_algorithm
 from Chern.kernel.VDirectory import create_directory
+from Chern.kernel.ChernDatabase import ChernDatabase
 
 manager = get_manager()
+cherndb = ChernDatabase.instance()
 
 def cd(line, inloop=True):
     """
@@ -74,11 +78,8 @@ def mv(line, inloop=True):
         source = os.path.abspath(source)
 
     shutil.copytree(source, destination)
-    Chern.git.add(destination)
     VObject(source).mv(destination)
     shutil.rmtree(source)
-    Chern.git.rm(source)
-    Chern.git.commit("mv {} to {}".format(manager.p.relative_path(source), manager.p.relative_path(destination)))
 
 def cp(line):
     line = line.split(" ")
@@ -95,41 +96,30 @@ def ls(line):
     """
     pass
 
-def mkdata(line, inloop=True):
-    line = utils.special_path_string(line)
-    if line.startswith("p/") or line == "p":
-        line = manager.p.path + line.strip("p")
-    else:
-        line = os.path.abspath(line)
-    create_data(line, inloop)
-    manager.switch_current_object(line)
-    if not inloop:
-        manager.switch_current_object(line)
-        os.chdir(manager.c.path)
-    Chern.git.add(line)
-    Chern.git.commit("Create data at {}".format(manager.p.relative_path(line)))
-
 def mkalgorithm(line, inloop=True):
-    line = utils.special_path_string(line)
-    if line.startswith("p/") or line == "p":
-        line = manager.p.path + line.strip("p")
-    else:
-        line = os.path.abspath(line)
+    """ Create a new algorithm """
+    line = csys.special_path_string(line)
+    line = csys.refine_path(line, cherndb.project_path())
+    parent_path = os.path.abspath(line+"/..")
+    object_type = VObject(parent_path).object_type()
+    if object_type != "directory" and object_type != "project":
+        print("Not allowed to create algorithm here")
+        return
     create_algorithm(line, inloop)
     if not inloop:
         manager.switch_current_object(line)
         os.chdir(manager.c.path)
-    Chern.git.add(line)
-    Chern.git.commit("Create algorithm at {}".format(manager.p.relative_path(line)))
 
 def mktask(line, inloop=True):
-    line = utils.special_path_string(line)
-    if line.startswith("p/") or line == "p":
-        line = manager.p.path + line.strip("p")
-    else:
-        line = os.path.abspath(line)
+    """ Create a new task """
+    line = csys.special_path_string(line)
+    line = csys.refine_path(line, cherndb.project_path())
+    parent_path = os.path.abspath(line+"/..")
+    object_type = VObject(parent_path).object_type()
+    if object_type != "directory" and object_type != "project":
+        print("Not allowed to create task here")
+        return
     create_task(line, inloop)
-    manager.switch_current_object(line)
     if not inloop:
         manager.switch_current_object(line)
         os.chdir(manager.c.path)
@@ -145,8 +135,6 @@ def mkdir(line, inloop=True):
     if not inloop:
         manager.switch_current_object(line)
         os.chdir(manager.c.path)
-    Chern.git.add(line)
-    Chern.git.commit("Create directory at {}".format(manager.p.relative_path(line)))
 
 def rm(line):
     line = os.path.abspath(line)

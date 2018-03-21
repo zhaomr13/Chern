@@ -352,6 +352,10 @@ class VTask(VObject):
 
 def create_task(path, inloop=False):
     path = utils.strip_path_string(path)
+    parent_path = os.path.abspath(path+"/..")
+    object_type = VObject(parent_path).object_type()
+    if object_type != "project" and object_type != "directory":
+        raise Exception("create task only under project or directory")
     os.mkdir(path)
     os.mkdir(path+"/.chern")
     open(path + "/.chern/parameters.py", "w").close()

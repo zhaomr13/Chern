@@ -20,3 +20,31 @@ You can use the following commands:
     submit
     readme """
 }
+
+algorithm_helpme = { "": """Hello, you are in the VProject object, what would you like to do?
+The commands to use:
+    cd [object]
+    ls : list the containings
+    mktask :
+    mkalgorithm : """,
+
+"cd": """The usage of cd:
+    cd [object] """,
+
+"cd test": """Test for cd"""
+                  }
+
+directory_helpme = { "": """Hello, you are in the VProject object, what would you like to do?
+The commands to use:
+    cd [object]
+    ls : list the containings
+    mktask :
+    mkalgorithm : """,
+
+"cd": """The usage of cd:
+    cd [object] """,
+
+"cd test": """Test for cd"""
+                  }
+
+

@@ -18,6 +18,11 @@ cherndb = ChernDatabase.instance()
 class VAlgorithm(VObject):
     """ Algorithm class
     """
+    def helpme(self, command):
+        from Chern.kernel.Helpme import algorithm_helpme
+        print(algorithm_helpme.get(command, "No such command, try ``helpme'' alone."))
+
+
     def commit(self):
         """ Commit the object
         """
@@ -165,7 +170,7 @@ def create_algorithm(path, inloop=False):
         config_file.write("main_file = \"main.py\"\n")
     with open(path + "/README.md", "w") as readme_file:
         readme_file.write("Please write README for this algorithm")
-    subprocess.call("vim %s/README.md".format(path), shell=True)
+    subprocess.call("vim {}/README.md".format(path), shell=True)
     with open(path + "/main.C", "w") as main_file:
         main_file.write("""hehe""")
-    subprocess.call("vim %s/main.py".format(path), shell=True)
+    subprocess.call("vim {}/main.py".format(path), shell=True)

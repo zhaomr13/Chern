@@ -10,7 +10,9 @@ class VDirectory(VObject):
     """
     Nothing more to do for this VDirectory.
     """
-    pass
+    def helpme(self, command):
+        from Chern.kernel.Helpme import directory_helpme
+        print(directory_helpme.get(command, "No such command, try ``helpme'' alone."))
 
     def add_parameter(self, parameter, value):
         """

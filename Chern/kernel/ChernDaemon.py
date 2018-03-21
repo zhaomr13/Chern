@@ -2,9 +2,10 @@
 import daemon
 import time
 from daemon import pidfile
+import os
 import sys
 import subprocess
-from Chern.utils import utils
+from Chern.utils import csys
 from Chern.kernel.ChernDatabase import ChernDatabase
 from Chern.kernel.VImage import VImage
 from Chern.kernel.VContainer import VContainer
@@ -28,12 +29,16 @@ def execute():
             job.execute()
 
 def status():
-    daemon_path = utils.daemon_path()
-    return "started"
+    daemon_path = csys.daemon_path()
+    if os.path.exists(daemon_path+"/daemon.pid"):
+        return "started"
+        pid = open(daemon_path+"/daemon.pid").read().decode().strip()
+    else:
+        return "stopped"
     # subprocess.call("kill {}".format(open(daemon_path + "/daemon.pid").read()), shell=True)
 
 def start():
-    daemon_path = utils.daemon_path()
+    daemon_path = csys.daemon_path()
     with daemon.DaemonContext(
         working_directory="/",
         pidfile=pidfile.TimeoutPIDLockFile(daemon_path + "/daemon.pid"),
@@ -47,5 +52,5 @@ def start():
                 print(e)
 
 def stop():
-    daemon_path = utils.daemon_path()
+    daemon_path = csys.daemon_path()
     subprocess.call("kill {}".format(open(daemon_path + "/daemon.pid").read()), shell=True)

@@ -36,10 +36,10 @@ setup(
     install_requires = [
         "click", "colored"
     ],
-    # include_package_data = True,
+    include_package_data = True,
     entry_points = {
         'console_scripts': [
-            'Chern = Chern:main',
+            'chern = Chern:main',
             'chen = Chern:main'
         ]
     }

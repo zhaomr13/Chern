@@ -5,6 +5,7 @@ from Chern.utils import utils
 from Chern.utils.utils import debug
 from Chern.utils.utils import colorize
 from Chern.utils.utils import color_print
+from Chern.kernel.ChernDaemon import status as daemon_status
 from subprocess import call
 import subprocess
 from Chern.utils import git
@@ -89,6 +90,8 @@ class VObject(object):
         """
         if not cherndb.is_docker_started():
             color_print("!!Warning: docker not started", color="warning")
+        if daemon_status() != "started":
+            color_print("!!Warning: runner not started {}".format(daemon_status()), color="warning")
         print(colorize("README:", "comment"))
         print(colorize(self.readme(), "comment"))
         sub_objects = self.sub_objects()

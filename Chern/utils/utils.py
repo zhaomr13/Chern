@@ -24,7 +24,9 @@ def storage_path():
     return path
 
 def local_config_path():
-    # FIXME
+    return os.environ["HOME"] + "/.Chern/config.py"
+
+def local_config_dir():
     return os.environ["HOME"] + "/.Chern/config.py"
 
 def mkdir(directory):
