@@ -9,6 +9,7 @@ from Chern.utils import utils
 from Chern.utils import git
 from Chern.utils.utils import debug
 from Chern.utils.utils import colorize
+from Chern.utils import csys
 
 from Chern.kernel.ChernDatabase import ChernDatabase
 cherndb = ChernDatabase.instance()
@@ -234,6 +235,29 @@ class VTask(VObject):
     def container(self):
         path = utils.storage_path() + "/" + self.impression()
         return VContainer(path)
+
+    def add_source(self, path):
+        """
+        After add source, the status of the task should be done
+        """
+        md5 = csys.dir_md5(path)
+        if self.is_impressed():
+            volume = self.volume()
+            volume.set_storage(path)
+        if self.algorithm() is not None:
+            print("Unable to set source if it is a task of type source")
+            return
+        self.config_file.write_variable("source", md5)
+        impression = uuid.uuid4().hex
+        self.config_file.write_variable("impression", impression)
+        git.add(self.path)
+        git.commit("Impress: {0}".format(impression))
+        path = utils.storage_path() + "/" + self.impression()
+        cwd = self.path
+        utils.copy_tree(cwd, path)
+        container = VContainer(path)
+        container.config_file.write_variable("job_type", "container")
+        cherndb.add_job(self.impression())
 
     def add_algorithm(self, path):
         """

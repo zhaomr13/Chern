@@ -34,7 +34,7 @@ setup(
     keywords = "Analysis Perservation",
     packages = find_packages(exclude=[]),
     install_requires = [
-        "click", "colored"
+        "click", "colored", "python-daemon", "ipython"
     ],
     include_package_data = True,
     entry_points = {

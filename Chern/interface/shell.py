@@ -1,5 +1,4 @@
 import os
-import Chern
 from Chern.utils import git
 from Chern.utils import csys
 from Chern.kernel.VObject import VObject
@@ -139,3 +138,7 @@ def mkdir(line, inloop=True):
 def rm(line):
     line = os.path.abspath(line)
     VObject(line).rm()
+
+def set_source(line):
+    # line = os.path.abspath(line)
+    manager.c.set_source(line)

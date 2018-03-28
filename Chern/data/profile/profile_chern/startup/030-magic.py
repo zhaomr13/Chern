@@ -175,6 +175,8 @@ def add(line):
         add_site(line.lstrip("site").strip())
     elif line.startswith("parameter"):
         add_parameter(line.lstrip("parameter").strip())
+    elif line.startswith("source"):
+        shell.set_source(line.lstrip("source").strip())
     else:
         line = line.split(" ")
         manager.c.add(line[0], line[1])

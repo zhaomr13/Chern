@@ -7,6 +7,19 @@ import os
 import shutil
 import uuid
 from colored import fg, bg, attr
+import subprocess
+import hashlib
+
+def dir_md5(path):
+    ps = subprocess.Popen("find -s {} -type f -exec md5sum {{}} \;".format(path),
+                          shell=True, stdout=subprocess.PIPE)
+    ps.wait()
+    out = ps.stdout.read().decode().split()
+    print(out)
+    md5s = out[::2]
+    names = [os.path.relpath(name, path) for name in out[1::2]]
+    string = "".join(md5s).join(names)
+    return hashlib.md5(string.encode('utf-8')).hexdigest()
 
 def daemon_path():
     path = os.environ["HOME"] + "/.Chern/daemon"

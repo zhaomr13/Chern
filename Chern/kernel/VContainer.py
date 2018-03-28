@@ -59,6 +59,15 @@ class VContainer(VJob):
         parameters_file.write_variable("parameters", parameters)
         self.set_update_time()
 
+    def storage(self):
+        storage = self.config_file.read_variable("storage")
+        if storage is None:
+            return self.path + "/output"
+        else:
+            return storage
+
+    def set_storage(self, path):
+        self.config_file.write_variable("storage")
 
     def image(self):
         predecessors = self.predecessors()
@@ -75,13 +84,17 @@ class VContainer(VJob):
         impression = self.config_file.read_variable("impression")
         return impression
 
-    def create_container(self):
-        mounts = "-v /data/{} ".format(self.impression())
-        for input_task in self.inputs():
-            mounts += "--volume-from {} ".format(input_task.container_id())
+    def create_container(self, container_type="task"):
+        mounts = "-v /data/{}:{}".format(self.impression(), self.storage())
+        for input_container in self.inputs():
+            mounts += " -v /data/{}:{}:ro".format(input_container.impression(),
+                                                  input_container.storage())
         print(self.image().image_id())
         print(mounts)
-        image_id = self.image().image_id()
+        if container_type == "task":
+            image_id = self.image().image_id()
+        elif container_type == "data":
+            image_id = "empty"
         ps = subprocess.Popen("docker create {0} {1}".format(mounts, image_id),
                               shell=True, stdout=subprocess.PIPE)
         ps.wait()
