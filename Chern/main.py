@@ -66,9 +66,7 @@ def daemon(command):
         daemon_stop()
 
 def start_chern_ipython():
-    print("started")
     profile_path = os.path.abspath(csys.local_config_dir()+"/profile")
-    print(profile_path)
     start_ipython(argv=["--profile=chern", "--ipython-dir="+profile_path])
     ip = get_ipython()
     del ip.magics_manager.magics["line"]["ls"]
@@ -90,6 +88,16 @@ def start_first_time():
     csys.mkdir(csys.local_config_dir())
     data_path = os.path.abspath(os.path.dirname(__file__) + "/data/profile")
     csys.copy_tree(data_path, csys.local_config_dir()+"/profile")
+
+@cli.command()
+def prologue():
+    """ A prologue from the author """
+    print("""
+Chern: A data analysis management toolkit
+Author: Mingrui Zhao, dedicated to Sidan
+2013 - 2017 @ Center of High Energy Physics, Tsinghua University
+2017 -  now @ Department of Nuclear Physics, China Institute of Atomic Energy
+Email: mingrui.zhao@mail.labz0.org""")
 
 def main():
     cli()

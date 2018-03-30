@@ -9,17 +9,40 @@ import uuid
 from colored import fg, bg, attr
 import subprocess
 import hashlib
+import time
+
+def dir_mtime(path):
+    mtime = os.path.getmtime(path)
+    if path.endswith(".chern"):
+        mtime = -1
+    if not os.path.isdir(path):
+        return mtime
+    for sub_dir in os.listdir(path):
+        if sub_dir == ".git":
+            continue
+        mtime = max(mtime, dir_mtime(os.path.join(path, sub_dir)))
+    return mtime
 
 def dir_md5(path):
+    config_file = ConfigFile(os.environ["HOME"] + "/.Chern/cache")
+    consult_table = config_file.read_variable("consult_table",{})
+    last_consult_time, md5 = consult_table.get(path, (-1,-1))
+    modification_time = os.path.getmtime(path)
+    if modification_time < last_consult_time:
+        return md5
+
     ps = subprocess.Popen("find -s {} -type f -exec md5sum {{}} \;".format(path),
                           shell=True, stdout=subprocess.PIPE)
     ps.wait()
     out = ps.stdout.read().decode().split()
-    print(out)
     md5s = out[::2]
     names = [os.path.relpath(name, path) for name in out[1::2]]
     string = "".join(md5s).join(names)
-    return hashlib.md5(string.encode('utf-8')).hexdigest()
+    md5 = hashlib.md5(string.encode('utf-8')).hexdigest()
+
+    consult_table[path] = (time.time(), md5)
+    config_file.write_variable("consult_table", consult_table)
+    return md5
 
 def daemon_path():
     path = os.environ["HOME"] + "/.Chern/daemon"

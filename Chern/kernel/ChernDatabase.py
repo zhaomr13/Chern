@@ -1,5 +1,6 @@
 """
 """
+import sys
 import os
 import subprocess
 from Chern.utils import utils
@@ -11,6 +12,8 @@ class ChernDatabase(object):
     ins = None
     def __init__(self):
         self.local_config_path = utils.local_config_path()
+        self.consult_table = {}
+        self.impression_consult_table = {}
 
     @classmethod
     def instance(cls):
@@ -49,6 +52,9 @@ class ChernDatabase(object):
                 job = VContainer(job.path)
             elif job.job_type() == "image":
                 job = VImage(job.path)
+            else:
+                continue
+            # print("{0} {1}".format(job, job.status()), file=sys.stderr)
             if job.status() == condition:
                 job_list.append(job)
         return job_list

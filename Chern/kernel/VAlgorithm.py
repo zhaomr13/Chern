@@ -1,6 +1,7 @@
 """ VAlgorithm
 """
 import uuid
+import time
 import os
 import subprocess
 
@@ -9,6 +10,7 @@ from Chern.kernel.VImage import VImage
 from Chern.kernel.ChernDatabase import ChernDatabase
 
 from Chern.utils import utils
+from Chern.utils import csys
 from Chern.utils.utils import color_print
 from Chern.utils import git
 from Chern.utils.utils import colorize
@@ -50,11 +52,25 @@ class VAlgorithm(VObject):
     def status(self):
         """ query the status of the current algorithm.
         """
-        if not self.is_impressed():
+        if not self.is_impressed_fast():
             return "new"
         if not self.is_submitted():
             return "impressed"
         return self.image().status()
+
+    def is_impressed_fast(self):
+        # config_file = utils.ConfigFile(os.environ["HOME"] + "/.Chern/git-cache")
+        # consult_table = config_file.read_variable("impression_consult_table", {})
+        # return self.is_impressed()
+        consult_table = cherndb.impression_consult_table
+        last_consult_time, is_impressed = consult_table.get(self.path, (-1,-1))
+        modification_time = csys.dir_mtime( cherndb.project_path() )
+        if modification_time < last_consult_time:
+            return is_impressed
+        is_impressed = self.is_impressed()
+        consult_table[self.path] = (time.time(), is_impressed)
+        # config_file.write_variable("impression_consult_table", consult_table)
+        return is_impressed
 
     def is_impressed(self):
         """ Judge whether impressed or not. Return a True or False.
@@ -67,7 +83,7 @@ class VAlgorithm(VObject):
     def is_submitted(self):
         """ Judge whether submitted or not. Return a True or False.
         """
-        if not self.is_impressed():
+        if not self.is_impressed_fast():
             return False
         return cherndb.job(self.impression()) is not None
 
@@ -75,7 +91,7 @@ class VAlgorithm(VObject):
         """ Submit """
         if self.is_submitted():
             return ["[ERROR] {0} already submitted! Skip ``submit''.".format(self.invariant_path())]
-        if not self.is_impressed():
+        if not self.is_impressed_fast():
             self.impress()
 
         path = utils.storage_path() + "/" + self.impression()
@@ -124,7 +140,13 @@ class VAlgorithm(VObject):
         print(colorize("---- Parameters:", "title0"))
         for parameter in parameters:
             print(parameter)
-        print(colorize("**** STATUS:", "title0"), self.status())
+        status = self.status()
+        if status == "built":
+            status_color = "success"
+        else:
+            status_color = "normal"
+        print(colorize("**** STATUS:", "title0"),
+              colorize(self.status(), status_color) )
         if self.is_submitted() and self.image().error() != "":
             print(colorize("!!!! ERROR:\n", "title0"), self.image().error())
         files = os.listdir(self.path)

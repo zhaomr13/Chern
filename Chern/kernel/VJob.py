@@ -1,5 +1,6 @@
 import os
-from Chern import utils
+from Chern.utils import utils
+from Chern.utils import csys
 
 class VJob(object):
     """ Virtual class of the objects, including VVolume, VImage, VContainer
@@ -8,7 +9,7 @@ class VJob(object):
     def __init__(self, path):
         """ Initialize the project the only **information** of a object instance
         """
-        self.path = utils.strip_path_string(path)
+        self.path = csys.strip_path_string(path)
         self.config_file = utils.ConfigFile(self.path+"/.chern/config.py")
 
     def __str__(self):
@@ -133,13 +134,11 @@ class VJob(object):
             predecessors.append(VJob(utils.storage_path()+"/"+path))
         return predecessors
 
-    def path_to_alias(self, path):
+    def impression_to_alias(self, path):
         """
         """
-        path_to_alias = self.config_file.read_variable("path_to_alias")
-        if path_to_alias is None:
-            return ""
-        return path_to_alias.get(path, "")
+        impression_to_alias = self.config_file.read_variable("impression_to_alias", {})
+        return impression_to_alias.get(path, "")
 
     def alias_to_path(self, alias):
         alias_to_path = self.config_file.read_variable("alias_to_path")

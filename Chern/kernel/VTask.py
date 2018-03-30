@@ -1,10 +1,12 @@
 import os
 import uuid
 import imp
+import time
 import subprocess
 import Chern
 from Chern.kernel.VObject import VObject
 from Chern.kernel.VContainer import VContainer
+from Chern.kernel import VAlgorithm
 from Chern.utils import utils
 from Chern.utils import git
 from Chern.utils.utils import debug
@@ -25,38 +27,97 @@ class VTask(VObject):
         for parameter in parameters:
             print(parameter, end=" = ")
             print(parameters_file.read_variable(parameter))
-        print(colorize("**** STATUS:", "title0"), self.status())
+
+        status = self.status()
+        if status == "done":
+            status_color = "success"
+        else:
+            status_color = "normal"
+        print(colorize("**** STATUS:", "title0"),
+              colorize(status, status_color) )
+
+        if self.is_submitted() and self.container().error() != "":
+            print(colorize("!!!! ERROR:\n", "title0"), self.container().error())
+        if self.is_submitted():
+            print("---------------")
+            if not os.path.exists(self.container().path+"/output"):
+                return
+            files = os.listdir(self.container().path+"/output")
+            for f in files:
+                if not f.startswith(".") and f != "README.md":
+                    print(f)
+
+    def view(self, file_name):
+        path = self.container().path+"/output/"+file_name
+        subprocess.Popen("open {}".format(path), shell=True)
 
     def inputs(self):
         """
         Input data.
         """
-        inputs = filter(lambda x: x.object_type() == "data", self.predecessors())
-        return list(map(lambda x: Chern.VData.VData(x.path), inputs))
+        inputs = filter(lambda x: x.object_type() == "task", self.predecessors())
+        return list(map(lambda x: VTask(x.path), inputs))
 
     def outputs(self):
         """
         Output data.
         """
-        outputs = filter(lambda x: x.object_type() == "data", self.successors())
-        return list(map(lambda x: Chern.VData.VData(x.path), outputs))
+        outputs = filter(lambda x: x.object_type() == "task", self.successors())
+        return list(map(lambda x: VTask(x.path), outputs))
 
     def impress(self):
+        print("impressing", self.path)
         inputs = self.inputs()
         pred = []
         for input_data in inputs:
-            if not input_data.is_impressed():
+            if not input_data.is_impressed_fast():
                 input_data.impress()
             pred.append(input_data.impression())
         algorithm = self.algorithm()
-        if not algorithm.is_impressed():
+        if not algorithm.is_impressed_fast():
             algorithm.impress()
         pred.append(algorithm.impression())
         self.config_file.write_variable("pred_impression", pred)
         impression = uuid.uuid4().hex
         self.config_file.write_variable("impression", impression)
+        impressions = self.config_file.read_variable("impressions", [])
+        impressions.append(impression)
+        self.config_file.write_variable("impressions", impressions)
         git.add(self.path)
         git.commit("Impress: {0}".format(impression))
+
+    def remove(self, remove_impression):
+        impressions = self.config_file.read_variable("impressions", [])
+        impression = self.config_file.read_variable("impression")
+        if remove_impression == impression[:8]:
+            print("The most recent job is not allowed to remove")
+            return
+        for im in impressions:
+            path = utils.storage_path() + "/" + im
+            if not os.path.exists(path):
+                continue
+            if remove_impression == im[:8]:
+                print("Try to remove the job")
+                container = VContainer(path)
+                container.remove()
+                return
+
+    def jobs(self):
+        impressions = self.config_file.read_variable("impressions", [])
+        if impressions == []:
+            return
+        impression = self.config_file.read_variable("impression")
+        for im in impressions:
+            path = utils.storage_path() + "/" + im
+            if not os.path.exists(path):
+                continue
+            if impression == im:
+                short = "*"
+            else:
+                short = " "
+            short += im[:8]
+            status = VContainer(path).status()
+            print("{0:<12}   {1:>20}".format(short, status))
 
     def stdout(self):
         with open(self.container().path+"/stdout") as f:
@@ -66,44 +127,51 @@ class VTask(VObject):
         with open(self.container().path+"/stderr") as f:
             return f.read()
 
+    def is_impressed_fast(self):
+        # return self.is_impressed()
+        # config_file = utils.ConfigFile(os.environ["HOME"] + "/.Chern/git-cache")
+        consult_table = cherndb.impression_consult_table
+        # config_file.read_variable("impression_consult_table", {})
+        last_consult_time, is_impressed = consult_table.get(self.path, (-1,-1))
+        modification_time = csys.dir_mtime( cherndb.project_path() )
+        if modification_time < last_consult_time:
+            return is_impressed
+        is_impressed = self.is_impressed()
+        consult_table[self.path] = (time.time(), is_impressed)
+        # config_file.write_variable("impression_consult_table", consult_table)
+        return is_impressed
+
+
     def is_impressed(self, is_global=False):
         """ Judge whether the file is impressed
         """
-        # quick check
-        """
-        impression = self.impression()
-        if impression is None:
-            return False
-        qtime = os.path.getmtime(self.path)
-        gtime = os.path.getmtime(path)
-        if qtime > gtime:
-            return True
-        """
-
+        print("is_impressed")
         if not self.is_git_committed():
             return False
         latest_commit_message = self.latest_commit_message()
         if "Impress:" not in latest_commit_message:
             return False
+        if self.algorithm() is None:
+            return True
         pred = []
         inputs = self.inputs()
         for input_data in inputs:
-            if not input_data.is_impressed():
+            if not input_data.is_impressed_fast():
                 return False
             else:
                 pred.append(input_data.impression())
         algorithm = self.algorithm()
-        if not algorithm.is_impressed():
+        if not algorithm.is_impressed_fast():
             return False
         else:
             pred.append(algorithm.impression())
-        if pred == sorted(self.config_file.read_variable("pred_impression")):
+        if sorted(pred) == sorted(self.config_file.read_variable("pred_impression")):
             return True
         else:
             return False
 
     def is_submitted(self):
-        if not self.is_impressed():
+        if not self.is_impressed_fast():
             return False
         if cherndb.job(self.impression()) is not None:
             return True
@@ -113,26 +181,34 @@ class VTask(VObject):
     def is_committed(self):
         if not self.is_git_committed():
             return False
-        inputs = self.inputs()
-        for input_data in inputs:
-            if not input_data.is_committed():
+        if self.algorithm() is not None:
+            inputs = self.inputs()
+            for input_data in inputs:
+                if not input_data.is_committed():
+                    return False
+            if not self.algorithm().is_committed():
                 return False
-        if not self.algorithm().is_committed():
-            return False
         return True
 
     def submit(self):
         if self.is_submitted():
             print("Already submitted")
             return
-        if not self.is_impressed():
+        if not self.is_impressed_fast():
             self.impress()
+
+        path_to_alias = self.config_file.read_variable("path_to_alias", {})
+        impression_to_alias = {}
+        for path, alias in path_to_alias.items():
+            impression = VTask(cherndb.project_path() + "/" + path).impression()
+            impression_to_alias[impression] = alias
 
         path = utils.storage_path() + "/" + self.impression()
         cwd = self.path
         utils.copy_tree(cwd, path)
         container = VContainer(path)
         container.config_file.write_variable("job_type", "container")
+        container.config_file.write_variable("impression_to_alias", impression_to_alias)
         cherndb.add_job(self.impression())
 
     def commit(self):
@@ -212,24 +288,19 @@ class VTask(VObject):
             container.connect(output_volume, "output")
         container.start()
 
-    def new_container(self):
-        self.docker
-
-
     def status(self):
         """
         """
-        if self.algorithm() is None:
-            return "new"
-        if not self.is_impressed():
+        if not self.is_impressed_fast():
             return "new"
         if not self.is_submitted():
             return "impressed"
-        if self.algorithm().status() != "built":
-            return "submitted"
-        for input_data in self.inputs():
-            if input_data.status() != "downloaded":
-                return "waitting"
+        if self.algorithm() is not None:
+            if self.algorithm().status() != "built":
+                return "submitted"
+            for input_data in self.inputs():
+                if input_data.status() != "done":
+                    return "waitting"
         return self.container().status()
 
     def container(self):
@@ -241,22 +312,18 @@ class VTask(VObject):
         After add source, the status of the task should be done
         """
         md5 = csys.dir_md5(path)
-        if self.is_impressed():
-            volume = self.volume()
-            volume.set_storage(path)
-        if self.algorithm() is not None:
-            print("Unable to set source if it is a task of type source")
-            return
         self.config_file.write_variable("source", md5)
         impression = uuid.uuid4().hex
         self.config_file.write_variable("impression", impression)
         git.add(self.path)
         git.commit("Impress: {0}".format(impression))
-        path = utils.storage_path() + "/" + self.impression()
+        job_path = utils.storage_path() + "/" + self.impression()
         cwd = self.path
-        utils.copy_tree(cwd, path)
-        container = VContainer(path)
+        utils.copy_tree(cwd, job_path)
+        container = VContainer(job_path)
         container.config_file.write_variable("job_type", "container")
+        container.config_file.write_variable("status", "external")
+        container.set_storage(path)
         cherndb.add_job(self.impression())
 
     def add_algorithm(self, path):
@@ -286,7 +353,7 @@ class VTask(VObject):
         predecessors = self.predecessors()
         for pred_object in predecessors:
             if pred_object.object_type() == "algorithm":
-                return Chern.VAlgorithm.VAlgorithm(pred_object.path)
+                return VAlgorithm.VAlgorithm(pred_object.path)
         return None
 
 
@@ -309,6 +376,11 @@ class VTask(VObject):
         """
         self.add_arc_from(path)
         self.set_alias(alias, VObject(path).invariant_path())
+        message = VObject(path).latest_commit_message()
+        git.add(path)
+        git.commit("{} + append successor".format(message))
+        git.add(self.path)
+        git.commit("Add input {}".format(VObject(path).invariant_path()))
 
     def remove_input(self, alias):
         path = self.alias_to_path(alias)

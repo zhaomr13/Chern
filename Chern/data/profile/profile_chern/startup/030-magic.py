@@ -2,14 +2,12 @@ from IPython.core.magic import (register_line_magic, register_cell_magic,
                                 register_line_cell_magic)
 
 import os
-import Chern
 import shutil
-from Chern import utils
+import subprocess
+from Chern.utils import csys
 from Chern.interface.ChernManager import get_manager
 from Chern.interface import shell
 from Chern.kernel.VObject import VObject
-from Chern.utils.utils import debug
-import subprocess
 
 manager = get_manager()
 
@@ -98,7 +96,7 @@ def set_algorithm(line):
 
 
 def add_input(line):
-    line = utils.strip_path_string(line)
+    line = csys.strip_path_string(line)
     # if line.startswith()
     if manager.c.object_type() != "task":
         print("Can not set the algorithm if you are not a task")
@@ -110,7 +108,7 @@ def add_input(line):
     git.commit("{}:add input {} named {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(path), alias))
 
 def add_output(line):
-    line = utils.strip_path_string(line)
+    line = csys.strip_path_string(line)
     # if line.startswith()
     if manager.c.object_type() != "task":
         print("Can not set the algorithm if you are not a task")
@@ -135,7 +133,7 @@ def add_parameter(line):
     manager.c.add_parameter(line[0], line[1])
 
 def add_algorithm(line):
-    line = utils.strip_path_string(line)
+    line = csys.strip_path_string(line)
     if manager.c.object_type() != "task":
         print("Can not set the algorithm if you are not a task or a directory")
         return
@@ -176,7 +174,7 @@ def add(line):
     elif line.startswith("parameter"):
         add_parameter(line.lstrip("parameter").strip())
     elif line.startswith("source"):
-        shell.set_source(line.lstrip("source").strip())
+        shell.add_source(line.lstrip("source").strip())
     else:
         line = line.split(" ")
         manager.c.add(line[0], line[1])
@@ -195,6 +193,8 @@ def remove(line):
         remove_site(line.lstrip("site").strip())
     elif line.startswith("parameter"):
         remove_parameter(line.lstrip("parameter").strip())
+    else:
+        manager.c.remove(line)
 del remove
 
 @register_line_magic
@@ -240,6 +240,16 @@ del resubmit
 def impress(line):
     manager.c.impress()
 del impress
+
+@register_line_magic
+def view(line):
+    manager.c.view(line)
+del view
+
+@register_line_magic
+def jobs(line):
+    manager.c.jobs()
+del jobs
 
 @register_line_magic
 def git(line):

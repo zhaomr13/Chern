@@ -15,8 +15,9 @@ cherndb = ChernDatabase.instance()
 
 def execute():
     waitting_jobs = cherndb.jobs("submitted")
+    # print("List {0}".format(waitting_jobs), file=sys.stderr)
     for job in waitting_jobs:
-        print("Flag ok", file=sys.stderr)
+        print("Running {0}".format(job), file=sys.stderr)
         flag = True
         for pred_object in job.predecessors():
             if pred_object == "container" and VContainer(pred_object.path).status() != "done":
@@ -49,8 +50,10 @@ def start():
             try:
                 execute()
             except Exception as e:
-                print(e)
+                print(e, file=sys.stderr)
 
 def stop():
+    if status() == "stop":
+        return
     daemon_path = csys.daemon_path()
     subprocess.call("kill {}".format(open(daemon_path + "/daemon.pid").read()), shell=True)

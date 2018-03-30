@@ -8,6 +8,7 @@ from Chern.utils.utils import color_print
 from Chern.kernel.ChernDaemon import status as daemon_status
 from subprocess import call
 import subprocess
+import Chern
 from Chern.utils import git
 from Chern.kernel.ChernDatabase import ChernDatabase
 
@@ -99,7 +100,15 @@ class VObject(object):
         if sub_objects:
             print(colorize(">>>> Subobjects:", "title0"))
         for index, sub_object in enumerate(sub_objects):
-            print("{2} {0:<12} {1:>20}".format("("+sub_object.object_type()+")", self.relative_path(sub_object.path), "[{}]".format(index)))
+            """
+            if sub_object.object_type() == "task" and Chern.kernel.VTask.VTask(sub_object.path).status() == "done":
+                sub_path = colorize(self.relative_path(sub_object.path), "success")
+            elif sub_object.object_type() == "algorithm" and Chern.kernel.VAlgorithm.VAlgorithm(sub_object.path).status() == "built":
+                sub_path = colorize(self.relative_path(sub_object.path), "success")
+            else:
+            """
+            sub_path = self.relative_path(sub_object.path)
+            print("{2} {0:<12} {1:>20}".format("("+sub_object.object_type()+")", sub_path, "[{}]".format(index)))
         total = len(sub_objects)
         predecessors = self.predecessors()
         if predecessors:
@@ -360,7 +369,19 @@ class VObject(object):
         if is_global:
             log = git.log('-n 1 --format="%s"').split("\n")
         else:
+            # config_file = utils.ConfigFile(os.environ["HOME"] + "/.Chern/git-cache")
+            consult_table = cherndb.consult_table
+            # = config_file.read_variable("consult_table", {})
+            last_consult_time, log = consult_table.get(self.path, (-1,-1))
+            modification_time = os.path.getmtime(self.path)
+
+            if modification_time < last_consult_time:
+                return log
+
             log = git.log('-n 1 --format="%s" -- {}'.format(self.path)).split("\n")
+
+            consult_table[self.path] = (time.time(), log[0])
+            # config_file.write_variable("consult_table", consult_table)
         return log[0]
 
     def edit_readme(self):

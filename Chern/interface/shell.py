@@ -139,6 +139,6 @@ def rm(line):
     line = os.path.abspath(line)
     VObject(line).rm()
 
-def set_source(line):
+def add_source(line):
     # line = os.path.abspath(line)
-    manager.c.set_source(line)
+    manager.c.add_source(line)

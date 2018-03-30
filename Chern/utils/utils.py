@@ -73,9 +73,13 @@ def special_path_string(path_string):
 def colorize(string, color):
     """ Make the string have color
     """
-    if color == "warning":
+    if color == "success":
+        return fg("green")+string+attr("reset")
+    elif color == "normal":
+        return string
+    elif color == "warning":
         return "\033[31m" + string + "\033[m"
-    if color == "debug":
+    elif color == "debug":
         return "\033[31m" + string + "\033[m"
     elif color == "comment":
         return fg("blue")+ string +attr("reset")

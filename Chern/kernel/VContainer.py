@@ -3,8 +3,12 @@
 """
 import subprocess
 import Chern
+import os
+import shutil
 from Chern.utils import utils
+from Chern.utils import csys
 from Chern.kernel.VJob import VJob
+from Chern.kernel import VImage
 
 class VContainer(VJob):
     """
@@ -30,7 +34,7 @@ class VContainer(VJob):
         """
         inputs = filter(lambda x: x.job_type() == "container",
                         self.predecessors())
-        return list(map(lambda x: Chern.VData.VData(x.path), inputs))
+        return list(map(lambda x: VContainer(x.path), inputs))
 
 
     def add_algorithm(self, path):
@@ -67,13 +71,13 @@ class VContainer(VJob):
             return storage
 
     def set_storage(self, path):
-        self.config_file.write_variable("storage")
+        self.config_file.write_variable("storage", path)
 
     def image(self):
         predecessors = self.predecessors()
         for pred_job in predecessors:
             if pred_job.job_type() == "image":
-                return Chern.VImage.VImage(pred_job.path)
+                return VImage.VImage(pred_job.path)
         return None
 
     def container_id(self):
@@ -85,16 +89,11 @@ class VContainer(VJob):
         return impression
 
     def create_container(self, container_type="task"):
-        mounts = "-v /data/{}:{}".format(self.impression(), self.storage())
+        mounts = "-v {1}:/data/{0}".format(self.impression(), self.storage())
         for input_container in self.inputs():
-            mounts += " -v /data/{}:{}:ro".format(input_container.impression(),
+            mounts += " -v {1}:/data/{0}:ro".format(input_container.impression(),
                                                   input_container.storage())
-        print(self.image().image_id())
-        print(mounts)
-        if container_type == "task":
-            image_id = self.image().image_id()
-        elif container_type == "data":
-            image_id = "empty"
+        image_id = self.image().image_id()
         ps = subprocess.Popen("docker create {0} {1}".format(mounts, image_id),
                               shell=True, stdout=subprocess.PIPE)
         ps.wait()
@@ -106,7 +105,6 @@ class VContainer(VJob):
         ps = subprocess.Popen("docker cp {0} {1}:/root".format(arguments_file, self.container_id())
                               , shell=True)
         ps.wait()
-
 
     def parameters(self):
         """ Read the parameters file
@@ -125,8 +123,8 @@ class VContainer(VJob):
                 parameter_str += "        storage[\"{0}\"] = \"{1}\";\n".format(parameter, value)
             folder_str = ""
             for folder in self.inputs():
-                alias = self.path_to_alias(folder.path)
-                location = "/data/" + folder.image_id()
+                alias = self.impression_to_alias(folder.impression())
+                location = "/data/" + folder.impression()
                 folder_str += "        storage[\"{0}\"] = \"{1}\";\n".format(alias, location)
             folder_str += "        storage[\"output\"] = \"/data/{0}\";\n".format(self.impression())
             argument_txt = """#ifndef CHERN_ARGUMENTS
@@ -183,11 +181,25 @@ const chern::Folders folders;
         status = self.config_file.read_variable("status")
         if status is None:
             return "submitted"
+        if status == "external":
+            return self.external_status()
         return status
         status = self.inspect().get("State")
         if status.get("Running"):
             return "running"
         return status.get("Status")
+
+    def external_status(self):
+        source = self.config_file.read_variable("source")
+        path = self.config_file.read_variable("storage")
+        if not os.path.exists(path):
+            return "missing"
+        md5 = csys.dir_md5(path)
+        if source == md5:
+            return "done"
+        else:
+            return "missing"
+
 
     def kill(self):
         ps = subprocess.Popen("docker kill {0}".format(self.container_id()),
@@ -205,12 +217,25 @@ const chern::Folders folders;
             f.write(ps.stdout.read().decode())
         return (ps.poll() == 0)
 
+    def remove(self):
+        ps = subprocess.Popen("docker rm -f {0}".format(self.container_id()),
+                              shell=True, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT)
+        print(ps.stdout.read().decode())
+        if ps.poll() == 0:
+            print("Successful removed")
+            shutil.rmtree(self.path)
+
     def copy_inputs(self):
         inputs = self.inputs()
         for input_volume in inputs:
             subprocess.Popen("docker cp {0} {0}:dfasdfa", docker_file)
 
     def execute(self):
+        source = self.config_file.read_variable("source")
+        if source is not None:
+            self.config_file.write_varialbe("status", "external")
+            return
         self.config_file.write_variable("status", "running")
         try:
             self.create_arguments_file()
@@ -218,10 +243,11 @@ const chern::Folders folders;
             self.copy_arguments_file()
             status = self.start()
         except Exception as e:
-            with open(error_file, "w") as f:
-                f.write(str(e))
+            self.config_file.write_variable("status", "failed")
+            self.append_error(str(e))
             raise e
         if status :
-            self.config_file.write_variable("status", "finished")
+            self.config_file.write_variable("status", "done")
         else:
             self.config_file.write_variable("status", "failed")
+            self.append_error("Run error")

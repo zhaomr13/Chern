@@ -33,7 +33,8 @@ class VImage(VJob):
         self.config_file.write_variable("status", "building")
         try:
             entrypoint = open(self.path+"/entrypoint.sh", "w")
-            entrypoint.write("""#!/bin/bash\n$@\nmd5sum output\n""")
+            # entrypoint.write("""#!/bin/bash\n$@\nmd5sum output\n""")
+            entrypoint.write("""#!/bin/bash\n$@\n""")
             entrypoint.close()
             self.build()
         except Exception as e:
