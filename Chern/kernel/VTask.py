@@ -52,16 +52,12 @@ class VTask(VObject):
         subprocess.Popen("open {}".format(path), shell=True)
 
     def inputs(self):
-        """
-        Input data.
-        """
+        """ Input data. """
         inputs = filter(lambda x: x.object_type() == "task", self.predecessors())
         return list(map(lambda x: VTask(x.path), inputs))
 
     def outputs(self):
-        """
-        Output data.
-        """
+        """ Output data. """
         outputs = filter(lambda x: x.object_type() == "task", self.successors())
         return list(map(lambda x: VTask(x.path), outputs))
 
@@ -104,6 +100,7 @@ class VTask(VObject):
 
     def jobs(self):
         impressions = self.config_file.read_variable("impressions", [])
+        output_md5s = self.config_file.read_variable("output_md5s", {})
         if impressions == []:
             return
         impression = self.config_file.read_variable("impression")
@@ -116,6 +113,9 @@ class VTask(VObject):
             else:
                 short = " "
             short += im[:8]
+            output_md5 = output_md5s.get(im, "")
+            if output_md5 != "":
+                short += " ({0})".format(output_md5[:8])
             status = VContainer(path).status()
             print("{0:<12}   {1:>20}".format(short, status))
 
@@ -288,6 +288,10 @@ class VTask(VObject):
             container.connect(output_volume, "output")
         container.start()
 
+    def output_md5(self):
+        output_md5s = self.config_file.read_variable("output_md5s", {})
+        return output_md5s.get(self.impression(), "")
+
     def status(self):
         """
         """
@@ -301,7 +305,20 @@ class VTask(VObject):
             for input_data in self.inputs():
                 if input_data.status() != "done":
                     return "waitting"
-        return self.container().status()
+        status = self.container().status()
+        if status == "done":
+            output_md5 = self.output_md5()
+            if output_md5 == "":
+                output_md5 = self.container().output_md5()
+                self.config_file.write_variable("output_md5", output_md5)
+                output_md5s = self.config_file.read_variable("output_md5s", {})
+                output_md5s[self.impression()] = output_md5
+                self.config_file.write_variable("output_md5s", output_md5s)
+                message = self.latest_commit_message()
+                git.add(self.path)
+                git.commit("{} + record output_md5 ".format(message))
+
+        return status
 
     def container(self):
         path = utils.storage_path() + "/" + self.impression()
@@ -312,11 +329,21 @@ class VTask(VObject):
         After add source, the status of the task should be done
         """
         md5 = csys.dir_md5(path)
-        self.config_file.write_variable("source", md5)
-        impression = uuid.uuid4().hex
-        self.config_file.write_variable("impression", impression)
-        git.add(self.path)
-        git.commit("Impress: {0}".format(impression))
+        if self.is_impressed_fast() and md5 == self.output_md5():
+            pass
+        else:
+            impression = uuid.uuid4().hex
+            output_md5s = self.config_file.read_variable("output_md5s", {})
+            impressions = self.config_file.read_varialbe("impressions", [])
+            output_md5s[impression] = md5
+            self.config_file.write_variable("output_md5s", output_md5s)
+            self.config_file.write_variable("output_md5", md5)
+            impressions.append(impression)
+            self.config_file.write_variable("impression", impression)
+            self.config_file.write_variable("impressions", impressions)
+            git.add(self.path)
+            git.commit("Impress: {0}".format(impression))
+
         job_path = utils.storage_path() + "/" + self.impression()
         cwd = self.path
         utils.copy_tree(cwd, job_path)

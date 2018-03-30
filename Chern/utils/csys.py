@@ -24,10 +24,10 @@ def dir_mtime(path):
     return mtime
 
 def dir_md5(path):
-    config_file = ConfigFile(os.environ["HOME"] + "/.Chern/cache")
+    config_file = ConfigFile(os.environ["HOME"] + "/.Chern/cache.py")
     consult_table = config_file.read_variable("consult_table",{})
     last_consult_time, md5 = consult_table.get(path, (-1,-1))
-    modification_time = os.path.getmtime(path)
+    modification_time = dir_mtime(path)
     if modification_time < last_consult_time:
         return md5
 
@@ -37,7 +37,7 @@ def dir_md5(path):
     out = ps.stdout.read().decode().split()
     md5s = out[::2]
     names = [os.path.relpath(name, path) for name in out[1::2]]
-    string = "".join(md5s).join(names)
+    string = "".join(md5s + names)
     md5 = hashlib.md5(string.encode('utf-8')).hexdigest()
 
     consult_table[path] = (time.time(), md5)

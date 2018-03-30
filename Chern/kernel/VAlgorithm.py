@@ -38,6 +38,9 @@ class VAlgorithm(VObject):
         """
         impression = uuid.uuid4().hex
         self.config_file.write_variable("impression", impression)
+        impressions = self.config_file.read_variable("impressions", [])
+        impressions.append(impression)
+        self.config_file.write_variable("impressions", impressions)
         git.add(self.path)
         git.commit("Impress: {0}".format(impression))
 
@@ -57,6 +60,23 @@ class VAlgorithm(VObject):
         if not self.is_submitted():
             return "impressed"
         return self.image().status()
+
+    def jobs(self):
+        impressions = self.config_file.read_variable("impressions", [])
+        if impressions == []:
+            return
+        impression = self.config_file.read_variable("impression")
+        for im in impressions:
+            path = utils.storage_path() + "/" + im
+            if not os.path.exists(path):
+                continue
+            if impression == im:
+                short = "*"
+            else:
+                short = " "
+            short += im[:8]
+            status = VContainer(path).status()
+            print("{0:<12}   {1:>20}".format(short, status))
 
     def is_impressed_fast(self):
         # config_file = utils.ConfigFile(os.environ["HOME"] + "/.Chern/git-cache")

@@ -92,7 +92,7 @@ def set_algorithm(line):
         print("Can not set the algorithm if you are not a task")
         return
     manager.c.set_algorithm(line)
-    git.commit("{}:set algorithm {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(line)))
+    # git.commit("{}:set algorithm {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(line)))
 
 
 def add_input(line):
@@ -105,7 +105,7 @@ def add_input(line):
     path = os.path.abspath(line[0])
     alias = line[1]
     manager.c.add_input(path, alias)
-    git.commit("{}:add input {} named {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(path), alias))
+    # git.commit("{}:add input {} named {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(path), alias))
 
 def add_output(line):
     line = csys.strip_path_string(line)
@@ -117,7 +117,7 @@ def add_output(line):
     path = os.path.abspath(line[0])
     alias = line[1]
     manager.c.add_output(path, alias)
-    git.commit("{}:add output {} named {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(path), alias))
+    # git.commit("{}:add output {} named {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(path), alias))
 
 def remove_site(line):
     pass
@@ -248,7 +248,7 @@ del view
 
 @register_line_magic
 def jobs(line):
-    manager.c.jobs()
+    shell.jobs(line)
 del jobs
 
 @register_line_magic
@@ -259,7 +259,7 @@ del git
 @register_line_magic
 def vim(line):
     subprocess.call("vim {}".format(line), shell=True)
-    git.commit("edit file {}".format(line))
+    # git.commit("edit file {}".format(line))
 del vim
 
 @register_line_magic
@@ -270,7 +270,7 @@ del download
 @register_line_magic
 def bash(line):
     subprocess.call("bash", shell=True)
-    git.commit("edit .".format(line))
+    # git.commit("edit .".format(line))
 del bash
 
 @register_line_magic

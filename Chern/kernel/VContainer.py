@@ -200,6 +200,11 @@ const chern::Folders folders;
         else:
             return "missing"
 
+    def output_md5(self):
+        path = self.config_file.read_variable("storage", self.path+"/output")
+        md5 = csys.dir_md5(path)
+        return md5
+
 
     def kill(self):
         ps = subprocess.Popen("docker kill {0}".format(self.container_id()),
