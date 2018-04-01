@@ -76,9 +76,7 @@ def mv(line, inloop=True):
     else:
         source = os.path.abspath(source)
 
-    shutil.copytree(source, destination)
     VObject(source).mv(destination)
-    shutil.rmtree(source)
 
 def cp(line):
     line = line.split(" ")
@@ -95,23 +93,18 @@ def ls(line):
     """
     pass
 
-def mkalgorithm(line, inloop=True):
+def mkalgorithm(obj, use_template=False):
     """ Create a new algorithm """
-    line = csys.special_path_string(line)
-    line = csys.refine_path(line, cherndb.project_path())
+    line = csys.refine_path(obj, cherndb.project_path())
     parent_path = os.path.abspath(line+"/..")
     object_type = VObject(parent_path).object_type()
     if object_type != "directory" and object_type != "project":
         print("Not allowed to create algorithm here")
         return
-    create_algorithm(line, inloop)
-    if not inloop:
-        manager.switch_current_object(line)
-        os.chdir(manager.c.path)
+    create_algorithm(line, use_template)
 
 def mktask(line, inloop=True):
     """ Create a new task """
-    line = csys.special_path_string(line)
     line = csys.refine_path(line, cherndb.project_path())
     parent_path = os.path.abspath(line+"/..")
     object_type = VObject(parent_path).object_type()
@@ -119,21 +112,16 @@ def mktask(line, inloop=True):
         print("Not allowed to create task here")
         return
     create_task(line, inloop)
-    if not inloop:
-        manager.switch_current_object(line)
-        os.chdir(manager.c.path)
 
 def mkdir(line, inloop=True):
-    line = utils.special_path_string(line)
-    if line.startswith("p/") or line == "p":
-        line = manager.p.path + line.strip("p")
-    else:
-        line = os.path.abspath(line)
+    """ Create a new directory """
+    line = csys.refine_path(line, cherndb.project_path())
+    parent_path = os.path.abspath(line+"/..")
+    object_type = VObject(parent_path).object_type()
+    if object_type != "directory" and object_type != "project":
+        print("Not allowed to create directory here")
+        return
     create_directory(line, inloop)
-    manager.switch_current_object(line)
-    if not inloop:
-        manager.switch_current_object(line)
-        os.chdir(manager.c.path)
 
 def rm(line):
     line = os.path.abspath(line)

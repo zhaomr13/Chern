@@ -2,6 +2,7 @@ import os
 import shutil
 import time
 from Chern.utils import utils
+from Chern.utils import csys
 from Chern.utils.utils import debug
 from Chern.utils.utils import colorize
 from Chern.utils.utils import color_print
@@ -11,6 +12,7 @@ import subprocess
 import Chern
 from Chern.utils import git
 from Chern.kernel.ChernDatabase import ChernDatabase
+import uuid
 
 cherndb = ChernDatabase.instance()
 
@@ -171,13 +173,13 @@ class VObject(object):
         pred_str = config_file.read_variable("predecessors")
         if pred_str is None:
             pred_str = []
-        pred_str.append(self.path)
+        pred_str.append(self.invariant_path())
         config_file.write_variable("predecessors", pred_str)
         config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         succ_str = config_file.read_variable("successors")
         if succ_str is None:
             succ_str = []
-        succ_str.append(path)
+        succ_str.append(VObject(path).invariant_path())
         config_file.write_variable("successors", succ_str)
 
     def remove_arc_to(self, path):
@@ -187,30 +189,28 @@ class VObject(object):
         """
         config_file = utils.ConfigFile(path+"/.chern/config.py")
         pred_str = config_file.read_variable("predecessors")
-        pred_str.remove(self.path)
+        pred_str.remove(self.invariant_path())
         config_file.write_variable("predecessors", pred_str)
         config_file = utils.ConfigFile(self.path+"/.chern/config.py")
         succ_str = config_file.read_variable("successors")
-        succ_str.remove(path)
+        succ_str.remove(VObject(path).invariant_path())
         config_file.write_variable("successors", succ_str)
 
     def successors(self):
         """
         The successors of the current object
         """
-        succ_str = self.config_file.read_variable("successors")
-        if succ_str is None:
-            return []
+        succ_str = self.config_file.read_variable("successors", [])
+        print(succ_str)
         successors = []
         project_path = cherndb.project_path()
         for path in succ_str:
             successors.append(VObject(project_path+"/"+path))
+        print("successors = ", successors)
         return successors
 
     def predecessors(self):
-        pred_str = self.config_file.read_variable("predecessors")
-        if pred_str is None:
-            return []
+        pred_str = self.config_file.read_variable("predecessors", [])
         predecessors = []
         project_path = cherndb.project_path()
         for path in pred_str:
@@ -226,9 +226,7 @@ class VObject(object):
             new_object = VObject(new_path +"/"+ self.relative_path(obj.path))
 
     def path_to_alias(self, path):
-        path_to_alias = self.config_file.read_variable("path_to_alias")
-        if path_to_alias is None:
-            return ""
+        path_to_alias = self.config_file.read_variable("path_to_alias", {})
         return path_to_alias.get(path, "")
 
     def alias_to_path(self, alias):
@@ -270,16 +268,23 @@ class VObject(object):
         self.config_file.write_variable("successors", [])
 
     def mv(self, new_path):
+        """ mv to another path
         """
-        FIXME
-        mv to another path
-        """
+        shutil.copytree(self.path, new_path)
         queue = self.sub_objects_recursively()
+
+        # Make sure the related objects are all impressed
         for obj in queue:
+            if not obj.is_impressed_fast():
+                obj.impress()
+
+        for obj in queue:
+            # Calculate the absolute path of the new directory
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
             new_object.clean()
             for pred_object in obj.predecessors():
+                # if in the outside directory
                 if self.relative_path(pred_object.path).startswith(".."):
                     new_object.add_arc_from(pred_object.path)
                     alias1 = obj.path_to_alias(pred_object.path)
@@ -304,13 +309,41 @@ class VObject(object):
                     new_object.set_alias(alias1, succ_object.invariant_path())
                     succ_object.remove_alias(alias2)
                     succ_object.set_alias(alias2, new_object.invariant_path())
+
         for obj in queue:
+            print("queue", self.successors())
             for pred_object in obj.predecessors():
                 if self.relative_path(pred_object.path).startswith(".."):
                     obj.remove_arc_from(pred_object.path)
+                    message = pred_object.latest_commit_message()
+                    git.add(pred_object.path)
+                    git.commit("{} + mv".format(message))
+
             for succ_object in obj.successors():
+                print("debug")
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object.path)
+                    message = succ_object.latest_commit_message()
+                    git.add(succ_object.path)
+                    git.commit("{} + mv".format(message))
+
+        # Deal with the impression
+        for obj in queue:
+            # Calculate the absolute path of the new directory
+            if obj.object_type == "directory":
+                continue
+            norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
+            new_object = VObject(norm_path)
+            message = obj.latest_commit_message()
+            git.add(new_object.path)
+            git.commit("{} + mv".format(message))
+
+        if self.object_type() == "directory":
+            norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
+            git.add(norm_path)
+            git.commit("move")
+        shutil.rmtree(self.path)
+        git.rm(self.path)
 
     def add(self, src, dst):
         if not os.path.exists(src):
@@ -331,11 +364,17 @@ class VObject(object):
                     obj.remove_arc_from(pred_object.path)
                     alias = pred_object.path_to_alias(pred_object.path)
                     pred_object.remove_alias(alias)
+                    message = pred_object.latest_commit_message()
+                    git.add(pred_object.path)
+                    git.commit("{} + mv".format(message))
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object.path)
                     alias = succ_object.path_to_alias(succ_object.path)
                     succ_object.remove_alias(alias)
+                    git.add(succ_object.path)
+                    git.commit("remove {}".format(alias))
+
         shutil.rmtree(self.path)
         git.rm(self.path)
         git.commit("rm {}".format(self.invariant_path()))
@@ -373,7 +412,7 @@ class VObject(object):
             consult_table = cherndb.consult_table
             # = config_file.read_variable("consult_table", {})
             last_consult_time, log = consult_table.get(self.path, (-1,-1))
-            modification_time = os.path.getmtime(self.path)
+            modification_time = csys.dir_mtime(self.path)
 
             if modification_time < last_consult_time:
                 return log
@@ -393,6 +432,79 @@ class VObject(object):
         git.add(self.path+"/README.md")
         message = self.latest_commit_message()
         git.commit("{} + edit readme".format(message))
+
+    def commit(self):
+        """ Commit the object
+        """
+        git.add(self.path)
+        commit_id = git.commit("commit all the files in {}".format(self.path))
+        self.config_file.write_variable("commit_id", commit_id)
+        git.commit("save the commit id")
+
+    def commit_id(self):
+        """ Get the commit id
+        """
+        commit_id = self.config_file.read_variable("commit_id", None)
+        if commit_id is None:
+            raise Exception("")
+        return commit_id
+
+    def is_impressed_fast(self):
+        # return self.is_impressed()
+        # config_file = utils.ConfigFile(os.environ["HOME"] + "/.Chern/git-cache")
+        consult_table = cherndb.impression_consult_table
+        # config_file.read_variable("impression_consult_table", {})
+        last_consult_time, is_impressed = consult_table.get(self.path, (-1,-1))
+        modification_time = csys.dir_mtime( cherndb.project_path() )
+        if modification_time < last_consult_time:
+            return is_impressed
+        is_impressed = self.is_impressed()
+        consult_table[self.path] = (time.time(), is_impressed)
+        # config_file.write_variable("impression_consult_table", consult_table)
+        return is_impressed
+
+
+    def is_impressed(self, is_global=False):
+        """ Judge whether the file is impressed
+        """
+        print("is_impressed")
+        if not self.is_git_committed():
+            return False
+        latest_commit_message = self.latest_commit_message()
+        if "Impress:" not in latest_commit_message:
+            return False
+        pred = self.predecessors()
+        if pred == []:
+            return True
+        pred_impression = []
+        for input_object in pred:
+            if not input_object.is_impressed_fast():
+                return False
+            else:
+                pred_impression.append(input_object.impression())
+        if sorted(pred_impression) == sorted(self.config_file.read_variable("pred_impression")):
+            return True
+        else:
+            return False
+
+    def impress(self):
+        print("impressing", self.path)
+        pred = self.predecessors()
+        pred_impression = []
+
+        for input_object in pred:
+            if not input_object.is_impressed_fast():
+                input_object.impress()
+            pred_impression.append(input_object.impression())
+
+        self.config_file.write_variable("pred_impression", pred_impression)
+        impression = uuid.uuid4().hex
+        self.config_file.write_variable("impression", impression)
+        impressions = self.config_file.read_variable("impressions", [])
+        impressions.append(impression)
+        self.config_file.write_variable("impressions", impressions)
+        git.add(self.path)
+        git.commit("Impress: {0}".format(impression))
 
     def impression(self):
         impression = self.config_file.read_variable("impression")

@@ -25,32 +25,6 @@ class VAlgorithm(VObject):
         print(algorithm_helpme.get(command, "No such command, try ``helpme'' alone."))
 
 
-    def commit(self):
-        """ Commit the object
-        """
-        git.add(self.path)
-        commit_id = git.commit("commit all the files in {}".format(self.path))
-        self.config_file.write_variable("commit_id", commit_id)
-        git.commit("save the commit id")
-
-    def impress(self):
-        """ Commit the object
-        """
-        impression = uuid.uuid4().hex
-        self.config_file.write_variable("impression", impression)
-        impressions = self.config_file.read_variable("impressions", [])
-        impressions.append(impression)
-        self.config_file.write_variable("impressions", impressions)
-        git.add(self.path)
-        git.commit("Impress: {0}".format(impression))
-
-    def commit_id(self):
-        """ Get the commit id
-        """
-        commit_id = self.config_file.read_variable("commit_id", None)
-        if commit_id is None:
-            raise Exception("")
-        return commit_id
 
     def status(self):
         """ query the status of the current algorithm.
@@ -75,7 +49,7 @@ class VAlgorithm(VObject):
             else:
                 short = " "
             short += im[:8]
-            status = VContainer(path).status()
+            status = VImage(path).status()
             print("{0:<12}   {1:>20}".format(short, status))
 
     def is_impressed_fast(self):
@@ -114,7 +88,7 @@ class VAlgorithm(VObject):
         if not self.is_impressed_fast():
             self.impress()
 
-        path = utils.storage_path() + "/" + self.impression()
+        path = csys.storage_path() + "/" + self.impression()
         cwd = self.path
         utils.copy_tree(cwd, path)
         image = self.image()
@@ -203,7 +177,7 @@ class VAlgorithm(VObject):
         except Exception as e:
             raise e
 
-def create_algorithm(path, inloop=False):
+def create_algorithm(path, use_template=False):
     path = utils.strip_path_string(path)
     os.mkdir(path)
     os.mkdir(path+"/.chern")
@@ -213,6 +187,7 @@ def create_algorithm(path, inloop=False):
     with open(path + "/README.md", "w") as readme_file:
         readme_file.write("Please write README for this algorithm")
     subprocess.call("vim {}/README.md".format(path), shell=True)
-    with open(path + "/main.C", "w") as main_file:
-        main_file.write("""hehe""")
-    subprocess.call("vim {}/main.py".format(path), shell=True)
+    if use_template:
+        template_name = input("Please input the Dockerfile template type")
+        print("Creating template, but hahahaha")
+        return

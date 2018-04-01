@@ -8,6 +8,21 @@ from Chern.utils import csys
 from Chern.interface.ChernManager import get_manager
 from Chern.interface import shell
 from Chern.kernel.VObject import VObject
+import click
+from click.testing import CliRunner
+
+@click.command()
+@click.argument('name')
+def test_hello_world(name):
+    print("I am doing something")
+click_test_hello_world = test_hello_world
+
+runner = CliRunner()
+@register_line_magic
+def test_hello_world(line):
+    result = runner.invoke(click_test_hello_world, line.split())
+    print("output = ", result.output.rstrip("\n"))
+del test_hello_world
 
 manager = get_manager()
 

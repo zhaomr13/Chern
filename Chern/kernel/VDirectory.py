@@ -47,10 +47,19 @@ class VDirectory(VObject):
 
 def create_directory(path, inloop=False):
     path = utils.strip_path_string(path)
+    parent_path = os.path.abspath(path+"/..")
+    object_type = VObject(parent_path).object_type()
+    if object_type != "project" and object_type != "directory":
+        raise Exception("create directory only under project or directory")
     os.mkdir(path)
     os.mkdir(path+"/.chern")
     with open(path + "/.chern/config.py", "w") as f:
         f.write("object_type = \"directory\"")
+    directory = VObject(path)
+    git.add(path+"/.chern")
+    git.commit("Create directory at {}".format(
+        directory.invariant_path()))
     with open(path + "/README.md", "w") as f:
-        f.write("Please write README for this directory")
-    subprocess.call("vim %s/README.md"%path, shell=True)
+        f.write("Please write README for directory {}".format(
+            directory.invariant_path() ) )
+    directory.edit_readme()

@@ -61,26 +61,6 @@ class VTask(VObject):
         outputs = filter(lambda x: x.object_type() == "task", self.successors())
         return list(map(lambda x: VTask(x.path), outputs))
 
-    def impress(self):
-        print("impressing", self.path)
-        inputs = self.inputs()
-        pred = []
-        for input_data in inputs:
-            if not input_data.is_impressed_fast():
-                input_data.impress()
-            pred.append(input_data.impression())
-        algorithm = self.algorithm()
-        if not algorithm.is_impressed_fast():
-            algorithm.impress()
-        pred.append(algorithm.impression())
-        self.config_file.write_variable("pred_impression", pred)
-        impression = uuid.uuid4().hex
-        self.config_file.write_variable("impression", impression)
-        impressions = self.config_file.read_variable("impressions", [])
-        impressions.append(impression)
-        self.config_file.write_variable("impressions", impressions)
-        git.add(self.path)
-        git.commit("Impress: {0}".format(impression))
 
     def remove(self, remove_impression):
         impressions = self.config_file.read_variable("impressions", [])
@@ -126,49 +106,6 @@ class VTask(VObject):
     def stderr(self):
         with open(self.container().path+"/stderr") as f:
             return f.read()
-
-    def is_impressed_fast(self):
-        # return self.is_impressed()
-        # config_file = utils.ConfigFile(os.environ["HOME"] + "/.Chern/git-cache")
-        consult_table = cherndb.impression_consult_table
-        # config_file.read_variable("impression_consult_table", {})
-        last_consult_time, is_impressed = consult_table.get(self.path, (-1,-1))
-        modification_time = csys.dir_mtime( cherndb.project_path() )
-        if modification_time < last_consult_time:
-            return is_impressed
-        is_impressed = self.is_impressed()
-        consult_table[self.path] = (time.time(), is_impressed)
-        # config_file.write_variable("impression_consult_table", consult_table)
-        return is_impressed
-
-
-    def is_impressed(self, is_global=False):
-        """ Judge whether the file is impressed
-        """
-        print("is_impressed")
-        if not self.is_git_committed():
-            return False
-        latest_commit_message = self.latest_commit_message()
-        if "Impress:" not in latest_commit_message:
-            return False
-        if self.algorithm() is None:
-            return True
-        pred = []
-        inputs = self.inputs()
-        for input_data in inputs:
-            if not input_data.is_impressed_fast():
-                return False
-            else:
-                pred.append(input_data.impression())
-        algorithm = self.algorithm()
-        if not algorithm.is_impressed_fast():
-            return False
-        else:
-            pred.append(algorithm.impression())
-        if sorted(pred) == sorted(self.config_file.read_variable("pred_impression")):
-            return True
-        else:
-            return False
 
     def is_submitted(self):
         if not self.is_impressed_fast():
@@ -334,7 +271,7 @@ class VTask(VObject):
         else:
             impression = uuid.uuid4().hex
             output_md5s = self.config_file.read_variable("output_md5s", {})
-            impressions = self.config_file.read_varialbe("impressions", [])
+            impressions = self.config_file.read_variable("impressions", [])
             output_md5s[impression] = md5
             self.config_file.write_variable("output_md5s", output_md5s)
             self.config_file.write_variable("output_md5", md5)
@@ -362,6 +299,12 @@ class VTask(VObject):
             print("Already have algorithm, will replace it")
             self.remove_algorithm()
         self.add_arc_from(path)
+        message = VObject(path).latest_commit_message()
+        git.add(path)
+        git.commit("{} + append successor".format(message))
+        git.add(self.path)
+        git.commit("Add algorithm {}".format(VObject(path).invariant_path()))
+
 
     def remove_algorithm(self):
         """

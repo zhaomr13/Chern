@@ -190,12 +190,11 @@ const chern::Folders folders;
         return status.get("Status")
 
     def external_status(self):
-        source = self.config_file.read_variable("source")
         path = self.config_file.read_variable("storage")
         if not os.path.exists(path):
             return "missing"
         md5 = csys.dir_md5(path)
-        if source == md5:
+        if md5 == self.output_md5():
             return "done"
         else:
             return "missing"
