@@ -14,6 +14,12 @@ from Chern.kernel.ChernDatabase import ChernDatabase
 manager = get_manager()
 cherndb = ChernDatabase.instance()
 
+def cd_project(line):
+    manager.switch_project(line)
+    os.chdir(manager.c.path)
+    manager.p = manager.c
+
+
 def cd(line, inloop=True):
     """
     Change the directory.
@@ -26,9 +32,6 @@ def cd(line, inloop=True):
         debug(line)
         line = utils.strip_path_string(line.lstrip("project"))
         debug(line)
-        manager.switch_project(line)
-        os.chdir(manager.c.path)
-        manager.p = manager.c
         return
 
     # cd can be used to change directory using absolute path
@@ -78,14 +81,35 @@ def mv(line, inloop=True):
 
     VObject(source).mv(destination)
 
-def cp(line):
+def cp(line, inloop=True):
+    """
+    Move or rename file. Will keep the link relationship.
+    mv SOURCE DEST
+    or
+    mv SOURCE DIRECTORY
+    BECAREFULL!!
+    mv SOURCE1 SOURCE2 SOURCE3 ... DIRECTORY is not supported
+    use loop instead
+    """
     line = line.split(" ")
-    old_object = line[0]
-    destination = line[1]
+    # Deal with the situation that command is not mv a b
+    if len(line) != 2:
+        print("Please lookup the USAGE of cp")
+        return
+    source = utils.special_path_string(line[0])
+    destination = utils.special_path_string(line[1])
+    if destination.startswith("p/") or destination == "p":
+        destination = os.path.normpath(manager.p.path + destination.strip("p"))
+    else:
+        destination = os.path.abspath(destination)
     if os.path.exists(destination):
-        destination += old_object
-    os.copy(old_object, destination)
-    VObject(old_object).cp(destination)
+        destination += "/" + source
+    if source.startswith("p/") or source == "p":
+        source = os.path.normpath(manager.p.path+destination.strip("p"))
+    else:
+        source = os.path.abspath(source)
+
+    VObject(source).cp(destination)
 
 def ls(line):
     """

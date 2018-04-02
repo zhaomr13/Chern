@@ -201,12 +201,10 @@ class VObject(object):
         The successors of the current object
         """
         succ_str = self.config_file.read_variable("successors", [])
-        print(succ_str)
         successors = []
         project_path = cherndb.project_path()
         for path in succ_str:
             successors.append(VObject(project_path+"/"+path))
-        print("successors = ", successors)
         return successors
 
     def predecessors(self):
@@ -221,9 +219,83 @@ class VObject(object):
         """
         FIXME
         """
+        shutil.copytree(self.path, new_path)
         queue = self.sub_objects_recursively()
+
+        # Make sure the related objects are all impressed
         for obj in queue:
-            new_object = VObject(new_path +"/"+ self.relative_path(obj.path))
+            if not obj.is_impressed_fast():
+                obj.impress()
+
+        for obj in queue:
+            # Calculate the absolute path of the new directory
+            norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
+            new_object = VObject(norm_path)
+            new_object.clean_flow()
+            new_object.clean_impressions()
+            for pred_object in obj.predecessors():
+                # if in the outside directory
+                if self.relative_path(pred_object.path).startswith(".."):
+                    """
+                    Do nothing
+                    new_object.add_arc_from(pred_object.path)
+                    alias1 = obj.path_to_alias(pred_object.path)
+                    alias2 = pred_object.path_to_alias(obj.path)
+                    new_object.set_alias(alias1, pred_object.invariant_path())
+                    pred_object.remove_alias(alias2)
+                    pred_object.set_alias(alias2, new_object.invariant_path())
+                    """
+                else:
+                # if in the same tree
+                    relative_path = self.relative_path(pred_object.path)
+                    new_object.add_arc_from(new_path+"/"+relative_path)
+                    alias1 = obj.path_to_alias(pred_object.invariant_path())
+                    # alias2 = pred_object.path_to_alias(obj.path)
+                    norm_path = os.path.normpath(new_path +"/"+ relative_path)
+                    new_object.set_alias(alias1, VObject(norm_path).invariant_path())
+                    # VObject(norm_path).set_alias(alias2, new_object.invariant_path())
+            for succ_object in obj.successors():
+                if self.relative_path(succ_object.path).startswith(".."):
+                    """
+                    Do nothing
+                    new_object.add_arc_to(succ_object.path)
+                    alias1 = obj.path_to_alias(succ_object.path)
+                    alias2 = succ_object.path_to_alias(obj.path)
+                    new_object.set_alias(alias1, succ_object.invariant_path())
+                    succ_object.remove_alias(alias2)
+                    succ_object.set_alias(alias2, new_object.invariant_path())
+                    """
+
+        """
+        for obj in queue:
+            print("queue", self.successors())
+            for pred_object in obj.predecessors():
+                if self.relative_path(pred_object.path).startswith(".."):
+                    obj.remove_arc_from(pred_object.path)
+                    message = pred_object.latest_commit_message()
+                    git.add(pred_object.path)
+                    git.commit("{} + mv".format(message))
+
+            for succ_object in obj.successors():
+                print("debug")
+                if self.relative_path(succ_object.path).startswith(".."):
+                    obj.remove_arc_to(succ_object.path)
+                    message = succ_object.latest_commit_message()
+                    git.add(succ_object.path)
+                    git.commit("{} + mv".format(message))
+        """
+
+        # Deal with the impression
+        for obj in queue:
+            # Calculate the absolute path of the new directory
+            if obj.object_type == "directory":
+                continue
+            norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
+            new_object = VObject(norm_path)
+            new_object.impress()
+            # message = obj.latest_commit_message()
+            # git.add(new_object.path)
+            # git.commit("{} + mv".format(message))
 
     def path_to_alias(self, path):
         path_to_alias = self.config_file.read_variable("path_to_alias", {})
@@ -258,7 +330,13 @@ class VObject(object):
         self.config_file.write_variable("path_to_alias", path_to_alias)
         self.config_file.write_variable("alias_to_path", alias_to_path)
 
-    def clean(self):
+    def clean_impressions(self):
+        self.config_file.write_variable("impressions", [])
+        self.config_file.write_variable("impression", None)
+        self.config_file.write_variable("output_md5s", [])
+        self.config_file.write_variable("output_md5", None)
+
+    def clean_flow(self):
         """
         Clean all the alias, predecessors and successors
         """
@@ -282,12 +360,12 @@ class VObject(object):
             # Calculate the absolute path of the new directory
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
-            new_object.clean()
+            new_object.clean_flow()
             for pred_object in obj.predecessors():
                 # if in the outside directory
                 if self.relative_path(pred_object.path).startswith(".."):
                     new_object.add_arc_from(pred_object.path)
-                    alias1 = obj.path_to_alias(pred_object.path)
+                    alias1 = obj.path_to_alias(pred_object.invariant_path())
                     alias2 = pred_object.path_to_alias(obj.path)
                     new_object.set_alias(alias1, pred_object.invariant_path())
                     pred_object.remove_alias(alias2)
@@ -311,7 +389,6 @@ class VObject(object):
                     succ_object.set_alias(alias2, new_object.invariant_path())
 
         for obj in queue:
-            print("queue", self.successors())
             for pred_object in obj.predecessors():
                 if self.relative_path(pred_object.path).startswith(".."):
                     obj.remove_arc_from(pred_object.path)
@@ -320,7 +397,6 @@ class VObject(object):
                     git.commit("{} + mv".format(message))
 
             for succ_object in obj.successors():
-                print("debug")
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object.path)
                     message = succ_object.latest_commit_message()
@@ -344,6 +420,7 @@ class VObject(object):
             git.commit("move")
         shutil.rmtree(self.path)
         git.rm(self.path)
+        git.commit("remove {}".format(self.path))
 
     def add(self, src, dst):
         if not os.path.exists(src):
@@ -467,7 +544,6 @@ class VObject(object):
     def is_impressed(self, is_global=False):
         """ Judge whether the file is impressed
         """
-        print("is_impressed")
         if not self.is_git_committed():
             return False
         latest_commit_message = self.latest_commit_message()
@@ -488,7 +564,6 @@ class VObject(object):
             return False
 
     def impress(self):
-        print("impressing", self.path)
         pred = self.predecessors()
         pred_impression = []
 

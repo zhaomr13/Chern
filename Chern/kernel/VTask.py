@@ -17,6 +17,10 @@ from Chern.kernel.ChernDatabase import ChernDatabase
 cherndb = ChernDatabase.instance()
 
 class VTask(VObject):
+    def helpme(self, command):
+        from Chern.kernel.Helpme import task_helpme
+        print(project_helpme.get(command, "No such command, try ``helpme'' alone."))
+
     def ls(self):
         super(VTask, self).ls()
         parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
@@ -43,9 +47,17 @@ class VTask(VObject):
             if not os.path.exists(self.container().path+"/output"):
                 return
             files = os.listdir(self.container().path+"/output")
-            for f in files:
+            if files == []: return
+            files.sort()
+            max_len = max([len(s) for s in files])
+            columns = os.get_terminal_size().columns
+            nfiles = columns // (max_len+5)
+            print(nfiles)
+            for i, f in enumerate(files):
                 if not f.startswith(".") and f != "README.md":
-                    print(f)
+                    print(("{:<"+str(max_len+5)+"}").format(f), end="")
+                    if (i+1)%nfiles == 0:
+                        print("")
 
     def view(self, file_name):
         path = self.container().path+"/output/"+file_name

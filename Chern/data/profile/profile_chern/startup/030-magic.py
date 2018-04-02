@@ -11,33 +11,49 @@ from Chern.kernel.VObject import VObject
 import click
 from click.testing import CliRunner
 
-@click.command()
-@click.argument('name')
-def test_hello_world(name):
-    print("I am doing something")
-click_test_hello_world = test_hello_world
-
+manager = get_manager()
 runner = CliRunner()
+#-------------------
 @register_line_magic
 def test_hello_world(line):
     result = runner.invoke(click_test_hello_world, line.split())
     print("output = ", result.output.rstrip("\n"))
 del test_hello_world
 
-manager = get_manager()
+#----------
+@click.command()
+@click.argument("project")
+def cd_project(project):
+    """ switch project
+    """
+    shell.cd_project(project)
+
+click_cd_project = cd_project
 
 @register_line_magic
-def mkp(line):
-    "make a new project"
-    return manager.new_project(line)
-del mkp
-
-@register_line_magic
-def cd(line):
+def cd_project(line):
     """ The extended cd function: cd number
     """
-    if line.isdigit():
-        index = int(line)
+    result = runner.invoke(click_cd_project, line.split())
+    print(result.output.rstrip("\n"))
+del cd_project
+
+@register_line_magic
+def cdproject(line):
+    """ The extended cd function: cd number
+    """
+    result = runner.invoke(click_cd_project, line.split())
+    print(result.output.rstrip("\n"))
+del cdproject
+
+#----------
+@click.command()
+@click.argument("object")
+def cd(object):
+    """ switch project
+    """
+    if object.isdigit():
+        index = int(object)
         sub_objects = manager.c.sub_objects()
         successors = manager.c.successors()
         predecessors = manager.c.predecessors()
@@ -60,7 +76,18 @@ def cd(line):
             print("Out out index")
             return
     else:
-        shell.cd(line, inloop=False)
+        shell.cd(object)
+
+click_cd = cd
+
+@register_line_magic
+def cd(line):
+    """ The extended cd function: cd number
+    """
+    result = runner.invoke(click_cd, line.split())
+    output = result.output.rstrip("\n")
+    if output != "":
+        print(output)
 del cd
 
 # How to get a line magic
@@ -75,13 +102,7 @@ del mv
 # Copy object
 @register_line_magic
 def cp(line):
-    line = line.split(" ")
-    old_object = line[0]
-    destination = line[1]
-    if os.path.exists(destination):
-        destination += old_object
-    os.copy(old_object, destination)
-    VObject(old_object).cp(destination)
+    shell.cp(line, inloop=False)
 del cp
 
 @register_line_magic
