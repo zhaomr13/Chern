@@ -1,24 +1,15 @@
-from IPython.core.magic import (register_line_magic, register_cell_magic,
-                                register_line_cell_magic)
-
+from IPython.core.magic import register_line_magic
 import os
-import shutil
 import subprocess
 from Chern.utils import csys
+from Chern.utils.pretty import color_print
 from Chern.interface.ChernManager import get_manager
 from Chern.interface import shell
-from Chern.kernel.VObject import VObject
 import click
 from click.testing import CliRunner
 
 manager = get_manager()
 runner = CliRunner()
-#-------------------
-@register_line_magic
-def test_hello_world(line):
-    result = runner.invoke(click_test_hello_world, line.split())
-    print("output = ", result.output.rstrip("\n"))
-del test_hello_world
 
 #----------
 @click.command()
@@ -73,7 +64,7 @@ def cd(object):
             shell.cd(manager.c.relative_path(successors[index].path))
             return
         else:
-            print("Out out index")
+            color_print("Out of index", "remind")
             return
     else:
         shell.cd(object)
@@ -90,8 +81,6 @@ def cd(line):
         print(output)
 del cd
 
-# How to get a line magic
-# old_mv = ip.magics_manager.magics["line"]["mv"]
 @register_line_magic
 def mv(line):
     """ Move a object to another object
@@ -205,8 +194,6 @@ def add(line):
         add_output(line.lstrip("output").strip())
     elif line.startswith("algorithm"):
         add_algorithm(line.lstrip("algorithm").strip())
-    elif line.startswith("site"):
-        add_site(line.lstrip("site").strip())
     elif line.startswith("parameter"):
         add_parameter(line.lstrip("parameter").strip())
     elif line.startswith("source"):
@@ -223,8 +210,6 @@ def remove(line):
         remove_input(line.lstrip("input").strip())
     elif line.startswith("output"):
         remove_output(line.lstrip("output").strip())
-    elif line.startswith("algorithm"):
-        remove_algorithm(line.lstrip("algorithm").strip())
     elif line.startswith("site"):
         remove_site(line.lstrip("site").strip())
     elif line.startswith("parameter"):
@@ -251,6 +236,11 @@ del configuration
 def submit(line):
     manager.c.submit()
 del submit
+
+@register_line_magic
+def resubmit(line):
+    manager.c.resubmit()
+del resubmit
 
 @register_line_magic
 def stdout(line):

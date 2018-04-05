@@ -96,12 +96,12 @@ class VAlgorithm(VObject):
         cherndb.add_job(self.impression())
 
     def resubmit(self):
-        """ Resubmit """
         if not self.is_submitted():
-            print("Job not submitted")
+            print("Not submitted yet.")
             return
-        image = self.image()
-        image.config_file.write_variable("status", "submitted")
+        path = utils.storage_path() + "/" + self.impression()
+        csys.rmtree(path)
+        self.submit()
 
     def stdout(self):
         """ stdout

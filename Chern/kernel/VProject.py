@@ -1,3 +1,4 @@
+import Chern
 from Chern.kernel.VObject import VObject
 from Chern.utils.utils import debug
 from Chern.utils import utils
@@ -10,6 +11,19 @@ class VProject(VObject):
         from Chern.kernel.Helpme import project_helpme
         print(project_helpme.get(command, "No such command, try ``helpme'' alone."))
 
+    def status(self):
+        sub_objects = self.sub_objects()
+        for sub_object in sub_objects:
+            if sub_object.object_type() == "task":
+                if Chern.kernel.VTask.VTask(sub_object.path).status() != "done":
+                    return "unfinished"
+            elif sub_object.object_type() == "algorithm":
+                if Chern.kernel.VAlgorithm.VAlgorithm(sub_object.path).status() != "built":
+                    return "unfinished"
+            elif Chern.kernel.VDirectory.VDirectory(sub_object.path).status() != "finished":
+                return "unfinished"
+        return "finished"
+
 def init_project():
     """ Create a new project from the existing folder
     """
@@ -20,7 +34,7 @@ def init_project():
     print("The project name is ``{}'', would you like to change it? [y/n]".format(project_name))
     change = input()
     if change == "y":
-        project_name = input("Please input the project name")
+        project_name = input("Please input the project name: ")
 
     # Check the forbidden name
     forbidden_names = ["config", "new", "projects", "start", "", "."]

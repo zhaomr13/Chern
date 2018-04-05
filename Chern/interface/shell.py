@@ -5,11 +5,14 @@ from Chern.kernel.VObject import VObject
 from Chern.utils import utils
 from Chern.utils.utils import debug
 from Chern.interface.ChernManager import get_manager
+from Chern.interface.ChernManager import create_object_instance
 import shutil
 from Chern.kernel.VTask import create_task
 from Chern.kernel.VAlgorithm import create_algorithm
 from Chern.kernel.VDirectory import create_directory
 from Chern.kernel.ChernDatabase import ChernDatabase
+from Chern.utils.pretty import color_print
+from Chern.utils.pretty import colorize
 
 manager = get_manager()
 cherndb = ChernDatabase.instance()
@@ -161,3 +164,31 @@ def jobs(line):
         print("Not able to found job")
         return
     manager.c.jobs()
+
+def status():
+    if manager.c.object_type() == "task" or manager.c.object_type == "algorithm":
+        status = manager.c.status()
+        if status == "built" or status == "done":
+            color_tag = "success"
+        elif status == "failed":
+            color_tag = "warning"
+        elif status == "running":
+            color_tag = "running"
+        else:
+            color_tag = "normal"
+        color_print(status, color_tag)
+
+    sub_objects = manager.c.sub_objects()
+    sub_objects.sort(key=lambda x:(x.object_type(),x.path))
+    for obj in sub_objects:
+        status = create_object_instance(obj.path).status()
+        if status == "built" or status == "done" or status == "finished":
+            color_tag = "success"
+        elif status == "failed" or status == "unfinished":
+            color_tag = "warning"
+        elif status == "running":
+            color_tag = "running"
+        else:
+            color_tag = "normal"
+
+        print("{1:<20} {0:<20} ".format(colorize(status, color_tag), manager.c.relative_path(obj.path)) )

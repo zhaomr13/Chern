@@ -3,6 +3,7 @@ A module
 """
 import os
 import subprocess
+import Chern
 from Chern.utils import utils
 from Chern.utils import git
 from Chern.kernel.VObject import VObject
@@ -14,36 +15,20 @@ class VDirectory(VObject):
         from Chern.kernel.Helpme import directory_helpme
         print(directory_helpme.get(command, "No such command, try ``helpme'' alone."))
 
-    def add_parameter(self, parameter, value):
-        """
-        Add a parameter to the parameters file
-        """
-        if parameter == "parameters":
-            print("A parameter is not allowed to be called parameters")
-        parameters_file = utils.CondfigFile(self.path+"/.chern/parameters.py")
-        parameters_file.write_varialbe(parameter, value)
-        parameters = parameters_file.read_variable("parameters")
-        if parameters is None:
-            parameters = []
-        parameters.append(parameter)
-        parameters_file.write_variable("parameters", parameters)
+    def status(self):
+        sub_objects = self.sub_objects()
+        for sub_object in sub_objects:
+            if sub_object.object_type() == "task":
+                if Chern.kernel.VTask.VTask(sub_object.path).status() != "done":
+                    return "unfinished"
+            elif sub_object.object_type() == "algorithm":
+                if Chern.kernel.VAlgorithm.VAlgorithm(sub_object.path).status() != "built":
+                    return "unfinished"
+            elif Chern.kernel.VDirectory.VDirectory(sub_object.path).status() != "finished":
+                return "unfinished"
+        return "finished"
 
-    def remove_parameter(self, parameter):
-        """
-        Remove a parameter to the parameters file
-        """
-        if parameter == "parameters":
-            print("parameters is not allowed to remove")
-            return
-        parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
-        parameters = parameters_file.read_variable("parameters")
-        if parameter not in parameters:
-            print("Parameter not found")
-            return
-        parameters.remove(parameter)
-        parameters_file.write_variable(parameter, None)
-        parameters_file.write_variable("parameters", parameters)
-        self.set_update_time()
+
 
 def create_directory(path, inloop=False):
     path = utils.strip_path_string(path)

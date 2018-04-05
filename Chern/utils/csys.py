@@ -81,6 +81,9 @@ def copy(src, dst):
 def list_dir(src):
     files = os.listdir(src)
 
+def rmtree(src):
+    shutil.rmtree(src)
+
 def copy_tree(src, dst):
     shutil.copytree(src, dst)
 

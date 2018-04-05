@@ -139,6 +139,14 @@ class VTask(VObject):
                 return False
         return True
 
+    def resubmit(self):
+        if not self.is_submitted():
+            print("Not submitted yet.")
+            return
+        path = utils.storage_path() + "/" + self.impression()
+        csys.rmtree(path)
+        self.submit()
+
     def submit(self):
         if self.is_submitted():
             print("Already submitted")
