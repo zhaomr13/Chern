@@ -1,13 +1,10 @@
 """
 Chern
 """
-from Chern import utils
-from Chern.shell import mv, cd
-from Chern.shell import mkdir, mktask, mkdata, mkalgorithm
 
-# VObject.sub_types = {"Algorithm":VAlgorithm, "Task":VTask, "Data":VData, "Directory":VDirectory}
+# from Chern.main import main
 __author__ = 'Mingrui Zhao'
-__version__ = 'v1r0p0'
+__version__ = '2.2.7'
 __version_info = ()
 __revision__ = ''
 __license__ = ''
