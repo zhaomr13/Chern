@@ -137,32 +137,26 @@ class VObject(object):
         FIXME: it directly operate the config_file of other object rather operate through.
         """
         config_file = utils.ConfigFile(path+"/.chern/config.py")
-        succ_str = config_file.read_variable("successors")
-        if succ_str is None:
-            succ_str = []
+        succ_str = config_file.read_variable("successors", [])
         succ_str.append(self.invariant_path())
         config_file.write_variable("successors", succ_str)
 
-        pred_str = self.config_file.read_variable("predecessors")
-        if pred_str is None:
-            pred_str = []
+        pred_str = self.config_file.read_variable("predecessors", [])
         pred_str.append(VObject(path).invariant_path())
         self.config_file.write_variable("predecessors", pred_str)
 
     def remove_arc_from(self, path):
         """
-        FIXME
         Remove link from the path
-        Just copied from "remove_arc_from"
         """
-        config_file = utils.ConfigFile(path+"/.chern/config.py")
-        succ_str = config_file.read_variable("successors")
+        config_file = VObject(path).config_file
+        succ_str = config_file.read_variable("successors", [])
         succ_str.remove(self.invariant_path())
         config_file.write_variable("successors", succ_str)
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        pred_str = config_file.read_variable("predecessors")
+
+        pred_str = self.config_file.read_variable("predecessors", [])
         pred_str.remove(VObject(path).invariant_path())
-        config_file.write_variable("predecessors", pred_str)
+        self.config_file.write_variable("predecessors", pred_str)
 
     def add_arc_to(self, path):
         """
@@ -183,18 +177,21 @@ class VObject(object):
         config_file.write_variable("successors", succ_str)
 
     def remove_arc_to(self, path):
+        print("Calling remove arc to ...")
+        print(self)
+        print(path)
         """
         FIXME
         remove the path to the path
         """
-        config_file = utils.ConfigFile(path+"/.chern/config.py")
-        pred_str = config_file.read_variable("predecessors")
+        config_file = VObject(path).config_file
+        pred_str = config_file.read_variable("predecessors", [])
         pred_str.remove(self.invariant_path())
         config_file.write_variable("predecessors", pred_str)
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
-        succ_str = config_file.read_variable("successors")
+
+        succ_str = self.config_file.read_variable("successors", [])
         succ_str.remove(VObject(path).invariant_path())
-        config_file.write_variable("successors", succ_str)
+        self.config_file.write_variable("successors", succ_str)
 
     def successors(self):
         """
@@ -332,9 +329,9 @@ class VObject(object):
 
     def clean_impressions(self):
         self.config_file.write_variable("impressions", [])
-        self.config_file.write_variable("impression", None)
+        self.config_file.write_variable("impression", "")
         self.config_file.write_variable("output_md5s", {})
-        self.config_file.write_variable("output_md5", None)
+        self.config_file.write_variable("output_md5", "")
 
     def clean_flow(self):
         """
@@ -365,15 +362,15 @@ class VObject(object):
                 # if in the outside directory
                 if self.relative_path(pred_object.path).startswith(".."):
                     new_object.add_arc_from(pred_object.path)
-                    alias1 = obj.path_to_alias(pred_object.invariant_path())
-                    alias2 = pred_object.path_to_alias(obj.invariant_path())
-                    new_object.set_alias(alias1, pred_object.invariant_path())
-                    pred_object.remove_alias(alias2)
-                    pred_object.set_alias(alias2, new_object.invariant_path())
+                    alias = obj.path_to_alias(pred_object.invariant_path())
+                    new_object.set_alias(alias, pred_object.invariant_path())
                 else:
                 # if in the same tree
                     relative_path = self.relative_path(pred_object.path)
                     new_object.add_arc_from(new_path+"/"+relative_path)
+                    print("In the same tree")
+                    print("new path", new_path)
+                    print("relative_path", relative_path)
                     alias1 = obj.path_to_alias(pred_object.invariant_path())
                     alias2 = pred_object.path_to_alias(obj.invariant_path())
                     norm_path = os.path.normpath(new_path +"/"+ relative_path)
@@ -382,11 +379,9 @@ class VObject(object):
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     new_object.add_arc_to(succ_object.path)
-                    alias1 = obj.path_to_alias(succ_object.invariant_path())
-                    alias2 = succ_object.path_to_alias(obj.invariant_path())
-                    new_object.set_alias(alias1, succ_object.invariant_path())
-                    succ_object.remove_alias(alias2)
-                    succ_object.set_alias(alias2, new_object.invariant_path())
+                    alias = obj.path_to_alias(succ_object.invariant_path())
+                    succ_object.remove_alias(alias)
+                    succ_object.set_alias(alias, new_object.invariant_path())
 
         for obj in queue:
             for pred_object in obj.predecessors():
@@ -548,6 +543,8 @@ class VObject(object):
             return False
         latest_commit_message = self.latest_commit_message()
         if "Impress:" not in latest_commit_message:
+            return False
+        if self.impression() == "":
             return False
         pred = self.predecessors()
         if pred == []:
