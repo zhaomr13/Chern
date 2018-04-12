@@ -78,8 +78,7 @@ class VObject(object):
         if path is None:
             path = self.path
         # simply read object_type in .chern/config.py
-        config_file = utils.ConfigFile(path+"/.chern/config.py")
-        return config_file.read_variable("object_type")
+        return self.config_file.read_variable("object_type", "")
 
     def ls(self):
         """
@@ -132,6 +131,19 @@ class VObject(object):
             obj_type = "("+succ_object.object_type()+")"
             print("{2} {0:<12} {3:>10}: {1:<20}".format(obj_type, succ_path, order, alias))
 
+    def is_zombine(self):
+        return self.object_type() != ""
+
+    def check_arcs(self):
+        predecessors = self.precesessors()
+        for obj in predecessors:
+            if obj.is_zombine() or not obj.has_successor(self):
+                self.remove_arc_from(obj, single=True)
+                self.remove_alias(self.path_to_alias(obj.path))
+        for obj in successors:
+            if obj.is_zombine() or not obj.has_predecessor(self):
+                self.remove_arc_to(obj, single=True)
+
     def add_arc_from(self, path):
         """ Add an link from the object contains in `path' to this object.
         FIXME: it directly operate the config_file of other object rather operate through.
@@ -145,14 +157,15 @@ class VObject(object):
         pred_str.append(VObject(path).invariant_path())
         self.config_file.write_variable("predecessors", pred_str)
 
-    def remove_arc_from(self, path):
+    def remove_arc_from(self, obj, single=False):
         """
         Remove link from the path
         """
-        config_file = VObject(path).config_file
-        succ_str = config_file.read_variable("successors", [])
-        succ_str.remove(self.invariant_path())
-        config_file.write_variable("successors", succ_str)
+        if not single:
+            config_file = obj.config_file
+            succ_str = config_file.read_variable("successors", [])
+            succ_str.remove(self.invariant_path())
+            config_file.write_variable("successors", succ_str)
 
         pred_str = self.config_file.read_variable("predecessors", [])
         pred_str.remove(VObject(path).invariant_path())
@@ -176,18 +189,15 @@ class VObject(object):
         succ_str.append(VObject(path).invariant_path())
         config_file.write_variable("successors", succ_str)
 
-    def remove_arc_to(self, path):
-        print("Calling remove arc to ...")
-        print(self)
-        print(path)
+    def remove_arc_to(self, obj, single=False):
         """
-        FIXME
         remove the path to the path
         """
-        config_file = VObject(path).config_file
-        pred_str = config_file.read_variable("predecessors", [])
-        pred_str.remove(self.invariant_path())
-        config_file.write_variable("predecessors", pred_str)
+        if not single:
+            config_file = obj.config_file
+            pred_str = config_file.read_variable("predecessors", [])
+            pred_str.remove(self.invariant_path())
+            config_file.write_variable("predecessors", pred_str)
 
         succ_str = self.config_file.read_variable("successors", [])
         succ_str.remove(VObject(path).invariant_path())
@@ -268,7 +278,7 @@ class VObject(object):
             print("queue", self.successors())
             for pred_object in obj.predecessors():
                 if self.relative_path(pred_object.path).startswith(".."):
-                    obj.remove_arc_from(pred_object.path)
+                    obj.remove_arc_from(pred_object)
                     message = pred_object.latest_commit_message()
                     git.add(pred_object.path)
                     git.commit("{} + mv".format(message))
@@ -276,7 +286,7 @@ class VObject(object):
             for succ_object in obj.successors():
                 print("debug")
                 if self.relative_path(succ_object.path).startswith(".."):
-                    obj.remove_arc_to(succ_object.path)
+                    obj.remove_arc_to(succ_object)
                     message = succ_object.latest_commit_message()
                     git.add(succ_object.path)
                     git.commit("{} + mv".format(message))
@@ -386,14 +396,14 @@ class VObject(object):
         for obj in queue:
             for pred_object in obj.predecessors():
                 if self.relative_path(pred_object.path).startswith(".."):
-                    obj.remove_arc_from(pred_object.path)
+                    obj.remove_arc_from(pred_object)
                     message = pred_object.latest_commit_message()
                     git.add(pred_object.path)
                     git.commit("{} + mv".format(message))
 
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
-                    obj.remove_arc_to(succ_object.path)
+                    obj.remove_arc_to(succ_object)
                     message = succ_object.latest_commit_message()
                     git.add(succ_object.path)
                     git.commit("{} + mv".format(message))
@@ -433,7 +443,7 @@ class VObject(object):
         for obj in queue:
             for pred_object in obj.predecessors():
                 if self.relative_path(pred_object.path).startswith(".."):
-                    obj.remove_arc_from(pred_object.path)
+                    obj.remove_arc_from(pred_object)
                     alias = pred_object.path_to_alias(pred_object.path)
                     pred_object.remove_alias(alias)
                     message = pred_object.latest_commit_message()
@@ -441,7 +451,7 @@ class VObject(object):
                     git.commit("{} + mv".format(message))
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
-                    obj.remove_arc_to(succ_object.path)
+                    obj.remove_arc_to(succ_object)
                     alias = succ_object.path_to_alias(succ_object.path)
                     succ_object.remove_alias(alias)
                     git.add(succ_object.path)
