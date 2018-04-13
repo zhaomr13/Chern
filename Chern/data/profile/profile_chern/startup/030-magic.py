@@ -41,34 +41,9 @@ del cdproject
 @click.command()
 @click.argument("object")
 def cd(object):
-    """ switch project
+    """ Switch directory or object
     """
-    if object.isdigit():
-        index = int(object)
-        sub_objects = manager.c.sub_objects()
-        successors = manager.c.successors()
-        predecessors = manager.c.predecessors()
-        total = len(sub_objects)
-        if index < total:
-            sub_objects.sort(key=lambda x:(x.object_type(), x.path))
-            shell.cd(manager.c.relative_path(sub_objects[index].path))
-            return
-        index -= total
-        total = len(predecessors)
-        if index < total:
-            shell.cd(manager.c.relative_path(predecessors[index].path))
-            return
-        index -= total
-        total = len(successors)
-        if index < total:
-            shell.cd(manager.c.relative_path(successors[index].path))
-            return
-        else:
-            color_print("Out of index", "remind")
-            return
-    else:
-        shell.cd(object)
-
+    shell.cd(object)
 click_cd = cd
 
 @register_line_magic
@@ -101,7 +76,14 @@ del rm
 
 @register_line_magic
 def helpme(line):
-    manager.c.helpme(line)
+    commands = line.split()
+    if commands == []:
+        manager.c.helpme("")
+        return
+    commands.append("--help")
+    func = globals()["click_" + commands[0]]
+    result = runner.invoke(func, commands[1:])
+    print(result.output.rstrip("\n"))
 del helpme
 
 @register_line_magic
@@ -109,8 +91,38 @@ def ls(line):
     if line == "projects":
         manager.ls_projects()
         return
-    manager.c.ls()
+    shell.ls(line)
 del ls
+
+#----------
+@click.command()
+@click.argument("PATH")
+@click.argument("ALIAS")
+def add_input(path, alias):
+    """ Add input task
+    """
+    shell.add_input(path, alias)
+click_add_input = add_input
+
+@register_line_magic
+def add_input(line):
+    """
+    """
+    result = runner.invoke(click_add_input, line.split())
+    output = result.output.rstrip("\n")
+    if output != "":
+        print(output)
+del add_input
+@register_line_magic
+def addinput(line):
+    """
+    """
+    result = runner.invoke(click_add_input, line.split())
+    print(result.output.rstrip("\n"))
+del addinput
+
+
+
 
 def set_algorithm(line):
     if manager.c.object_type() != "task":
@@ -120,16 +132,6 @@ def set_algorithm(line):
     # git.commit("{}:set algorithm {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(line)))
 
 
-def add_input(line):
-    line = csys.strip_path_string(line)
-    # if line.startswith()
-    if manager.c.object_type() != "task":
-        print("Can not set the algorithm if you are not a task")
-        return
-    line = line.split(" ")
-    path = os.path.abspath(line[0])
-    alias = line[1]
-    manager.c.add_input(path, alias)
     # git.commit("{}:add input {} named {}".format(manager.p.relative_path(manager.c.path), manager.p.relative_path(path), alias))
 
 def add_output(line):
