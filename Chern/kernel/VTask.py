@@ -19,7 +19,7 @@ cherndb = ChernDatabase.instance()
 class VTask(VObject):
     def helpme(self, command):
         from Chern.kernel.Helpme import task_helpme
-        print(project_helpme.get(command, "No such command, try ``helpme'' alone."))
+        print(task_helpme.get(command, "No such command, try ``helpme'' alone."))
 
     def ls(self):
         super(VTask, self).ls()
@@ -364,13 +364,27 @@ class VTask(VObject):
     def add_input(self, path, alias):
         """ FIXME: judge the input type
         """
+        obj = VObject(path)
+        if obj.object_type() != "task":
+            print("You are adding {} type object as input. The input is required to be a task.".format(obj.object_type()))
+            return
+
+        if self.has_alias(alias):
+            print("The alias already exists. The original input and alias will be replaced.")
+            original_object = VObject(cherndb.project_path()+"/"+self.alias_to_path(alias))
+            self.remove_arc_from(original_object)
+            self.remove_alias(alias)
+            message = original_object.latest_commit_message()
+            git.add(original_object.path)
+            git.commit("{} /Modify successor".format(message))
+
         self.add_arc_from(path)
-        self.set_alias(alias, VObject(path).invariant_path())
-        message = VObject(path).latest_commit_message()
+        self.set_alias(alias, obj.invariant_path())
+        message = obj.latest_commit_message()
         git.add(path)
-        git.commit("{} + append successor".format(message))
+        git.commit("{} /Append successor".format(message))
         git.add(self.path)
-        git.commit("Add input {}".format(VObject(path).invariant_path()))
+        git.commit("Add input {}".format(obj.invariant_path()))
 
     def remove_input(self, alias):
         path = self.alias_to_path(alias)
@@ -403,7 +417,7 @@ class VTask(VObject):
         if parameters is None:
             return {}
         else:
-            return parameters
+            return parameters.sorted()
 
     def add_parameter(self, parameter, value):
         """
