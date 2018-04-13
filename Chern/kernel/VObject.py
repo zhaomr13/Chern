@@ -63,37 +63,22 @@ class VObject(object):
         """
         return os.path.relpath(path, self.path)
 
-    def is_modified(self):
-        """ FIXME: may be replaced by the git commit method.
-        Return whether this object object is modified.
-        Check should be done before every use.
-        """
-        return False
-
-    def object_type(self, path=None):
-        """
-        Return the type of the object under a specific path.
+    def object_type(self):
+        """ Return the type of the object under a specific path.
         If path is left blank, return the type of the object itself.
+        If the object does not exists, return ""
         """
-        if path is None:
-            path = self.path
-        # simply read object_type in .chern/config.py
         return self.config_file.read_variable("object_type", "")
 
     def ls(self):
-        """
-        FIXME
-        Print the subdirectory of the object
+        """ Print the subdirectory of the object
         I recommend to print also the README
         and the parameters|inputs|outputs ...
-        And it's better to give a number to the listed
-        object and therefore, command like cd 1
-        can be used
         """
         if not cherndb.is_docker_started():
             color_print("!!Warning: docker not started", color="warning")
         if daemon_status() != "started":
-            color_print("!!Warning: runner not started {}".format(daemon_status()), color="warning")
+            color_print("!!Warning: runner not started, the status is {}".format(daemon_status()), color="warning")
         print(colorize("README:", "comment"))
         print(colorize(self.readme(), "comment"))
         sub_objects = self.sub_objects()
@@ -101,13 +86,6 @@ class VObject(object):
         if sub_objects:
             print(colorize(">>>> Subobjects:", "title0"))
         for index, sub_object in enumerate(sub_objects):
-            """
-            if sub_object.object_type() == "task" and Chern.kernel.VTask.VTask(sub_object.path).status() == "done":
-                sub_path = colorize(self.relative_path(sub_object.path), "success")
-            elif sub_object.object_type() == "algorithm" and Chern.kernel.VAlgorithm.VAlgorithm(sub_object.path).status() == "built":
-                sub_path = colorize(self.relative_path(sub_object.path), "success")
-            else:
-            """
             sub_path = self.relative_path(sub_object.path)
             print("{2} {0:<12} {1:>20}".format("("+sub_object.object_type()+")", sub_path, "[{}]".format(index)))
         total = len(sub_objects)
@@ -132,7 +110,7 @@ class VObject(object):
             print("{2} {0:<12} {3:>10}: {1:<20}".format(obj_type, succ_path, order, alias))
 
     def is_zombine(self):
-        return self.object_type() != ""
+        return self.object_type() == ""
 
     def check_arcs(self):
         predecessors = self.precesessors()
@@ -162,13 +140,16 @@ class VObject(object):
         Remove link from the path
         """
         if not single:
+            print(obj)
             config_file = obj.config_file
             succ_str = config_file.read_variable("successors", [])
+            print(succ_str)
+            print(self.invariant_path())
             succ_str.remove(self.invariant_path())
             config_file.write_variable("successors", succ_str)
 
         pred_str = self.config_file.read_variable("predecessors", [])
-        pred_str.remove(VObject(path).invariant_path())
+        pred_str.remove(obj.invariant_path())
         self.config_file.write_variable("predecessors", pred_str)
 
     def add_arc_to(self, path):
@@ -200,7 +181,7 @@ class VObject(object):
             config_file.write_variable("predecessors", pred_str)
 
         succ_str = self.config_file.read_variable("successors", [])
-        succ_str.remove(VObject(path).invariant_path())
+        succ_str.remove(obj.invariant_path())
         self.config_file.write_variable("successors", succ_str)
 
     def successors(self):
@@ -226,13 +207,13 @@ class VObject(object):
         """
         FIXME
         """
-        shutil.copytree(self.path, new_path)
         queue = self.sub_objects_recursively()
 
         # Make sure the related objects are all impressed
         for obj in queue:
             if not obj.is_impressed_fast():
                 obj.impress()
+        shutil.copytree(self.path, new_path)
 
         for obj in queue:
             # Calculate the absolute path of the new directory
@@ -295,28 +276,29 @@ class VObject(object):
         # Deal with the impression
         for obj in queue:
             # Calculate the absolute path of the new directory
-            if obj.object_type == "directory":
+            if obj.object_type() == "directory":
                 continue
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
             new_object.impress()
-            # message = obj.latest_commit_message()
-            # git.add(new_object.path)
-            # git.commit("{} + mv".format(message))
 
     def path_to_alias(self, path):
         path_to_alias = self.config_file.read_variable("path_to_alias", {})
         return path_to_alias.get(path, "")
 
     def alias_to_path(self, alias):
-        alias_to_path = self.config_file.read_variable("alias_to_path")
-        return alias_to_path[alias]
+        alias_to_path = self.config_file.read_variable("alias_to_path", {})
+        return alias_to_path.get(alias, "")
+
+    def has_alias(self, alias):
+        alias_to_path = self.config_file.read_variable("alias_to_path", {})
+        return alias in alias_to_path.keys()
 
     def remove_alias(self, alias):
         if alias == "":
             return
-        alias_to_path = self.config_file.read_variable("alias_to_path")
-        path_to_alias = self.config_file.read_variable("path_to_alias")
+        alias_to_path = self.config_file.read_variable("alias_to_path", {})
+        path_to_alias = self.config_file.read_variable("path_to_alias", {})
         path = alias_to_path[alias]
         path_to_alias.pop(path)
         alias_to_path.pop(alias)
@@ -326,12 +308,8 @@ class VObject(object):
     def set_alias(self, alias, path):
         if alias == "":
             return
-        path_to_alias = self.config_file.read_variable("path_to_alias")
-        alias_to_path = self.config_file.read_variable("alias_to_path")
-        if path_to_alias is None:
-            path_to_alias = {}
-        if alias_to_path is None:
-            alias_to_path = {}
+        path_to_alias = self.config_file.read_variable("path_to_alias", {})
+        alias_to_path = self.config_file.read_variable("alias_to_path", {})
         path_to_alias[path] = alias
         alias_to_path[alias] = path
         self.config_file.write_variable("path_to_alias", path_to_alias)
@@ -355,13 +333,14 @@ class VObject(object):
     def mv(self, new_path):
         """ mv to another path
         """
-        shutil.copytree(self.path, new_path)
         queue = self.sub_objects_recursively()
 
         # Make sure the related objects are all impressed
         for obj in queue:
             if not obj.is_impressed_fast():
+                print("Impress the {}".format(obj))
                 obj.impress()
+        shutil.copytree(self.path, new_path)
 
         for obj in queue:
             # Calculate the absolute path of the new directory
@@ -399,19 +378,20 @@ class VObject(object):
                     obj.remove_arc_from(pred_object)
                     message = pred_object.latest_commit_message()
                     git.add(pred_object.path)
-                    git.commit("{} + mv".format(message))
+                    git.commit("{}/mv".format(message))
 
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object)
                     message = succ_object.latest_commit_message()
                     git.add(succ_object.path)
-                    git.commit("{} + mv".format(message))
+                    git.commit("{}/mv".format(message))
 
         # Deal with the impression
         for obj in queue:
             # Calculate the absolute path of the new directory
-            if obj.object_type == "directory":
+            print("Try to keep the impress of {}".format(obj))
+            if obj.object_type() == "directory":
                 continue
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
@@ -468,10 +448,10 @@ class VObject(object):
         sub_object_list = []
         for item in sub_directories:
             if os.path.isdir(self.path+"/"+item):
-                object_type = self.object_type(self.path+"/"+item)
-                if object_type is None:
+                obj = VObject(self.path+"/"+item)
+                if obj.is_zombine():
                     continue
-                sub_object_list.append(VObject(self.path+"/"+item))
+                sub_object_list.append(obj)
         return sub_object_list
 
     def sub_objects_recursively(self):
@@ -565,12 +545,14 @@ class VObject(object):
                 return False
             else:
                 pred_impression.append(input_object.impression())
-        if sorted(pred_impression) == sorted(self.config_file.read_variable("pred_impression")):
+        if sorted(pred_impression) == sorted(self.config_file.read_variable("pred_impression", [])):
             return True
         else:
             return False
 
     def impress(self):
+        if self.object_type() != "task" and self.object_type() != "algorithm":
+            return
         pred = self.predecessors()
         pred_impression = []
 
