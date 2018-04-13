@@ -28,31 +28,46 @@ def cd(line, inloop=True):
     Change the directory.
     The standalone Chern.cd command is protected.
     """
-    if line.startswith("project"):
-        if inloop:
-            print("cd to a project in the script is not allowed")
+    if line.isdigit():
+        index = int(object)
+        sub_objects = manager.c.sub_objects()
+        successors = manager.c.successors()
+        predecessors = manager.c.predecessors()
+        total = len(sub_objects)
+        if index < total:
+            sub_objects.sort(key=lambda x:(x.object_type(), x.path))
+            shell.cd(manager.c.relative_path(sub_objects[index].path))
             return
-        debug(line)
-        line = utils.strip_path_string(line.lstrip("project"))
-        debug(line)
-        return
-
-    # cd can be used to change directory using absolute path
-    line = utils.special_path_string(line)
-    if line.startswith("p/") or line == "p":
-        line = manager.p.path + line.strip("p")
+        index -= total
+        total = len(predecessors)
+        if index < total:
+            shell.cd(manager.c.relative_path(predecessors[index].path))
+            return
+        index -= total
+        total = len(successors)
+        if index < total:
+            shell.cd(manager.c.relative_path(successors[index].path))
+            return
+        else:
+            color_print("Out of index", "remind")
+            return
     else:
-        line = os.path.abspath(line)
+        # cd can be used to change directory using absolute path
+        line = utils.special_path_string(line)
+        if line.startswith("@/") or line == "@":
+            line = manager.p.path + line.strip("@")
+        else:
+            line = os.path.abspath(line)
 
-    # Check available
-    if os.path.relpath(line, manager.p.path).startswith(".."):
-        print("Can not go to a place not in the project")
-        return
-    if not os.path.exists(line):
-        print("Directory not exists")
-        return
-    manager.switch_current_object(line)
-    os.chdir(manager.c.path)
+        # Check available
+        if os.path.relpath(line, manager.p.path).startswith(".."):
+            print("Can not go to a place not in the project")
+            return
+        if not os.path.exists(line):
+            print("Directory not exists")
+            return
+        manager.switch_current_object(line)
+        os.chdir(manager.c.path)
 
 def mv(line, inloop=True):
     """
@@ -118,7 +133,7 @@ def ls(line):
     """
     The function ls should not be defined here
     """
-    pass
+    manager.c.ls()
 
 def mkalgorithm(obj, use_template=False):
     """ Create a new algorithm """
@@ -192,3 +207,10 @@ def status():
             color_tag = "normal"
 
         print("{1:<20} {0:<20} ".format(colorize(status, color_tag), manager.c.relative_path(obj.path)) )
+
+def add_input(path, alias):
+    if manager.c.object_type() != "task":
+        print("Unable to call add_input if you are not in a task.")
+        return
+    manager.c.add_input(path, alias)
+
