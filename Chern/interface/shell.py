@@ -28,25 +28,26 @@ def cd(line, inloop=True):
     Change the directory.
     The standalone Chern.cd command is protected.
     """
+    line = line.rstrip("\n")
     if line.isdigit():
-        index = int(object)
+        index = int(line)
         sub_objects = manager.c.sub_objects()
         successors = manager.c.successors()
         predecessors = manager.c.predecessors()
         total = len(sub_objects)
         if index < total:
             sub_objects.sort(key=lambda x:(x.object_type(), x.path))
-            shell.cd(manager.c.relative_path(sub_objects[index].path))
+            cd(manager.c.relative_path(sub_objects[index].path))
             return
         index -= total
         total = len(predecessors)
         if index < total:
-            shell.cd(manager.c.relative_path(predecessors[index].path))
+            cd(manager.c.relative_path(predecessors[index].path))
             return
         index -= total
         total = len(successors)
         if index < total:
-            shell.cd(manager.c.relative_path(successors[index].path))
+            cd(manager.c.relative_path(successors[index].path))
             return
         else:
             color_print("Out of index", "remind")
