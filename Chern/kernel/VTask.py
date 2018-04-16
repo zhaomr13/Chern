@@ -391,8 +391,15 @@ class VTask(VObject):
         if path == "":
             print("Alias not found")
             return
-        self.remove_arc_from(path)
+        obj = VObject(cherndb.project_path()+"/"+path)
+        self.remove_arc_from()
         self.remove_alias(alias)
+        message = obj.latest_commit_message()
+        git.add(obj.path)
+        git.commit("{}/remove input".format(message))
+        git.add(self.path)
+        git.commit("Add input {}".format(obj.invariant_path()))
+
 
     def add_output(self, file_name):
         """ FIXME: The output is now binding with the task

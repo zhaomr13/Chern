@@ -215,3 +215,9 @@ def add_input(path, alias):
         return
     manager.c.add_input(path, alias)
 
+def remove_input(alias):
+    if manager.c.object_type() != "task":
+        print("Unable to call remove_input if you are not in a task.")
+        return
+    manager.c.remove_input(alias)
+

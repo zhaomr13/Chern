@@ -113,6 +113,7 @@ def add_input(line):
     if output != "":
         print(output)
 del add_input
+
 @register_line_magic
 def addinput(line):
     """
@@ -120,6 +121,33 @@ def addinput(line):
     result = runner.invoke(click_add_input, line.split())
     print(result.output.rstrip("\n"))
 del addinput
+
+#----------
+@click.command()
+@click.argument("ALIAS")
+def remove_input(alias):
+    """ Remove input task
+    """
+    shell.remove_input(alias)
+click_remove_input = remove_input
+
+@register_line_magic
+def remove_input(line):
+    """
+    """
+    result = runner.invoke(click_remove_input, line.split())
+    output = result.output.rstrip("\n")
+    if output != "":
+        print(output)
+del remove_input
+
+@register_line_magic
+def removeinput(line):
+    """
+    """
+    result = runner.invoke(click_remove_input, line.split())
+    print(result.output.rstrip("\n"))
+del removeinput
 
 
 
@@ -167,8 +195,6 @@ def add_algorithm(line):
     line = os.path.abspath(line)
     manager.c.add_algorithm(line)
 
-def remove_input(line):
-    pass
 
 def remove_output(line):
     pass
