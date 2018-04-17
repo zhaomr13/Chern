@@ -20,11 +20,10 @@ cherndb = ChernDatabase.instance()
 class VAlgorithm(VObject):
     """ Algorithm class
     """
+
     def helpme(self, command):
         from Chern.kernel.Helpme import algorithm_helpme
         print(algorithm_helpme.get(command, "No such command, try ``helpme'' alone."))
-
-
 
     def status(self):
         """ query the status of the current algorithm.
@@ -53,9 +52,6 @@ class VAlgorithm(VObject):
             print("{0:<12}   {1:>20}".format(short, status))
 
     def is_impressed_fast(self):
-        # config_file = utils.ConfigFile(os.environ["HOME"] + "/.Chern/git-cache")
-        # consult_table = config_file.read_variable("impression_consult_table", {})
-        # return self.is_impressed()
         consult_table = cherndb.impression_consult_table
         last_consult_time, is_impressed = consult_table.get(self.path, (-1,-1))
         modification_time = csys.dir_mtime( cherndb.project_path() )
@@ -63,7 +59,6 @@ class VAlgorithm(VObject):
             return is_impressed
         is_impressed = self.is_impressed()
         consult_table[self.path] = (time.time(), is_impressed)
-        # config_file.write_variable("impression_consult_table", consult_table)
         return is_impressed
 
     def is_impressed(self):
@@ -120,7 +115,7 @@ class VAlgorithm(VObject):
         """
         path = utils.storage_path() + "/" + self.impression()
         if not os.path.exists(path):
-            raise Exception("")
+            raise Exception("Image does not exist.")
         return VImage(path)
 
     def ls(self):
