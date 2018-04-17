@@ -4,7 +4,7 @@ import time
 from Chern.utils import utils
 from Chern.utils import csys
 from Chern.utils.utils import debug
-from Chern.utils.utils import colorize
+from Chern.utils.pretty import colorize
 from Chern.utils.utils import color_print
 from Chern.kernel.ChernDaemon import status as daemon_status
 from subprocess import call
@@ -70,6 +70,18 @@ class VObject(object):
         """
         return self.config_file.read_variable("object_type", "")
 
+    def color_tag(self, status):
+        if status == "built" or status == "done" or status == "finished":
+            color_tag = "success"
+        elif status == "failed" or status == "unfinished":
+            color_tag = "warning"
+        elif status == "running":
+            color_tag = "running"
+        else:
+            color_tag = "normal"
+        return color_tag
+
+
     def ls(self):
         """ Print the subdirectory of the object
         I recommend to print also the README
@@ -81,6 +93,47 @@ class VObject(object):
             color_print("!!Warning: runner not started, the status is {}".format(daemon_status()), color="warning")
         print(colorize("README:", "comment"))
         print(colorize(self.readme(), "comment"))
+        sub_objects = self.sub_objects()
+        sub_objects.sort(key=lambda x:(x.object_type(),x.path))
+        if sub_objects:
+            print(colorize(">>>> Subobjects:", "title0"))
+
+
+        for index, sub_object in enumerate(sub_objects):
+            status = Chern.interface.ChernManager.create_object_instance(sub_object.path).status()
+            color_tag = self.color_tag(status)
+            sub_path = self.relative_path(sub_object.path)
+            print("{2} {0:<12} {1:>20} ({3})".format("("+sub_object.object_type()+")", sub_path, "[{}]".format(index), colorize(status, color_tag)))
+        total = len(sub_objects)
+        predecessors = self.predecessors()
+        if predecessors:
+            print(colorize("o--> Predecessors:", "title0"))
+        for index, pred_object in enumerate(predecessors):
+            alias = self.path_to_alias(pred_object.invariant_path())
+            order = "[{}]".format(total+index)
+            pred_path = pred_object.invariant_path()
+            obj_type = "("+pred_object.object_type()+")"
+            print("{2} {0:<12} {3:>10}: {1:<20}".format(obj_type, pred_path, order, alias))
+        total += len(predecessors)
+        successors = self.successors()
+        if successors:
+            print(colorize("-->o Successors:", "title0"))
+        for index, succ_object in enumerate(successors):
+            alias = self.path_to_alias(succ_object.invariant_path())
+            order = "[{}]".format(total+index)
+            succ_path = succ_object.invariant_path()
+            obj_type = "("+succ_object.object_type()+")"
+            print("{2} {0:<12} {3:>10}: {1:<20}".format(obj_type, succ_path, order, alias))
+
+    def short_ls(self):
+        """ Print the subdirectory of the object
+        I recommend to print also the README
+        and the parameters|inputs|outputs ...
+        """
+        if not cherndb.is_docker_started():
+            color_print("!!Warning: docker not started", color="warning")
+        if daemon_status() != "started":
+            color_print("!!Warning: runner not started, the status is {}".format(daemon_status()), color="warning")
         sub_objects = self.sub_objects()
         sub_objects.sort(key=lambda x:(x.object_type(),x.path))
         if sub_objects:
@@ -203,6 +256,70 @@ class VObject(object):
             predecessors.append(VObject(project_path+"/"+path))
         return predecessors
 
+    def has_successor(self, obj):
+        succ_str = self.config_file.read_variable("successors", [])
+        return obj.invariant_path() in succ_str
+
+
+    def has_predecessor(self, obj):
+        pred_str = self.config_file.read_variable("predecessors", [])
+        return obj.invariant_path() in pred_str
+
+    def doctor(self):
+        queue = self.sub_objects_recursively()
+        for obj in queue:
+            if obj.object_type() != "task" and obj.object_type() != "algorithm":
+                continue
+
+            for pred_object in obj.predecessors():
+                if pred_object.is_zombine() or not pred_object.has_successor(obj):
+                    print("The predecessor \n\t {} \n\t does not exists or do not \
+has a link to object {}".format(pred_object, obj) )
+                    choice = input("Would you like to remove the input or the algorithm? [Y/N]")
+                    if choice == "Y":
+                        obj.remove_arc_from(pred_object, single=True)
+                        obj.remove_alias(obj.path_to_alias(pred_object.path))
+                        obj.impress()
+
+            for succ_object in obj.successors():
+                if succ_object.is_zombine() or not succ_object.has_predecessor(obj):
+                    print("The succecessor \n\t {} \n\t does not exists or do not \
+has a link to object {}".format(succ_object, obj) )
+                    choice = input("Would you like to remove the output? [Y/N]")
+                    if choice == "Y":
+                        obj.remove_arc_to(succ_object, single=True)
+                        message = obj.latest_commit_message()
+                        git.add(obj.path)
+                        git.commit("{}/remove output arc".format(message))
+
+            for pred_object in obj.predecessors():
+                if obj.path_to_alias(pred_object.invariant_path()) == "" and pred_object.object_type() != "algorithm":
+                    print("The input {} of {} does not have alias, it will be removed".format(pred_object, obj))
+                    choice = input("Would you like to remove the input or the algorithm? [Y/N]")
+                    if choice == "Y":
+                        obj.remove_arc_from(pred_object)
+                        message = pred_object.latest_commit_message()
+                        git.add(pred_object.path)
+                        git.commit("{}/remove output arc".format(message))
+                        obj.impress()
+
+
+            alias_to_path = obj.config_file.read_variable("alias_to_path", {})
+            path_to_alias = obj.config_file.read_variable("path_to_alias", {})
+            for path in path_to_alias.keys():
+                project_path = cherndb.project_path()
+                pred_obj = VObject(project_path+"/"+path)
+                if not obj.has_predecessor(pred_obj):
+                    print("There seems being a zombine alias to {} in {}".format(pred_obj, obj))
+                    choice = input("Would you like to remove it?[Y/N]")
+                    if choice == "Y":
+                        obj.remove_alias(obj.path_to_alias(path))
+                        message = obj.latest_commit_message()
+                        git.add(obj.path)
+                        git.commit("{}/remove zombine alias".format(message))
+
+
+
     def cp(self, new_path):
         """
         FIXME
@@ -211,6 +328,8 @@ class VObject(object):
 
         # Make sure the related objects are all impressed
         for obj in queue:
+            if obj.object_type() != "task" and obj.object_type() != "algorithm":
+                continue
             if not obj.is_impressed_fast():
                 obj.impress()
         shutil.copytree(self.path, new_path)
@@ -337,8 +456,9 @@ class VObject(object):
 
         # Make sure the related objects are all impressed
         for obj in queue:
+            if obj.object_type() != "task" and obj.object_type() != "algorithm":
+                continue
             if not obj.is_impressed_fast():
-                print("Impress the {}".format(obj))
                 obj.impress()
         shutil.copytree(self.path, new_path)
 
