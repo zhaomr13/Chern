@@ -91,8 +91,13 @@ def ls(line):
     if line == "projects":
         manager.ls_projects()
         return
-    shell.ls(line)
+    shell.short_ls(line)
 del ls
+
+@register_line_magic
+def ll(line):
+    shell.ls(line)
+del ll
 
 #----------
 @click.command()

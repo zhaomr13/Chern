@@ -136,6 +136,12 @@ def ls(line):
     """
     manager.c.ls()
 
+def short_ls(line):
+    """
+    The function ls should not be defined here
+    """
+    manager.c.short_ls()
+
 def mkalgorithm(obj, use_template=False):
     """ Create a new algorithm """
     line = csys.refine_path(obj, cherndb.project_path())
