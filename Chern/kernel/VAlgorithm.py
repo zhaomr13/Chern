@@ -118,10 +118,10 @@ class VAlgorithm(VObject):
             raise Exception("Image does not exist.")
         return VImage(path)
 
-    def ls(self):
+    def ls(self, show_readme=True, show_predecessors=True, show_sub_objects=True, show_status=False, show_successors=False):
         """ list the infomation.
         """
-        super(VAlgorithm, self).ls()
+        super(VAlgorithm, self).ls(show_readme, show_predecessors, show_sub_objects, show_status, show_successors)
         parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
         parameters = parameters_file.read_variable("parameters")
         if parameters is None:
@@ -129,13 +129,16 @@ class VAlgorithm(VObject):
         print(colorize("---- Parameters:", "title0"))
         for parameter in parameters:
             print(parameter)
-        status = self.status()
-        if status == "built":
-            status_color = "success"
-        else:
-            status_color = "normal"
-        print(colorize("**** STATUS:", "title0"),
-              colorize(self.status(), status_color) )
+
+        if show_status:
+            status = self.status()
+            if status == "built":
+                status_color = "success"
+            else:
+                status_color = "normal"
+            print(colorize("**** STATUS:", "title0"),
+                colorize(self.status(), status_color) )
+
         if self.is_submitted() and self.image().error() != "":
             print(colorize("!!!! ERROR:\n", "title0"), self.image().error())
         files = os.listdir(self.path)

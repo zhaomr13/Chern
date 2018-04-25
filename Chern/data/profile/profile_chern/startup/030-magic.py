@@ -86,13 +86,40 @@ def helpme(line):
     print(result.output.rstrip("\n"))
 del helpme
 
+@click.command()
+@click.option("-r/-R", "--show-readme/--hide-readme", default=True, help="Show readme")
+@click.option("-p/-P", "--show-predecessors/--hide-predecessors", default=True, help="Show predecessors")
+@click.option("-c/-C", "--show-subobjects/--hide-subobjects", default=True, help="Show subobjects")
+@click.option("-n/-N", "--show-successors/--hide-successors", default=False, help="Show successors")
+@click.option("-t/-T", "--show-status/--hide-status", default=False, help="Show status")
+@click.option("-a", "--show-all", is_flag=True, default=False, help="Show all")
+def ls(show_readme, show_predecessors, show_subobjects, show_successors, show_status, show_all):
+    """ switch project
+    """
+    if show_all:
+        show_readme = True
+        show_predecessors = True
+        show_subobjects = True
+        show_successors = True
+        show_status = True
+    manager.c.ls(show_readme, show_predecessors, show_subobjects, show_status, show_successors)
+
+click_ls = ls
+
 @register_line_magic
 def ls(line):
-    if line == "projects":
-        manager.ls_projects()
-        return
-    shell.short_ls(line)
+    """ The extended cd function: cd number
+    """
+    result = runner.invoke(click_ls, line.split())
+    print(result.output.rstrip("\n"))
 del ls
+
+@register_line_magic
+def ls_projects(line):
+    """ The extended cd function: cd number
+    """
+    manager.ls_projects()
+del ls_projects
 
 @register_line_magic
 def ll(line):

@@ -21,8 +21,8 @@ class VTask(VObject):
         from Chern.kernel.Helpme import task_helpme
         print(task_helpme.get(command, "No such command, try ``helpme'' alone."))
 
-    def ls(self):
-        super(VTask, self).ls()
+    def ls(self, show_readme=True, show_predecessors=True, show_sub_objects=True, show_status=False, show_successors=False):
+        super(VTask, self).ls(show_readme, show_predecessors, show_sub_objects, show_status, show_successors)
         parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
         parameters = parameters_file.read_variable("parameters")
         if parameters is None:
@@ -32,13 +32,14 @@ class VTask(VObject):
             print(parameter, end=" = ")
             print(parameters_file.read_variable(parameter))
 
-        status = self.status()
-        if status == "done":
-            status_color = "success"
-        else:
-            status_color = "normal"
-        print(colorize("**** STATUS:", "title0"),
-              colorize(status, status_color) )
+        if show_status:
+            status = self.status()
+            if status == "done":
+                status_color = "success"
+            else:
+                status_color = "normal"
+            print(colorize("**** STATUS:", "title0"),
+                colorize(status, status_color) )
 
         if self.is_submitted() and self.container().error() != "":
             print(colorize("!!!! ERROR:\n", "title0"), self.container().error())
@@ -51,17 +52,29 @@ class VTask(VObject):
             files.sort()
             max_len = max([len(s) for s in files])
             columns = os.get_terminal_size().columns
-            nfiles = columns // (max_len+5)
-            print(nfiles)
+            nfiles = columns // (max_len+5+7)
             for i, f in enumerate(files):
                 if not f.startswith(".") and f != "README.md":
-                    print(("{:<"+str(max_len+5)+"}").format(f), end="")
+                    print(("docker:{:<"+str(max_len+5)+"}").format(f), end="")
                     if (i+1)%nfiles == 0:
                         print("")
 
     def view(self, file_name):
-        path = self.container().path+"/output/"+file_name
-        subprocess.Popen("open {}".format(path), shell=True)
+        if file_name.startswith("docker:"):
+            path = self.container().path+"/output/"+file_name.replace("docker:", "").lstrip()
+            if not csys.exists(path):
+                print("File: {} do not exists".format(path))
+                return
+            subprocess.Popen("open {}".format(path), shell=True)
+
+    def cp(self, source, dst):
+        if source.startswith("docker:"):
+            path = self.container().path+"/output/"+source.replace("docker:", "").lstrip()
+            if not csys.exists(path):
+                print("File: {} do not exists".format(path))
+                return
+            csys.copy(path, dst)
+
 
     def inputs(self):
         """ Input data. """

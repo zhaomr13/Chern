@@ -76,6 +76,7 @@ def copy(src, dst):
     """
     directory = os.path.dirname(dst)
     mkdir(directory)
+    print(src, dst)
     shutil.copy2(src, dst)
 
 def list_dir(src):
@@ -86,6 +87,9 @@ def rmtree(src):
 
 def copy_tree(src, dst):
     shutil.copytree(src, dst)
+
+def exists(path):
+    return os.path.exists(path)
 
 def strip_path_string(path_string):
     """ Remove the "/" in the end of the string

@@ -82,7 +82,7 @@ class VObject(object):
         return color_tag
 
 
-    def ls(self):
+    def ls(self, show_readme=True, show_predecessors=True, show_sub_objects=True, show_status=False, show_successors=False):
         """ Print the subdirectory of the object
         I recommend to print also the README
         and the parameters|inputs|outputs ...
@@ -91,39 +91,47 @@ class VObject(object):
             color_print("!!Warning: docker not started", color="warning")
         if daemon_status() != "started":
             color_print("!!Warning: runner not started, the status is {}".format(daemon_status()), color="warning")
-        print(colorize("README:", "comment"))
-        print(colorize(self.readme(), "comment"))
+
+        if show_readme:
+            print(colorize("README:", "comment"))
+            print(colorize(self.readme(), "comment"))
+
         sub_objects = self.sub_objects()
         sub_objects.sort(key=lambda x:(x.object_type(),x.path))
-        if sub_objects:
+        if sub_objects and show_sub_objects:
             print(colorize(">>>> Subobjects:", "title0"))
 
+        if show_sub_objects:
+            for index, sub_object in enumerate(sub_objects):
+                sub_path = self.relative_path(sub_object.path)
+                if show_status:
+                    status = Chern.interface.ChernManager.create_object_instance(sub_object.path).status()
+                    color_tag = self.color_tag(status)
+                    print("{2} {0:<12} {1:>20} ({3})".format("("+sub_object.object_type()+")", sub_path, "[{}]".format(index), colorize(status, color_tag)))
+                else:
+                    print("{2} {0:<12} {1:>20}".format("("+sub_object.object_type()+")", sub_path, "[{}]".format(index)))
 
-        for index, sub_object in enumerate(sub_objects):
-            status = Chern.interface.ChernManager.create_object_instance(sub_object.path).status()
-            color_tag = self.color_tag(status)
-            sub_path = self.relative_path(sub_object.path)
-            print("{2} {0:<12} {1:>20} ({3})".format("("+sub_object.object_type()+")", sub_path, "[{}]".format(index), colorize(status, color_tag)))
         total = len(sub_objects)
         predecessors = self.predecessors()
-        if predecessors:
+        if predecessors and show_predecessors:
             print(colorize("o--> Predecessors:", "title0"))
-        for index, pred_object in enumerate(predecessors):
-            alias = self.path_to_alias(pred_object.invariant_path())
-            order = "[{}]".format(total+index)
-            pred_path = pred_object.invariant_path()
-            obj_type = "("+pred_object.object_type()+")"
-            print("{2} {0:<12} {3:>10}: {1:<20}".format(obj_type, pred_path, order, alias))
+            for index, pred_object in enumerate(predecessors):
+                alias = self.path_to_alias(pred_object.invariant_path())
+                order = "[{}]".format(total+index)
+                pred_path = pred_object.invariant_path()
+                obj_type = "("+pred_object.object_type()+")"
+                print("{2} {0:<12} {3:>10}: @/{1:<20}".format(obj_type, pred_path, order, alias))
+
         total += len(predecessors)
         successors = self.successors()
-        if successors:
+        if successors and show_successors:
             print(colorize("-->o Successors:", "title0"))
-        for index, succ_object in enumerate(successors):
-            alias = self.path_to_alias(succ_object.invariant_path())
-            order = "[{}]".format(total+index)
-            succ_path = succ_object.invariant_path()
-            obj_type = "("+succ_object.object_type()+")"
-            print("{2} {0:<12} {3:>10}: {1:<20}".format(obj_type, succ_path, order, alias))
+            for index, succ_object in enumerate(successors):
+                alias = self.path_to_alias(succ_object.invariant_path())
+                order = "[{}]".format(total+index)
+                succ_path = succ_object.invariant_path()
+                obj_type = "("+succ_object.object_type()+")"
+                print("{2} {0:<12} {3:>10}: @/{1:<20}".format(obj_type, succ_path, order, alias))
 
     def short_ls(self):
         """ Print the subdirectory of the object
@@ -183,6 +191,7 @@ class VObject(object):
         succ_str = config_file.read_variable("successors", [])
         succ_str.append(self.invariant_path())
         config_file.write_variable("successors", succ_str)
+        print("!!!!!", path, succ_str)
 
         pred_str = self.config_file.read_variable("predecessors", [])
         pred_str.append(VObject(path).invariant_path())
@@ -320,7 +329,7 @@ has a link to object {}".format(succ_object, obj) )
 
 
 
-    def cp(self, new_path):
+    def copy_to(self, new_path):
         """
         FIXME
         """
@@ -340,6 +349,11 @@ has a link to object {}".format(succ_object, obj) )
             new_object = VObject(norm_path)
             new_object.clean_flow()
             new_object.clean_impressions()
+
+        for obj in queue:
+            # Calculate the absolute path of the new directory
+            norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
+            new_object = VObject(norm_path)
             for pred_object in obj.predecessors():
                 # if in the outside directory
                 if self.relative_path(pred_object.path).startswith(".."):
@@ -355,6 +369,10 @@ has a link to object {}".format(succ_object, obj) )
                 else:
                 # if in the same tree
                     relative_path = self.relative_path(pred_object.path)
+                    print("In the same tree")
+                    # print("new path", new_path)
+                    print("object", new_object)
+                    print("relative_path", relative_path)
                     new_object.add_arc_from(new_path+"/"+relative_path)
                     alias1 = obj.path_to_alias(pred_object.invariant_path())
                     # alias2 = pred_object.path_to_alias(obj.path)
@@ -396,6 +414,10 @@ has a link to object {}".format(succ_object, obj) )
         for obj in queue:
             # Calculate the absolute path of the new directory
             if obj.object_type() == "directory":
+                norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
+                git.add(norm_path+"/.chern")
+                git.add(norm_path+"/README.md")
+                git.commit("save directory")
                 continue
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
@@ -449,7 +471,7 @@ has a link to object {}".format(succ_object, obj) )
         self.config_file.write_variable("predecessors", [])
         self.config_file.write_variable("successors", [])
 
-    def mv(self, new_path):
+    def move_to(self, new_path):
         """ mv to another path
         """
         queue = self.sub_objects_recursively()
@@ -467,6 +489,11 @@ has a link to object {}".format(succ_object, obj) )
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
             new_object.clean_flow()
+
+        for obj in queue:
+            # Calculate the absolute path of the new directory
+            norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
+            new_object = VObject(norm_path)
             for pred_object in obj.predecessors():
                 # if in the outside directory
                 if self.relative_path(pred_object.path).startswith(".."):
@@ -603,7 +630,7 @@ has a link to object {}".format(succ_object, obj) )
 
             consult_table[self.path] = (time.time(), log[0])
             # config_file.write_variable("consult_table", consult_table)
-        return log[0]
+            return log[0][:42]
 
     def edit_readme(self):
         """
@@ -613,7 +640,7 @@ has a link to object {}".format(succ_object, obj) )
         call("vim {0}".format(self.path+"/README.md"), shell=True)
         git.add(self.path+"/README.md")
         message = self.latest_commit_message()
-        git.commit("{} + edit readme".format(message))
+        git.commit("{}/edit readme".format(message))
 
     def commit(self):
         """ Commit the object
@@ -672,6 +699,9 @@ has a link to object {}".format(succ_object, obj) )
 
     def impress(self):
         if self.object_type() != "task" and self.object_type() != "algorithm":
+            return
+        if self.is_impressed_fast():
+            print("Already impressed.")
             return
         pred = self.predecessors()
         pred_impression = []

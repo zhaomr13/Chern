@@ -58,8 +58,8 @@ def use(path):
 
 @cli.command()
 @click.argument("command", type=str)
-def daemon(command):
-    """ Start or stop the daemon"""
+def machine(command):
+    """ Start or stop the chern machine"""
     if command == "start":
         daemon_start()
     elif command == "stop":
@@ -70,6 +70,7 @@ def start_chern_ipython():
     start_ipython(argv=["--profile=chern", "--ipython-dir="+profile_path])
     ip = get_ipython()
     del ip.magics_manager.magics["line"]["ls"]
+    del ip.magics_manager.magics["line"]["ll"]
     del ip.magics_manager.magics["line"]["mv"]
     del ip.magics_manager.magics["line"]["rm"]
     del ip.magics_manager.magics["line"]["cp"]
@@ -89,15 +90,27 @@ def start_first_time():
     data_path = os.path.abspath(os.path.dirname(__file__) + "/data/profile")
     csys.copy_tree(data_path, csys.local_config_dir()+"/profile")
 
+def main():
+    cli()
+
 @cli.command()
 def prologue():
     """ A prologue from the author """
     print("""
 Chern: A data analysis management toolkit
-Author: Mingrui Zhao, dedicated to Sidan
-2013 - 2017 @ Center of High Energy Physics, Tsinghua University
-2017 -  now @ Department of Nuclear Physics, China Institute of Atomic Energy
-Email: mingrui.zhao@mail.labz0.org""")
+Author: Mingrui Zhao
+        2013 - 2017       @ Center of High Energy Physics, Tsinghua University
+        2017 - 2018(now)  @ Department of Nuclear Physics, China Institute of Atomic Energy
+Email: mingrui.zhao@mail.labz0.org
 
-def main():
-    cli()
+I started the project when I was a undergraduate student in Tsinghua University and working for LHCb collaboration.
+And the software in LHCb is usually named after the Great name, such as ``Gauss'' and ``Davinci''.
+The term ``Chern''(陈) is a common surname in China and it is usually written as ``Chen'' in English now.
+The unusual spelling "Chern" is a transliteration in the old Gwoyeu Romatzyh (GR) romanization used in the early twentieth century China.
+Nowadays, when written in the form of ``Chern'', it usually refer to ``Shiing-Shen Chern'',
+the great Chinese-American mathematician who made fundamental contributions to differential geometry and topology.
+The well-known ``Chern classes'', ``Chern–Gauss–Bonnet theorem'' and many others are named after him.
+At the same time, my girlfriend has the same surname in Chinese with S.S.Chern.
+This is the origin of the software name.
+""")
+

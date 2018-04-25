@@ -98,7 +98,7 @@ def mv(line, inloop=True):
     else:
         source = os.path.abspath(source)
 
-    VObject(source).mv(destination)
+    VObject(source).move_to(destination)
 
 def cp(line, inloop=True):
     """
@@ -115,8 +115,12 @@ def cp(line, inloop=True):
     if len(line) != 2:
         print("Please lookup the USAGE of cp")
         return
-    source = utils.special_path_string(line[0])
-    destination = utils.special_path_string(line[1])
+    source = line[0]
+    destination = line[1]
+    if manager.c.object_type() == "task":
+        manager.c.cp(source, destination)
+        return
+
     if destination.startswith("p/") or destination == "p":
         destination = os.path.normpath(manager.p.path + destination.strip("p"))
     else:
@@ -128,7 +132,7 @@ def cp(line, inloop=True):
     else:
         source = os.path.abspath(source)
 
-    VObject(source).cp(destination)
+    VObject(source).copy_to(destination)
 
 def ls(line):
     """
