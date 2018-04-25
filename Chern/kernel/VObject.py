@@ -4,6 +4,7 @@ import time
 from Chern.utils import utils
 from Chern.utils import csys
 from Chern.utils.utils import debug
+from Chern.utils import metadata
 from Chern.utils.pretty import colorize
 from Chern.utils.utils import color_print
 from Chern.kernel.ChernDaemon import status as daemon_status
@@ -26,7 +27,7 @@ class VObject(object):
         """
         self.path = utils.strip_path_string(path)
         self.created_time = time.time()
-        self.config_file = utils.ConfigFile(self.path+"/.chern/config.py")
+        self.config_file = metadata.ConfigFile(self.path+"/.chern/config.json")
 
     def invariant_path(self):
         """ The path relative to the project root.
@@ -187,7 +188,7 @@ class VObject(object):
         """ Add an link from the object contains in `path' to this object.
         FIXME: it directly operate the config_file of other object rather operate through.
         """
-        config_file = utils.ConfigFile(path+"/.chern/config.py")
+        config_file = metadata.ConfigFile(path+"/.chern/config.json")
         succ_str = config_file.read_variable("successors", [])
         succ_str.append(self.invariant_path())
         config_file.write_variable("successors", succ_str)
@@ -219,13 +220,13 @@ class VObject(object):
         FIXME
         Add a link from this object to the path object
         """
-        config_file = utils.ConfigFile(path+"/.chern/config.py")
+        config_file = metadata.ConfigFile(path+"/.chern/config.json")
         pred_str = config_file.read_variable("predecessors")
         if pred_str is None:
             pred_str = []
         pred_str.append(self.invariant_path())
         config_file.write_variable("predecessors", pred_str)
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
+        config_file = metadata.ConfigFile(self.path+"/.chern/config.json")
         succ_str = config_file.read_variable("successors")
         if succ_str is None:
             succ_str = []

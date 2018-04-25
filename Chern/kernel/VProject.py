@@ -2,6 +2,7 @@ import Chern
 from Chern.kernel.VObject import VObject
 from Chern.utils.utils import debug
 from Chern.utils import utils
+from Chern.utils import metadata
 from Chern.utils import csys
 import os
 import subprocess
@@ -47,29 +48,25 @@ def init_project():
     if project_name in forbidden_names:
         check_project_failed(project_name, forbidden_names)
 
-    print("Your name and email is needed to initialize git.")
-    user_name = input("Please input your name: ")
-    user_mail = input("Please input your email: ")
-
     project_path = pwd
-    config_file = utils.ConfigFile(project_path+"/.chern/config.py")
+    config_file = metadata.ConfigFile(project_path+"/.chern/config.json")
     config_file.write_variable("object_type", "project")
+    config_file.write_variable("chern_version", "3.0.0")
+    open(project_path+"/.chern/project.json", "w").close()
+    # config_file.write_variable("ncpus", ncpus)
+    # config_file.write_variable("user_name", user_name)
+    # config_file.write_variable("user_mail", user_mail)
     with open(project_path + "/README.md", "w") as f:
         f.write("Please write README for this project")
     subprocess.call("vim %s/README.md"%project_path, shell=True)
-    global_config_file = utils.ConfigFile(csys.local_config_path())
-    projects_path = global_config_file.read_variable("projects_path")
-    if projects_path is None:
-        projects_path = {}
+    global_config_file = metadata.ConfigFile(csys.local_config_path())
+    projects_path = global_config_file.read_variable("projects_path", {})
+    print("Read")
     projects_path[project_name] = project_path
     global_config_file.write_variable("projects_path", projects_path)
     global_config_file.write_variable("current_project", project_name)
+    print("Written")
     os.chdir(project_path)
-    subprocess.call("git init", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    subprocess.call("git add .chern/config.py", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    subprocess.call("git commit -m \" Create config file for the project\"", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    subprocess.call("git add README.md", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    subprocess.call("git commit -m \" Create README file for the project\"", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 def use_project(path):
     """ Use an exsiting project
@@ -93,7 +90,7 @@ def use_project(path):
         check_project_failed(project_name, forbidden_names)
 
     project_path = path
-    config_file = utils.ConfigFile(project_path+"/.chern/config.py")
+    config_file = utils.ConfigFile(project_path+"/.chern/config.json")
     object_type = config_file.read_variable("object_type", "")
     if object_type != "project":
         print("What!!?")
@@ -106,11 +103,10 @@ def use_project(path):
         print("Not committed")
         os.chdir(cwd)
         return
-    global_config_file = utils.ConfigFile(csys.local_config_path())
-    projects_path = global_config_file.read_variable("projects_path")
-    if projects_path is None:
-        projects_path = {}
+    global_config_file = metadata.ConfigFile(csys.local_config_path())
+    projects_path = global_config_file.read_variable("projects_path", {})
     projects_path[project_name] = project_path
+    print("Written")
     global_config_file.write_variable("projects_path", projects_path)
     global_config_file.write_variable("current_project", project_name)
     os.chdir(project_path)
@@ -133,8 +129,8 @@ def new_project(project_name):
         check_project_failed(project_name, forbidden_names)
 
     ncpus = int(input("Please input the number of cpus to use for this project: "))
-    user_name = input("Please input your name: ")
-    user_mail = input("Please input your email: ")
+    # user_name = input("Please input your name: ")
+    # user_mail = input("Please input your email: ")
 
     pwd = os.getcwd()
     project_path = pwd + "/" + project_name
@@ -142,11 +138,12 @@ def new_project(project_name):
         os.mkdir(project_path)
     else:
         raise Exception("Project exist")
-    config_file = utils.ConfigFile(project_path+"/.chern/config.py")
+    config_file = metadata.ConfigFile(project_path+"/.chern/config.json")
     config_file.write_variable("object_type", "project")
-    config_file.write_variable("ncpus", ncpus)
-    config_file.write_variable("user_name", user_name)
-    config_file.write_variable("user_mail", user_mail)
+    open(project_path+"/.chern/project.json").close()
+    # config_file.write_variable("ncpus", ncpus)
+    # config_file.write_variable("user_name", user_name)
+    # config_file.write_variable("user_mail", user_mail)
     with open(project_path + "/README.md", "w") as f:
         f.write("Please write README for this project")
     call("vim %s/README.md"%project_path, shell=True)
@@ -158,9 +155,9 @@ def new_project(project_name):
     global_config_file.write_variable("projects_path", projects_path)
     global_config_file.write_variable("current_project", project_name)
     os.chdir(project_path)
-    call("git init", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    call("git add .chern/config.py", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    call("git commit -m \" Create config file for the project\"", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    call("git add README.md", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    call("git commit -m \" Create README file for the project\"", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # call("git init", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # call("git add .chern/config.py", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # call("git commit -m \" Create config file for the project\"", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # call("git add README.md", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # call("git commit -m \" Create README file for the project\"", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 

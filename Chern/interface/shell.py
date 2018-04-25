@@ -23,7 +23,7 @@ def cd_project(line):
     manager.p = manager.c
 
 
-def cd(line, inloop=True):
+def cd(line):
     """
     Change the directory.
     The standalone Chern.cd command is protected.
@@ -70,7 +70,7 @@ def cd(line, inloop=True):
         manager.switch_current_object(line)
         os.chdir(manager.c.path)
 
-def mv(line, inloop=True):
+def mv(line):
     """
     Move or rename file. Will keep the link relationship.
     mv SOURCE DEST
@@ -100,7 +100,7 @@ def mv(line, inloop=True):
 
     VObject(source).move_to(destination)
 
-def cp(line, inloop=True):
+def cp(line):
     """
     Move or rename file. Will keep the link relationship.
     mv SOURCE DEST
@@ -156,7 +156,7 @@ def mkalgorithm(obj, use_template=False):
         return
     create_algorithm(line, use_template)
 
-def mktask(line, inloop=True):
+def mktask(line):
     """ Create a new task """
     line = csys.refine_path(line, cherndb.project_path())
     parent_path = os.path.abspath(line+"/..")
@@ -164,9 +164,9 @@ def mktask(line, inloop=True):
     if object_type != "directory" and object_type != "project":
         print("Not allowed to create task here")
         return
-    create_task(line, inloop)
+    create_task(line)
 
-def mkdir(line, inloop=True):
+def mkdir(line):
     """ Create a new directory """
     line = csys.refine_path(line, cherndb.project_path())
     parent_path = os.path.abspath(line+"/..")
@@ -174,7 +174,7 @@ def mkdir(line, inloop=True):
     if object_type != "directory" and object_type != "project":
         print("Not allowed to create directory here")
         return
-    create_directory(line, inloop)
+    create_directory(line)
 
 def rm(line):
     line = os.path.abspath(line)

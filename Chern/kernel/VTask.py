@@ -8,6 +8,7 @@ from Chern.kernel.VObject import VObject
 from Chern.kernel.VContainer import VContainer
 from Chern.kernel import VAlgorithm
 from Chern.utils import utils
+from Chern.utils import metadata
 from Chern.utils import git
 from Chern.utils.utils import debug
 from Chern.utils.utils import colorize
@@ -446,7 +447,7 @@ class VTask(VObject):
         if parameter == "parameters":
             print("A parameter is not allowed to be called parameters")
             return
-        parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
+        parameters_file = metadata.ConfigFile(self.path+"/.chern/parameters.json")
         parameters_file.write_variable(parameter, value)
         parameters = parameters_file.read_variable("parameters")
         if parameters is None:
@@ -461,7 +462,7 @@ class VTask(VObject):
         if parameter == "parameters":
             print("parameters is not allowed to remove")
             return
-        parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
+        parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.json")
         parameters = parameters_file.read_variable("parameters")
         if parameter not in parameters:
             print("Parameter not found")
@@ -470,20 +471,21 @@ class VTask(VObject):
         parameters_file.write_variable(parameter, None)
         parameters_file.write_variable("parameters", parameters)
 
-def create_task(path, inloop=False):
+def create_task(path):
     path = utils.strip_path_string(path)
     parent_path = os.path.abspath(path+"/..")
     object_type = VObject(parent_path).object_type()
     if object_type != "project" and object_type != "directory":
-        raise Exception("create task only under project or directory")
-    os.mkdir(path)
-    os.mkdir(path+"/.chern")
-    open(path + "/.chern/parameters.py", "w").close()
-    with open(path + "/.chern/config.py", "w") as f:
-        f.write("object_type = \"task\"")
+        return
+        # raise Exception("create task only under project or directory")
+    csys.mkdir(path)
+    csys.mkdir(path+"/.chern")
+    # open(path + "/.chern/parameters.py", "w").close()
+    config_file = metadata.ConfigFile(path + "/.chern/config.json")
+    config_file.write_variable("object_type", "task")
     task = VObject(path)
-    git.add(path+"/.chern")
-    git.commit("Create task at {}".format(task.invariant_path()))
+    # git.add(path+"/.chern")
+    # git.commit("Create task at {}".format(task.invariant_path()))
     with open(path + "/README.md", "w") as f:
         f.write("Please write README for task {}".format(task.invariant_path()))
     task.edit_readme()

@@ -122,7 +122,7 @@ class VAlgorithm(VObject):
         """ list the infomation.
         """
         super(VAlgorithm, self).ls(show_readme, show_predecessors, show_sub_objects, show_status, show_successors)
-        parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
+        parameters_file = metadata.ConfigFile(self.path+"/.chern/parameters.json")
         parameters = parameters_file.read_variable("parameters")
         if parameters is None:
             parameters = []
@@ -152,7 +152,7 @@ class VAlgorithm(VObject):
         try:
             if parameter == "parameters":
                 return ["[ERROR] A parameter is not allowed to be called ``parameters''"]
-            parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
+            parameters_file = metadata.ConfigFile(self.path+"/.chern/parameters.json")
             parameters = parameters_file.read_variable("parameters", [])
             if parameter in parameters:
                 return ["[ERROR] Fail to add parameter ``{}'', exist".format(parameter)]
@@ -165,7 +165,7 @@ class VAlgorithm(VObject):
         """ Remove parameter
         """
         try:
-            parameters_file = utils.ConfigFile(self.path+"/.chern/parameters.py")
+            parameters_file = metadata.ConfigFile(self.path+"/.chern/parameters.json")
             parameters = parameters_file.read_variable("parameters", [])
             if parameter not in parameters:
                 return ["[ERROR] Fail to remove parameter ``{}'', not exist".format()]
@@ -179,9 +179,9 @@ def create_algorithm(path, use_template=False):
     path = utils.strip_path_string(path)
     os.mkdir(path)
     os.mkdir(path+"/.chern")
-    with open(path + "/.chern/config.py", "w") as config_file:
-        config_file.write("object_type = \"algorithm\"\n")
-        config_file.write("main_file = \"main.py\"\n")
+    config_file = metadata.ConfigFile(path+"/.chern/config.json")
+    config_file.write_variable("object_type", "algorithm")
+
     with open(path + "/README.md", "w") as readme_file:
         readme_file.write("Please write README for this algorithm")
     subprocess.call("vim {}/README.md".format(path), shell=True)

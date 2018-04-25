@@ -11,6 +11,16 @@ import subprocess
 import hashlib
 import time
 
+def project_path():
+    """ Get the project path by searching for project.json
+    """
+    path = os.getcwd()
+    while (path != "/"):
+        if exists(path+"./chern/project.json"):
+            return path
+        path = abspath(path+"/..")
+    raise NotInChernRepoError("Not in a Chern repository.")
+
 def dir_mtime(path):
     mtime = os.path.getmtime(path)
     if path.endswith(".chern"):
@@ -60,7 +70,7 @@ def storage_path():
     return path
 
 def local_config_path():
-    return os.environ["HOME"] + "/.Chern/config.py"
+    return os.environ["HOME"] + "/.Chern/config.json"
 
 def local_config_dir():
     return os.environ["HOME"] + "/.Chern"

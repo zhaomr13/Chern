@@ -3,7 +3,8 @@
 import sys
 import os
 import subprocess
-from Chern.utils import utils
+from Chern.utils import csys
+from Chern.utils import metadata
 from Chern.kernel.VJob import VJob
 from Chern.kernel.VContainer import VContainer
 from Chern.kernel.VImage import VImage
@@ -11,7 +12,7 @@ from Chern.kernel.VImage import VImage
 class ChernDatabase(object):
     ins = None
     def __init__(self):
-        self.local_config_path = utils.local_config_path()
+        self.local_config_path = csys.local_config_path()
         self.consult_table = {}
         self.impression_consult_table = {}
 
@@ -28,22 +29,22 @@ class ChernDatabase(object):
         return (ps.poll() == 0)
 
     def job(self, id):
-        storage_path = utils.storage_path()
+        storage_path = csys.storage_path()
         if os.path.exists(storage_path+"/"+id):
             return VJob(storage_path+"/"+id)
         else:
             return None
 
     def add_job(self, job_id):
-        storage_path = utils.storage_path()
-        jobs_list_file = utils.ConfigFile(storage_path+"/jobs.py")
+        storage_path = csys.storage_path()
+        jobs_list_file = metadata.ConfigFile(storage_path+"/jobs.json")
         job_id_list = jobs_list_file.read_variable("jobs_list", [])
         job_id_list.append(job_id)
         jobs_list_file.write_variable("jobs_list", job_id_list)
 
     def jobs(self, condition):
-        storage_path = utils.storage_path()
-        jobs_list_file = utils.ConfigFile(storage_path+"/jobs.py")
+        storage_path = csys.storage_path()
+        jobs_list_file = metadata.ConfigFile(storage_path+"/jobs.json")
         job_id_list = jobs_list_file.read_variable("jobs_list", [])
         job_list = []
         for job_id in job_id_list:
@@ -64,7 +65,7 @@ class ChernDatabase(object):
         """ Get the name of the current working project.
         If there isn't a working project, return None
         """
-        local_config_file = utils.ConfigFile(self.local_config_path)
+        local_config_file = metadata.ConfigFile(self.local_config_path)
         current_project = local_config_file.read_variable("current_project", None)
         if current_project is None:
             return None
@@ -89,7 +90,7 @@ class ChernDatabase(object):
         """ Get the list of all the projects.
         If there is not a list create one.
         """
-        local_config_file = utils.ConfigFile(self.local_config_path)
+        local_config_file = metadata.ConfigFile(self.local_config_path)
         projects_path = local_config_file.read_variable("projects_path", {})
         return list(projects_path.keys())
 
@@ -101,7 +102,7 @@ class ChernDatabase(object):
         This function don't check it.
         """
         project_name = self.get_current_project()
-        local_config_file = utils.ConfigFile(self.local_config_path)
+        local_config_file = metadata.ConfigFile(self.local_config_path)
         projects_path = local_config_file.read_variable("projects_path")
         return projects_path[project_name]
 

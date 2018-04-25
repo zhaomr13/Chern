@@ -3,7 +3,8 @@ This is the top class for project manager
 """
 import os
 from subprocess import call, PIPE
-from Chern.utils import utils
+from Chern.utils import metadata
+from Chern.utils import csys
 from Chern.kernel.VAlgorithm import VAlgorithm #as _VAlgorithm
 from Chern.kernel.VTask import VTask #as _VTask
 from Chern.kernel.VDirectory import VDirectory
@@ -12,8 +13,8 @@ from Chern.kernel.VProject import VProject
 def create_object_instance(path):
     """ Create an object instance
     """
-    path = utils.strip_path_string(path)
-    object_config_file = utils.ConfigFile(path+"/.chern/config.py")
+    path = csys.strip_path_string(path)
+    object_config_file = metadata.ConfigFile(path+"/.chern/config.json")
     object_type = object_config_file.read_variable("object_type")
     vobject_class = {"algorithm":VAlgorithm,
                      "task":VTask,
@@ -42,13 +43,13 @@ class ChernProjectManager(object):
         chern_config_path = os.environ.get("HOME") +"/.Chern"
         if not os.path.exists(chern_config_path):
             os.mkdir(chern_config_path)
-        self.global_config_path = utils.strip_path_string(chern_config_path) + "/config.py"
+        self.global_config_path = csys.strip_path_string(chern_config_path) + "/config.json"
 
     def get_current_project(self):
         """ Get the name of the current working project.
         If there isn't a working project, return None
         """
-        global_config_file = utils.ConfigFile(self.global_config_path)
+        global_config_file = metadata.ConfigFile(self.global_config_path)
         current_project = global_config_file.read_variable("current_project")
         if current_project is None:
             return None
@@ -73,7 +74,7 @@ class ChernProjectManager(object):
         """ Get the list of all the projects.
         If there is not a list create one.
         """
-        global_config_file = utils.ConfigFile(self.global_config_path)
+        global_config_file = metadata.ConfigFile(self.global_config_path)
         projects_path = global_config_file.read_variable("projects_path")
         return list(projects_path.keys())
 
@@ -90,7 +91,7 @@ class ChernProjectManager(object):
         You must be sure that the project exists.
         This function don't check it.
         """
-        global_config_file = utils.ConfigFile(self.global_config_path)
+        global_config_file = metadata.ConfigFile(self.global_config_path)
         projects_path = global_config_file.read_variable("projects_path")
         return projects_path[project_name]
 
@@ -104,7 +105,7 @@ class ChernProjectManager(object):
         if project_name not in projects_list:
             print("No such a project")
             return
-        global_config_file = utils.ConfigFile(self.global_config_path)
+        global_config_file = metadata.ConfigFile(self.global_config_path)
         global_config_file.write_variable("current_project", project_name)
         path = self.get_project_path(project_name)
         if not os.path.exists(path):

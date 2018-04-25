@@ -289,7 +289,7 @@ del readme
 @register_line_magic
 def configuration(line):
     chern_config_path = os.environ["HOME"]
-    subprocess.call("vim " + chern_config_path+"/config.py", shell=True)
+    subprocess.call("vim " + chern_config_path+"/config.json", shell=True)
 del configuration
 
 @register_line_magic

@@ -1,8 +1,16 @@
+import json
+import os
+
 class ConfigFile(object):
-    """ ConfigFile class, it contains the metadata.
-    ConfigFile(somefile.py) can define a config file,
-    where you can read and write python variables
+    """ ConfigFile class, it is used to read and write the metadata.
+    In the version 3 of ``Chern'', metadata is saved in a json file rather than a python file.
+    It will support three types:
+        dict,
+        list,
+          and
+        string
     """
+
     def __init__(self, file_path):
         """ Initialize the class use a path
         Create a file if it is not initially exists
@@ -15,21 +23,19 @@ class ConfigFile(object):
         file_path = self.file_path
         if not os.path.exists(file_path):
             return default
-        # read the module
-        from imp import load_source
-        module = load_source("tmp_module_{0}".format(uuid.uuid4().hex), file_path)
-        value = module.__dict__.get(variable_name, default)
-
-        # remove pyc file and module instance
-        remove_cache(file_path)
-        del module
-        return value
+        with open(file_path, encoding='utf-8') as f:
+            contents = f.read()
+            if contents == "" or contents.isspace():
+                return default
+            d = json.loads(contents)
+            return d.get(variable_name)
 
     def write_variable(self, variable_name, value):
         file_path = self.file_path
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         if not os.path.exists(file_path):
-            open(file_path, "w").close()
+            with open(file_path, "w") as f:
+                json.dump({}, f)
         try_times = 10 ** 4
         for i in range(try_times):
             if not os.path.exists(file_path + ".lock"):
@@ -39,39 +45,15 @@ class ConfigFile(object):
 
         open(file_path+".lock", "a").close()
 
-        # Module variables, key value mapping
-        from imp import load_source
-        module = load_source("tmp_module_{0}".format(uuid.uuid4().hex), file_path)
-        dic = module.__dict__
+        with open(file_path, encoding='utf-8') as f:
+            contents = f.read()
+            if contents == "" or contents.isspace():
+                d = {}
+            else:
+                d = json.loads(contents)
 
-        # Add new variables to the list
-        old_variables = dir(module)
-        # DELETE print old_variables
-        if variable_name not in old_variables:
-            old_variables.append(variable_name)
+        d[variable_name] = value
+        with open(file_path, "w") as f:
+            json.dump(d, f)
 
-        f = open(file_path, "w")
-        # Change values
-        dic[variable_name] = value
-
-        # Save to file
-        for key in old_variables:
-            if not key.startswith("__") and not key.startswith("-"):
-                if type(dic[key]) == str:
-                    f.write("%s=u'%s'\n"%(key, str(dic[key])))
-                elif type(dic[key]) == str:
-                    f.write("%s='%s'\n"%(key, str(dic[key])))
-                else:
-                    f.write("%s=%s\n"%(key, str(dic[key])))
-        # DELETED print "written"
-        f.close()
         os.remove(file_path+".lock")
-        del module
-        remove_cache(file_path)
-
-    def modify_variable(self):
-        """
-        Might be used in the future
-        FIXME
-        """
-        pass

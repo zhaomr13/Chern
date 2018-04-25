@@ -10,7 +10,7 @@ class VJob(object):
         """ Initialize the project the only **information** of a object instance
         """
         self.path = csys.strip_path_string(path)
-        self.config_file = utils.ConfigFile(self.path+"/.chern/config.py")
+        self.config_file = metadata.ConfigFile(self.path+"/.chern/config.json")
 
     def __str__(self):
         """ Define the behavior of print(vobject)
@@ -33,8 +33,8 @@ class VJob(object):
         """
         if path is None:
             path = self.path
-        # simply read object_type in .chern/config.py
-        config_file = utils.ConfigFile(path+"/.chern/config.py")
+        # simply read object_type in .chern/config.json
+        config_file = metadata.ConfigFile(path+"/.chern/config.json")
         return config_file.read_variable("job_type")
 
 
@@ -56,7 +56,7 @@ class VJob(object):
     def add_arc_from(self, path):
         """ Add an link from the path object to this object
         """
-        config_file = utils.ConfigFile(path+"/.chern/config.py")
+        config_file = metadata.ConfigFile(path+"/.chern/config.json")
         succ_str = config_file.read_variable("successors")
         if succ_str is None:
             succ_str = []
@@ -74,11 +74,11 @@ class VJob(object):
         Remove link from the path
         Just copied from "remove_arc_from"
         """
-        config_file = utils.ConfigFile(path+"/.chern/config.py")
+        config_file = metadata.ConfigFile(path+"/.chern/config.json")
         succ_str = config_file.read_variable("successors")
         succ_str.remove(self.path)
         config_file.write_variable("successors", succ_str)
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
+        config_file = metadata.ConfigFile(self.path+"/.chern/config.json")
         pred_str = config_file.read_variable("predecessors")
         pred_str.remove(path)
         config_file.write_variable("predecessors", pred_str)
@@ -87,13 +87,13 @@ class VJob(object):
         """ FIXME:
         Add a link from this object to the path object
         """
-        config_file = utils.ConfigFile(path+"/.chern/config.py")
+        config_file = metadata.ConfigFile(path+"/.chern/config.json")
         pred_str = config_file.read_variable("predecessors")
         if pred_str is None:
             pred_str = []
         pred_str.append(self.path)
         config_file.write_variable("predecessors", pred_str)
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
+        config_file = metadata.ConfigFile(self.path+"/.chern/config.json")
         succ_str = config_file.read_variable("successors")
         if succ_str is None:
             succ_str = []
@@ -103,11 +103,11 @@ class VJob(object):
     def remove_arc_to(self, path):
         """ FIXME remove the path to the path
         """
-        config_file = utils.ConfigFile(path+"/.chern/config.py")
+        config_file = metadata.ConfigFile(path+"/.chern/config.json")
         pred_str = config_file.read_variable("predecessors")
         pred_str.remove(self.path)
         config_file.write_variable("predecessors", pred_str)
-        config_file = utils.ConfigFile(self.path+"/.chern/config.py")
+        config_file = metadata.ConfigFile(self.path+"/.chern/config.json")
         succ_str = config_file.read_variable("successors")
         succ_str.remove(path)
         config_file.write_variable("successors", succ_str)
