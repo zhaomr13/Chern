@@ -14,6 +14,7 @@ from Chern.utils import csys
 from Chern.utils.utils import color_print
 from Chern.utils import git
 from Chern.utils.utils import colorize
+from Chern.utils import metadata
 
 cherndb = ChernDatabase.instance()
 

@@ -11,12 +11,15 @@ import subprocess
 import hashlib
 import time
 
+def abspath(path):
+    return os.path.abspath(path)
+
 def project_path():
     """ Get the project path by searching for project.json
     """
     path = os.getcwd()
     while (path != "/"):
-        if exists(path+"./chern/project.json"):
+        if exists(path+"/.chern/project.json"):
             return path
         path = abspath(path+"/..")
     raise NotInChernRepoError("Not in a Chern repository.")
@@ -91,6 +94,7 @@ def copy(src, dst):
 
 def list_dir(src):
     files = os.listdir(src)
+    return files
 
 def rmtree(src):
     shutil.rmtree(src)

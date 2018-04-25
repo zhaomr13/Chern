@@ -60,13 +60,13 @@ del cd
 def mv(line):
     """ Move a object to another object
     """
-    shell.mv(line, inloop=False)
+    shell.mv(line)
 del mv
 
 # Copy object
 @register_line_magic
 def cp(line):
-    shell.cp(line, inloop=False)
+    shell.cp(line)
 del cp
 
 @register_line_magic

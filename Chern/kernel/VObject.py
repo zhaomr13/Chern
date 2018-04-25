@@ -261,7 +261,7 @@ class VObject(object):
     def predecessors(self):
         pred_str = self.config_file.read_variable("predecessors", [])
         predecessors = []
-        project_path = cherndb.project_path()
+        project_path = csys.project_path()
         for path in pred_str:
             predecessors.append(VObject(project_path+"/"+path))
         return predecessors
@@ -299,8 +299,8 @@ has a link to object {}".format(succ_object, obj) )
                     if choice == "Y":
                         obj.remove_arc_to(succ_object, single=True)
                         message = obj.latest_commit_message()
-                        git.add(obj.path)
-                        git.commit("{}/remove output arc".format(message))
+                        # git.add(obj.path)
+                        # git.commit("{}/remove output arc".format(message))
 
             for pred_object in obj.predecessors():
                 if obj.path_to_alias(pred_object.invariant_path()) == "" and pred_object.object_type() != "algorithm":
@@ -309,8 +309,8 @@ has a link to object {}".format(succ_object, obj) )
                     if choice == "Y":
                         obj.remove_arc_from(pred_object)
                         message = pred_object.latest_commit_message()
-                        git.add(pred_object.path)
-                        git.commit("{}/remove output arc".format(message))
+                        # git.add(pred_object.path)
+                        # git.commit("{}/remove output arc".format(message))
                         obj.impress()
 
 
@@ -325,8 +325,8 @@ has a link to object {}".format(succ_object, obj) )
                     if choice == "Y":
                         obj.remove_alias(obj.path_to_alias(path))
                         message = obj.latest_commit_message()
-                        git.add(obj.path)
-                        git.commit("{}/remove zombine alias".format(message))
+                        # git.add(obj.path)
+                        # git.commit("{}/remove zombine alias".format(message))
 
 
 
@@ -416,9 +416,9 @@ has a link to object {}".format(succ_object, obj) )
             # Calculate the absolute path of the new directory
             if obj.object_type() == "directory":
                 norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
-                git.add(norm_path+"/.chern")
-                git.add(norm_path+"/README.md")
-                git.commit("save directory")
+                # git.add(norm_path+"/.chern")
+                # git.add(norm_path+"/README.md")
+                # git.commit("save directory")
                 continue
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
@@ -525,15 +525,15 @@ has a link to object {}".format(succ_object, obj) )
                 if self.relative_path(pred_object.path).startswith(".."):
                     obj.remove_arc_from(pred_object)
                     message = pred_object.latest_commit_message()
-                    git.add(pred_object.path)
-                    git.commit("{}/mv".format(message))
+                    # git.add(pred_object.path)
+                    # git.commit("{}/mv".format(message))
 
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object)
                     message = succ_object.latest_commit_message()
-                    git.add(succ_object.path)
-                    git.commit("{}/mv".format(message))
+                    # git.add(succ_object.path)
+                    # git.commit("{}/mv".format(message))
 
         # Deal with the impression
         for obj in queue:
@@ -544,23 +544,23 @@ has a link to object {}".format(succ_object, obj) )
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
             message = obj.latest_commit_message()
-            git.add(new_object.path)
-            git.commit("{} + mv".format(message))
+            # git.add(new_object.path)
+            # git.commit("{} + mv".format(message))
 
         if self.object_type() == "directory":
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
-            git.add(norm_path)
-            git.commit("move")
+            # git.add(norm_path)
+            # git.commit("move")
         shutil.rmtree(self.path)
-        git.rm(self.path)
-        git.commit("remove {}".format(self.path))
+        # git.rm(self.path)
+        # git.commit("remove {}".format(self.path))
 
     def add(self, src, dst):
         if not os.path.exists(src):
             return
         utils.copy(src, self.path+"/"+dst)
-        git.add(self.path+"/"+dst)
-        git.commit("Add {}".format(dst))
+        # git.add(self.path+"/"+dst)
+        # git.commit("Add {}".format(dst))
 
     def rm(self):
         """
@@ -575,19 +575,19 @@ has a link to object {}".format(succ_object, obj) )
                     alias = pred_object.path_to_alias(pred_object.path)
                     pred_object.remove_alias(alias)
                     message = pred_object.latest_commit_message()
-                    git.add(pred_object.path)
-                    git.commit("{} + mv".format(message))
+                    # git.add(pred_object.path)
+                    # git.commit("{} + mv".format(message))
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object)
                     alias = succ_object.path_to_alias(succ_object.path)
                     succ_object.remove_alias(alias)
-                    git.add(succ_object.path)
-                    git.commit("remove {}".format(alias))
+                    # git.add(succ_object.path)
+                    # git.commit("remove {}".format(alias))
 
         shutil.rmtree(self.path)
-        git.rm(self.path)
-        git.commit("rm {}".format(self.invariant_path()))
+        # git.rm(self.path)
+        # git.commit("rm {}".format(self.invariant_path()))
 
     def sub_objects(self):
         """ return a list of the sub_objects
@@ -639,17 +639,17 @@ has a link to object {}".format(succ_object, obj) )
         need more editor support
         """
         call("vim {0}".format(self.path+"/README.md"), shell=True)
-        git.add(self.path+"/README.md")
+        # git.add(self.path+"/README.md")
         message = self.latest_commit_message()
-        git.commit("{}/edit readme".format(message))
+        # git.commit("{}/edit readme".format(message))
 
     def commit(self):
         """ Commit the object
         """
-        git.add(self.path)
+        # git.add(self.path)
         commit_id = git.commit("commit all the files in {}".format(self.path))
         self.config_file.write_variable("commit_id", commit_id)
-        git.commit("save the commit id")
+        # git.commit("save the commit id")
 
     def commit_id(self):
         """ Get the commit id
@@ -712,14 +712,19 @@ has a link to object {}".format(succ_object, obj) )
                 input_object.impress()
             pred_impression.append(input_object.impression())
 
-        self.config_file.write_variable("pred_impression", pred_impression)
+        # self.config_file.write_variable("pred_impression", pred_impression)
         impression = uuid.uuid4().hex
         self.config_file.write_variable("impression", impression)
         impressions = self.config_file.read_variable("impressions", [])
         impressions.append(impression)
         self.config_file.write_variable("impressions", impressions)
-        git.add(self.path)
-        git.commit("Impress: {0}".format(impression))
+        csys.mkdir(self.path+"/.chern/impressions/"+impression)
+        for f in csys.list_dir(self.path):
+            print(f)
+            if f != ".chern" and f != "README.md":
+                csys.copy(f, self.path+"/.chern/impressions/"+impression)
+        impression_config = self.path+"/.chern/impressions/"+impression+"/dependences.json"
+        impression_config.write_variable(pred_impressions)
 
     def impression(self):
         impression = self.config_file.read_variable("impression")

@@ -28,7 +28,7 @@ class ConfigFile(object):
             if contents == "" or contents.isspace():
                 return default
             d = json.loads(contents)
-            return d.get(variable_name)
+            return d.get(variable_name, default)
 
     def write_variable(self, variable_name, value):
         file_path = self.file_path
