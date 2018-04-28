@@ -39,8 +39,8 @@ setup(
     include_package_data = True,
     entry_points = {
         'console_scripts': [
-            'chern = Chern.main:main',
-            'chen = Chern.main:main'
+            'chern3 = Chern.main:main',
+            'chen3 = Chern.main:main'
         ]
     }
 )
