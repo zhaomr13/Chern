@@ -25,14 +25,26 @@ class VAlgorithm(VObject):
         from Chern.kernel.Helpme import algorithm_helpme
         print(algorithm_helpme.get(command, "No such command, try ``helpme'' alone."))
 
-    def status(self):
+    def status(self, consult_id = None):
         """ query the status of the current algorithm.
         """
+        if consult_id:
+            consult_table = cherndb.status_consult_table
+            # config_file.read_variable("impression_consult_table", {})
+            cid, status = consult_table.get(self.path, (-1,-1))
+            if cid == consult_id:
+                return status
+
         if not self.is_impressed_fast():
-            return "new"
-        if not self.is_submitted():
-            return "impressed"
-        return self.image().status()
+            status = "new"
+        elif not self.is_submitted():
+            status  = "impressed"
+        else:
+            status = self.image().status()
+        if consult_id:
+            consult_table[self.path] = (consult_id, status)
+        return status
+
 
     def jobs(self):
         impressions = self.config_file.read_variable("impressions", [])
