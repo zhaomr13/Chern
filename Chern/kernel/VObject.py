@@ -664,6 +664,9 @@ has a link to object {}".format(succ_object, obj) )
         consult_table = cherndb.impression_consult_table
         # config_file.read_variable("impression_consult_table", {})
         last_consult_time, is_impressed = consult_table.get(self.path, (-1,-1))
+        now = time.time()
+        if now - last_consult_time < 1:
+            return is_impressed
         modification_time = csys.dir_mtime( cherndb.project_path() )
         if modification_time < last_consult_time:
             return is_impressed

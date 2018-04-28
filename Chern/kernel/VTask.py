@@ -262,20 +262,39 @@ class VTask(VObject):
         output_md5s = self.config_file.read_variable("output_md5s", {})
         return output_md5s.get(self.impression(), "")
 
-    def status(self):
+    def status(self, consult_id = None):
         """
         """
+        if consult_id:
+            consult_table = cherndb.status_consult_table
+            # config_file.read_variable("impression_consult_table", {})
+            cid, status = consult_table.get(self.path, (-1,-1))
+            if cid == consult_id:
+                return status
+
+
         if not self.is_impressed_fast():
+            if consult_id:
+                consult_table[self.path] = (consult_id, "new")
             return "new"
         if not self.is_submitted():
+            if consult_id:
+                consult_table[self.path] = (consult_id, "impressed")
             return "impressed"
         if self.algorithm() is not None:
             if self.algorithm().status() != "built":
+                if consult_id:
+                    consult_table[self.path] = (consult_id, "submitted")
                 return "submitted"
             for input_data in self.inputs():
-                if input_data.status() != "done":
+                if input_data.status(consult_id) != "done":
+                    if consult_id:
+                        consult_table[self.path] = (consult_id, "waitting")
                     return "waitting"
         status = self.container().status()
+        if consult_id:
+            consult_table[self.path] = (consult_id, status)
+
         if status == "done":
             output_md5 = self.output_md5()
             if output_md5 == "":
