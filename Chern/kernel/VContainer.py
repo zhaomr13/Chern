@@ -194,14 +194,17 @@ const chern::Folders folders;
         if not os.path.exists(path):
             return "missing"
         md5 = csys.dir_md5(path)
+        # print("md5 = ", md5)
+        # print("output_md5 = ", self.output_md5())
         if md5 == self.output_md5():
             return "done"
         else:
             return "missing"
 
     def output_md5(self):
-        path = self.config_file.read_variable("storage", self.path+"/output")
-        md5 = csys.dir_md5(path)
+        # path = self.config_file.read_variable("storage", self.path+"/output")
+        # md5 = csys.dir_md5(path)
+        md5 = self.config_file.read_variable("output_md5", "")
         return md5
 
 

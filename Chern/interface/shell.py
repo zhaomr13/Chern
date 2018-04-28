@@ -13,6 +13,7 @@ from Chern.kernel.VDirectory import create_directory
 from Chern.kernel.ChernDatabase import ChernDatabase
 from Chern.utils.pretty import color_print
 from Chern.utils.pretty import colorize
+import time
 
 manager = get_manager()
 cherndb = ChernDatabase.instance()
@@ -192,8 +193,12 @@ def jobs(line):
     manager.c.jobs()
 
 def status():
+    consult_id = time.time()
     if manager.c.object_type() == "task" or manager.c.object_type == "algorithm":
-        status = manager.c.status()
+        if manager.c.object_type() == "task":
+            status = manager.c.status(consult_id)
+        else:
+            status = manager.c.status()
         if status == "built" or status == "done":
             color_tag = "success"
         elif status == "failed":
@@ -207,7 +212,7 @@ def status():
     sub_objects = manager.c.sub_objects()
     sub_objects.sort(key=lambda x:(x.object_type(),x.path))
     for obj in sub_objects:
-        status = create_object_instance(obj.path).status()
+        status = create_object_instance(obj.path).status(consult_id)
         if status == "built" or status == "done" or status == "finished":
             color_tag = "success"
         elif status == "failed" or status == "unfinished":

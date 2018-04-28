@@ -28,6 +28,7 @@ def execute():
                 break
         if flag:
             job.execute()
+            break
 
 def status():
     daemon_path = csys.daemon_path()

@@ -15,19 +15,45 @@ class VDirectory(VObject):
         from Chern.kernel.Helpme import directory_helpme
         print(directory_helpme.get(command, "No such command, try ``helpme'' alone."))
 
-    def status(self):
+    def status(self, consult_id = None):
         sub_objects = self.sub_objects()
         for sub_object in sub_objects:
             if sub_object.object_type() == "task":
-                if Chern.kernel.VTask.VTask(sub_object.path).status() != "done":
+                status = Chern.kernel.VTask.VTask(sub_object.path).status(consult_id)
+                if status == "running":
+                    return "processing"
+            elif sub_object.object_type() == "algorithm":
+                if Chern.kernel.VAlgorithm.VAlgorithm(sub_object.path).status(consult_id) == "building":
+                    return "processing"
+            else:
+                status = Chern.kernel.VDirectory.VDirectory(sub_object.path).status(consult_id)
+                if status == "processing":
+                    return "processing"
+
+        for sub_object in sub_objects:
+            if sub_object.object_type() == "task":
+                status = Chern.kernel.VTask.VTask(sub_object.path).status(consult_id)
+                if status != "done":
                     return "unfinished"
             elif sub_object.object_type() == "algorithm":
-                if Chern.kernel.VAlgorithm.VAlgorithm(sub_object.path).status() != "built":
+                if Chern.kernel.VAlgorithm.VAlgorithm(sub_object.path).status(consult_id) != "built":
                     return "unfinished"
-            elif Chern.kernel.VDirectory.VDirectory(sub_object.path).status() != "finished":
-                return "unfinished"
+            else:
+                status = Chern.kernel.VDirectory.VDirectory(sub_object.path).status(consult_id)
+                if status != "finished":
+                    return "unfinished"
+
         return "finished"
 
+    def submit(self):
+        sub_objects = self.sub_objects()
+        for sub_object in sub_objects:
+            if sub_object.object_type() == "task":
+                Chern.kernel.VTask.VTask(sub_object.path).submit()
+            elif sub_object.object_type() == "algorithm":
+                Chern.kernel.VAlgorithm.VAlgorithm(sub_object.path).submit()
+            else:
+                Chern.kernel.VDirectory.VDirectory(sub_object.path).submit()
 
 
 def create_directory(path, inloop=False):

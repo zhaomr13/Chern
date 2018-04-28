@@ -15,6 +15,7 @@ class ChernDatabase(object):
         self.local_config_path = csys.local_config_path()
         self.consult_table = {}
         self.impression_consult_table = {}
+        self.status_consult_table = {}
 
     @classmethod
     def instance(cls):
