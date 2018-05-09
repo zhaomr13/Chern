@@ -28,6 +28,14 @@ class VContainer(VJob):
         self.add_arc_from(path)
         self.set_alias(alias, path)
 
+    def satisfied(self):
+        for pred_object in self.predecessors():
+            if pred_object == "container" and VContainer(pred_object.path).status() != "done":
+                return False
+            if pred_object == "image" and VImage(pred_object.path).status() != "built":
+                return False
+        return True
+
     def inputs(self):
         """
         Input data.
