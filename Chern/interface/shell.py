@@ -21,8 +21,10 @@ cherndb = ChernDatabase.instance()
 def cd_project(line):
     manager.switch_project(line)
     os.chdir(manager.c.path)
-    manager.p = manager.c
 
+def shell_cd_project(line):
+    cd_project(line)
+    print(manager.c.path)
 
 def cd(line):
     """
@@ -57,12 +59,12 @@ def cd(line):
         # cd can be used to change directory using absolute path
         line = utils.special_path_string(line)
         if line.startswith("@/") or line == "@":
-            line = manager.p.path + line.strip("@")
+            line = csys.project_path() + line.strip("@")
         else:
             line = os.path.abspath(line)
 
         # Check available
-        if os.path.relpath(line, manager.p.path).startswith(".."):
+        if os.path.relpath(line, csys.project_path()).startswith(".."):
             print("Can not go to a place not in the project")
             return
         if not os.path.exists(line):
@@ -89,13 +91,13 @@ def mv(line):
     source = utils.special_path_string(line[0])
     destination = utils.special_path_string(line[1])
     if destination.startswith("p/") or destination == "p":
-        destination = os.path.normpath(manager.p.path + destination.strip("p"))
+        destination = os.path.normpath(csys.project_path() + destination.strip("p"))
     else:
         destination = os.path.abspath(destination)
     if os.path.exists(destination):
         destination += "/" + source
     if source.startswith("p/") or source == "p":
-        source = os.path.normpath(manager.p.path+destination.strip("p"))
+        source = os.path.normpath(csys.project_path() +destination.strip("p"))
     else:
         source = os.path.abspath(source)
 
@@ -139,7 +141,7 @@ def ls(line):
     """
     The function ls should not be defined here
     """
-    manager.c.ls()
+    manager.current_object().ls()
 
 def short_ls(line):
     """
@@ -194,11 +196,11 @@ def jobs(line):
 
 def status():
     consult_id = time.time()
-    if manager.c.object_type() == "task" or manager.c.object_type == "algorithm":
+    if manager.c.object_type() == "task" or manager.c.object_type() == "algorithm":
         if manager.c.object_type() == "task":
             status = manager.c.status(consult_id)
         else:
-            status = manager.c.status()
+            status = manager.c.status(consult_id)
         if status == "built" or status == "done":
             color_tag = "success"
         elif status == "failed":

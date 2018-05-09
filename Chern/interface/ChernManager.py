@@ -100,8 +100,6 @@ class ChernProjectManager(object):
 
         """
         projects_list = self.get_all_projects()
-        print(projects_list)
-        print(project_name)
         if project_name not in projects_list:
             print("No such a project")
             return
@@ -115,6 +113,11 @@ class ChernProjectManager(object):
 
     def switch_current_object(self, path):
         self.c = create_object_instance(path)
+
+    def current_object(self):
+        path = os.getcwd()
+        return create_object_instance(path)
+
 
 def get_manager():
     return ChernProjectManager.get_manager()

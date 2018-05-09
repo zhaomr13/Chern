@@ -64,24 +64,6 @@ class VAlgorithm(VObject):
             status = VImage(path).status()
             print("{0:<12}   {1:>20}".format(short, status))
 
-    def is_impressed_fast(self):
-        consult_table = cherndb.impression_consult_table
-        last_consult_time, is_impressed = consult_table.get(self.path, (-1,-1))
-        modification_time = csys.dir_mtime( cherndb.project_path() )
-        if modification_time < last_consult_time:
-            return is_impressed
-        is_impressed = self.is_impressed()
-        consult_table[self.path] = (time.time(), is_impressed)
-        return is_impressed
-
-    def is_impressed(self):
-        """ Judge whether impressed or not. Return a True or False.
-        """
-        if not self.is_git_committed():
-            return False
-        latest_commit_message = self.latest_commit_message()
-        return "Impress:" in latest_commit_message
-
     def is_submitted(self):
         """ Judge whether submitted or not. Return a True or False.
         """
@@ -135,13 +117,6 @@ class VAlgorithm(VObject):
         """ list the infomation.
         """
         super(VAlgorithm, self).ls(show_readme, show_predecessors, show_sub_objects, show_status, show_successors)
-        parameters_file = metadata.ConfigFile(self.path+"/.chern/parameters.json")
-        parameters = parameters_file.read_variable("parameters")
-        if parameters is None:
-            parameters = []
-        print(colorize("---- Parameters:", "title0"))
-        for parameter in parameters:
-            print(parameter)
 
         if show_status:
             status = self.status()
@@ -154,39 +129,13 @@ class VAlgorithm(VObject):
 
         if self.is_submitted() and self.image().error() != "":
             print(colorize("!!!! ERROR:\n", "title0"), self.image().error())
+
+        print(colorize("---- Files:", "title0"))
         files = os.listdir(self.path)
         for f in files:
             if not f.startswith(".") and f != "README.md":
                 print(f)
 
-    def add_parameter(self, parameter):
-        """ Add a parameter to the parameters file
-        """
-        try:
-            if parameter == "parameters":
-                return ["[ERROR] A parameter is not allowed to be called ``parameters''"]
-            parameters_file = metadata.ConfigFile(self.path+"/.chern/parameters.json")
-            parameters = parameters_file.read_variable("parameters", [])
-            if parameter in parameters:
-                return ["[ERROR] Fail to add parameter ``{}'', exist".format(parameter)]
-            parameters.append(parameter)
-            parameters_file.write_variable("parameters", parameters)
-        except Exception as e:
-            raise e
-
-    def remove_parameter(self, parameter):
-        """ Remove parameter
-        """
-        try:
-            parameters_file = metadata.ConfigFile(self.path+"/.chern/parameters.json")
-            parameters = parameters_file.read_variable("parameters", [])
-            if parameter not in parameters:
-                return ["[ERROR] Fail to remove parameter ``{}'', not exist".format()]
-            else:
-                parameters.remove(parameter)
-                return
-        except Exception as e:
-            raise e
 
 def create_algorithm(path, use_template=False):
     path = utils.strip_path_string(path)

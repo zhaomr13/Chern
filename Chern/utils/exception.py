@@ -3,3 +3,4 @@
 """
 class NotInChernRepoError(Exception):
     pass
+

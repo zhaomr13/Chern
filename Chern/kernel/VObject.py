@@ -1,41 +1,31 @@
 import os
 import shutil
 import time
-from Chern.utils import utils
+import subprocess
+import Chern
+import uuid
+import filecmp
 from Chern.utils import csys
-from Chern.utils.utils import debug
 from Chern.utils import metadata
 from Chern.utils.pretty import colorize
 from Chern.utils.utils import color_print
 from Chern.kernel.ChernDaemon import status as daemon_status
-from subprocess import call
-import subprocess
-import Chern
-from Chern.utils import git
 from Chern.kernel.ChernDatabase import ChernDatabase
-import uuid
 
 cherndb = ChernDatabase.instance()
 
 class VObject(object):
-    """ Virtual class of the objects, including VData, VAlgorithm, VData and VDirectory
+    """ Virtual class of the objects, including VData, VAlgorithm and VDirectory
     """
 
     def __init__(self, path):
         """ Initialize a instance of the object.
         All the infomation is directly read from and write to the disk.
+        parameter ``path'' is allowed to be a string begin with empty characters.
         """
-        self.path = utils.strip_path_string(path)
-        self.created_time = time.time()
+        self.path = csys.strip_path_string(path)
         self.config_file = metadata.ConfigFile(self.path+"/.chern/config.json")
 
-    def invariant_path(self):
-        """ The path relative to the project root.
-        It is invariant when the project is moved.
-        """
-        project_path = cherndb.project_path()
-        path = os.path.relpath(self.path, project_path)
-        return path
 
     def __str__(self):
         """ Define the behavior of print(vobject)
@@ -47,17 +37,13 @@ class VObject(object):
         """
         return self.invariant_path()
 
-    def is_git_committed(self, is_global=False):
-        """ Whether the object is recorded by git.
-        FIXME: the is_global flag maybe useless.
+    def invariant_path(self):
+        """ The path relative to the project root.
+        It is invariant when the project is moved.
         """
-        if is_global:
-            ps = subprocess.Popen("git status", shell=True, stdout=subprocess.PIPE)
-        else:
-            ps = subprocess.Popen("git status -- {0}".format(self.path), shell=True, stdout=subprocess.PIPE)
-        ps.wait()
-        output = ps.stdout.read()
-        return output.decode().find("nothing to commit") != -1
+        project_path = csys.project_path()
+        path = os.path.relpath(self.path, project_path)
+        return path
 
     def relative_path(self, path):
         """ Return a path relative to the path of this object
@@ -71,6 +57,9 @@ class VObject(object):
         """
         return self.config_file.read_variable("object_type", "")
 
+    def is_zombine(self):
+        return self.object_type() == ""
+
     def color_tag(self, status):
         if status == "built" or status == "done" or status == "finished":
             color_tag = "success"
@@ -81,7 +70,6 @@ class VObject(object):
         else:
             color_tag = "normal"
         return color_tag
-
 
     def ls(self, show_readme=True, show_predecessors=True, show_sub_objects=True, show_status=False, show_successors=False):
         """ Print the subdirectory of the object
@@ -134,68 +122,17 @@ class VObject(object):
                 obj_type = "("+succ_object.object_type()+")"
                 print("{2} {0:<12} {3:>10}: @/{1:<20}".format(obj_type, succ_path, order, alias))
 
-    def short_ls(self):
-        """ Print the subdirectory of the object
-        I recommend to print also the README
-        and the parameters|inputs|outputs ...
-        """
-        if not cherndb.is_docker_started():
-            color_print("!!Warning: docker not started", color="warning")
-        if daemon_status() != "started":
-            color_print("!!Warning: runner not started, the status is {}".format(daemon_status()), color="warning")
-        sub_objects = self.sub_objects()
-        sub_objects.sort(key=lambda x:(x.object_type(),x.path))
-        if sub_objects:
-            print(colorize(">>>> Subobjects:", "title0"))
-        for index, sub_object in enumerate(sub_objects):
-            sub_path = self.relative_path(sub_object.path)
-            print("{2} {0:<12} {1:>20}".format("("+sub_object.object_type()+")", sub_path, "[{}]".format(index)))
-        total = len(sub_objects)
-        predecessors = self.predecessors()
-        if predecessors:
-            print(colorize("o--> Predecessors:", "title0"))
-        for index, pred_object in enumerate(predecessors):
-            alias = self.path_to_alias(pred_object.invariant_path())
-            order = "[{}]".format(total+index)
-            pred_path = pred_object.invariant_path()
-            obj_type = "("+pred_object.object_type()+")"
-            print("{2} {0:<12} {3:>10}: {1:<20}".format(obj_type, pred_path, order, alias))
-        total += len(predecessors)
-        successors = self.successors()
-        if successors:
-            print(colorize("-->o Successors:", "title0"))
-        for index, succ_object in enumerate(successors):
-            alias = self.path_to_alias(succ_object.invariant_path())
-            order = "[{}]".format(total+index)
-            succ_path = succ_object.invariant_path()
-            obj_type = "("+succ_object.object_type()+")"
-            print("{2} {0:<12} {3:>10}: {1:<20}".format(obj_type, succ_path, order, alias))
 
-    def is_zombine(self):
-        return self.object_type() == ""
-
-    def check_arcs(self):
-        predecessors = self.precesessors()
-        for obj in predecessors:
-            if obj.is_zombine() or not obj.has_successor(self):
-                self.remove_arc_from(obj, single=True)
-                self.remove_alias(self.path_to_alias(obj.path))
-        for obj in successors:
-            if obj.is_zombine() or not obj.has_predecessor(self):
-                self.remove_arc_to(obj, single=True)
-
-    def add_arc_from(self, path):
+    def add_arc_from(self, obj):
         """ Add an link from the object contains in `path' to this object.
         FIXME: it directly operate the config_file of other object rather operate through.
         """
-        config_file = metadata.ConfigFile(path+"/.chern/config.json")
-        succ_str = config_file.read_variable("successors", [])
+        succ_str = obj.config_file.read_variable("successors", [])
         succ_str.append(self.invariant_path())
-        config_file.write_variable("successors", succ_str)
-        print("!!!!!", path, succ_str)
+        obj.config_file.write_variable("successors", succ_str)
 
         pred_str = self.config_file.read_variable("predecessors", [])
-        pred_str.append(VObject(path).invariant_path())
+        pred_str.append(obj.invariant_path())
         self.config_file.write_variable("predecessors", pred_str)
 
     def remove_arc_from(self, obj, single=False):
@@ -203,11 +140,8 @@ class VObject(object):
         Remove link from the path
         """
         if not single:
-            print(obj)
             config_file = obj.config_file
             succ_str = config_file.read_variable("successors", [])
-            print(succ_str)
-            print(self.invariant_path())
             succ_str.remove(self.invariant_path())
             config_file.write_variable("successors", succ_str)
 
@@ -215,22 +149,17 @@ class VObject(object):
         pred_str.remove(obj.invariant_path())
         self.config_file.write_variable("predecessors", pred_str)
 
-    def add_arc_to(self, path):
+    def add_arc_to(self, obj):
         """
         FIXME
         Add a link from this object to the path object
         """
-        config_file = metadata.ConfigFile(path+"/.chern/config.json")
-        pred_str = config_file.read_variable("predecessors")
-        if pred_str is None:
-            pred_str = []
+        pred_str = obj.config_file.read_variable("predecessors", [])
         pred_str.append(self.invariant_path())
-        config_file.write_variable("predecessors", pred_str)
-        config_file = metadata.ConfigFile(self.path+"/.chern/config.json")
-        succ_str = config_file.read_variable("successors")
-        if succ_str is None:
-            succ_str = []
-        succ_str.append(VObject(path).invariant_path())
+        obj.config_file.write_variable("predecessors", pred_str)
+
+        succ_str = self.config_file.read_variable("successors", [])
+        succ_str.append(obj.invariant_path())
         config_file.write_variable("successors", succ_str)
 
     def remove_arc_to(self, obj, single=False):
@@ -253,7 +182,7 @@ class VObject(object):
         """
         succ_str = self.config_file.read_variable("successors", [])
         successors = []
-        project_path = cherndb.project_path()
+        project_path = csys.project_path()
         for path in succ_str:
             successors.append(VObject(project_path+"/"+path))
         return successors
@@ -269,7 +198,6 @@ class VObject(object):
     def has_successor(self, obj):
         succ_str = self.config_file.read_variable("successors", [])
         return obj.invariant_path() in succ_str
-
 
     def has_predecessor(self, obj):
         pred_str = self.config_file.read_variable("predecessors", [])
@@ -298,9 +226,6 @@ has a link to object {}".format(succ_object, obj) )
                     choice = input("Would you like to remove the output? [Y/N]")
                     if choice == "Y":
                         obj.remove_arc_to(succ_object, single=True)
-                        message = obj.latest_commit_message()
-                        # git.add(obj.path)
-                        # git.commit("{}/remove output arc".format(message))
 
             for pred_object in obj.predecessors():
                 if obj.path_to_alias(pred_object.invariant_path()) == "" and pred_object.object_type() != "algorithm":
@@ -308,31 +233,24 @@ has a link to object {}".format(succ_object, obj) )
                     choice = input("Would you like to remove the input or the algorithm? [Y/N]")
                     if choice == "Y":
                         obj.remove_arc_from(pred_object)
-                        message = pred_object.latest_commit_message()
-                        # git.add(pred_object.path)
-                        # git.commit("{}/remove output arc".format(message))
                         obj.impress()
 
 
             alias_to_path = obj.config_file.read_variable("alias_to_path", {})
             path_to_alias = obj.config_file.read_variable("path_to_alias", {})
             for path in path_to_alias.keys():
-                project_path = cherndb.project_path()
+                project_path = csys.project_path()
                 pred_obj = VObject(project_path+"/"+path)
                 if not obj.has_predecessor(pred_obj):
                     print("There seems being a zombine alias to {} in {}".format(pred_obj, obj))
                     choice = input("Would you like to remove it?[Y/N]")
                     if choice == "Y":
                         obj.remove_alias(obj.path_to_alias(path))
-                        message = obj.latest_commit_message()
-                        # git.add(obj.path)
-                        # git.commit("{}/remove zombine alias".format(message))
 
 
 
     def copy_to(self, new_path):
-        """
-        FIXME
+        """ Copy the current objects and its containings to a new path.
         """
         queue = self.sub_objects_recursively()
 
@@ -370,16 +288,11 @@ has a link to object {}".format(succ_object, obj) )
                 else:
                 # if in the same tree
                     relative_path = self.relative_path(pred_object.path)
-                    print("In the same tree")
-                    # print("new path", new_path)
-                    print("object", new_object)
-                    print("relative_path", relative_path)
-                    new_object.add_arc_from(new_path+"/"+relative_path)
+                    new_object.add_arc_from(VObject(new_path+"/"+relative_path))
                     alias1 = obj.path_to_alias(pred_object.invariant_path())
-                    # alias2 = pred_object.path_to_alias(obj.path)
                     norm_path = os.path.normpath(new_path +"/"+ relative_path)
                     new_object.set_alias(alias1, VObject(norm_path).invariant_path())
-                    # VObject(norm_path).set_alias(alias2, new_object.invariant_path())
+
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     """
@@ -392,33 +305,11 @@ has a link to object {}".format(succ_object, obj) )
                     succ_object.set_alias(alias2, new_object.invariant_path())
                     """
 
-        """
-        for obj in queue:
-            print("queue", self.successors())
-            for pred_object in obj.predecessors():
-                if self.relative_path(pred_object.path).startswith(".."):
-                    obj.remove_arc_from(pred_object)
-                    message = pred_object.latest_commit_message()
-                    git.add(pred_object.path)
-                    git.commit("{} + mv".format(message))
-
-            for succ_object in obj.successors():
-                print("debug")
-                if self.relative_path(succ_object.path).startswith(".."):
-                    obj.remove_arc_to(succ_object)
-                    message = succ_object.latest_commit_message()
-                    git.add(succ_object.path)
-                    git.commit("{} + mv".format(message))
-        """
-
         # Deal with the impression
         for obj in queue:
             # Calculate the absolute path of the new directory
             if obj.object_type() == "directory":
                 norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
-                # git.add(norm_path+"/.chern")
-                # git.add(norm_path+"/README.md")
-                # git.commit("save directory")
                 continue
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
@@ -498,21 +389,19 @@ has a link to object {}".format(succ_object, obj) )
             for pred_object in obj.predecessors():
                 # if in the outside directory
                 if self.relative_path(pred_object.path).startswith(".."):
-                    new_object.add_arc_from(pred_object.path)
+                    new_object.add_arc_from(pred_object)
                     alias = obj.path_to_alias(pred_object.invariant_path())
                     new_object.set_alias(alias, pred_object.invariant_path())
                 else:
                 # if in the same tree
                     relative_path = self.relative_path(pred_object.path)
-                    new_object.add_arc_from(new_path+"/"+relative_path)
-                    print("In the same tree")
-                    print("new path", new_path)
-                    print("relative_path", relative_path)
+                    new_object.add_arc_from(VObject(new_path+"/"+relative_path) )
                     alias1 = obj.path_to_alias(pred_object.invariant_path())
                     alias2 = pred_object.path_to_alias(obj.invariant_path())
                     norm_path = os.path.normpath(new_path +"/"+ relative_path)
                     new_object.set_alias(alias1, VObject(norm_path).invariant_path())
                     VObject(norm_path).set_alias(alias2, new_object.invariant_path())
+
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     new_object.add_arc_to(succ_object.path)
@@ -524,16 +413,10 @@ has a link to object {}".format(succ_object, obj) )
             for pred_object in obj.predecessors():
                 if self.relative_path(pred_object.path).startswith(".."):
                     obj.remove_arc_from(pred_object)
-                    message = pred_object.latest_commit_message()
-                    # git.add(pred_object.path)
-                    # git.commit("{}/mv".format(message))
 
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object)
-                    message = succ_object.latest_commit_message()
-                    # git.add(succ_object.path)
-                    # git.commit("{}/mv".format(message))
 
         # Deal with the impression
         for obj in queue:
@@ -543,24 +426,16 @@ has a link to object {}".format(succ_object, obj) )
                 continue
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
-            message = obj.latest_commit_message()
-            # git.add(new_object.path)
-            # git.commit("{} + mv".format(message))
 
         if self.object_type() == "directory":
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
-            # git.add(norm_path)
-            # git.commit("move")
+
         shutil.rmtree(self.path)
-        # git.rm(self.path)
-        # git.commit("remove {}".format(self.path))
 
     def add(self, src, dst):
         if not os.path.exists(src):
             return
-        utils.copy(src, self.path+"/"+dst)
-        # git.add(self.path+"/"+dst)
-        # git.commit("Add {}".format(dst))
+        csys.copy(src, self.path+"/"+dst)
 
     def rm(self):
         """
@@ -574,20 +449,14 @@ has a link to object {}".format(succ_object, obj) )
                     obj.remove_arc_from(pred_object)
                     alias = pred_object.path_to_alias(pred_object.path)
                     pred_object.remove_alias(alias)
-                    message = pred_object.latest_commit_message()
-                    # git.add(pred_object.path)
-                    # git.commit("{} + mv".format(message))
+
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object)
                     alias = succ_object.path_to_alias(succ_object.path)
                     succ_object.remove_alias(alias)
-                    # git.add(succ_object.path)
-                    # git.commit("remove {}".format(alias))
 
         shutil.rmtree(self.path)
-        # git.rm(self.path)
-        # git.commit("rm {}".format(self.invariant_path()))
 
     def sub_objects(self):
         """ return a list of the sub_objects
@@ -614,51 +483,6 @@ has a link to object {}".format(succ_object, obj) )
             index += 1
         return queue
 
-    def latest_commit_message(self, is_global=False):
-        if is_global:
-            log = git.log('-n 1 --format="%s"').split("\n")
-        else:
-            # config_file = utils.ConfigFile(os.environ["HOME"] + "/.Chern/git-cache")
-            consult_table = cherndb.consult_table
-            # = config_file.read_variable("consult_table", {})
-            last_consult_time, log = consult_table.get(self.path, (-1,-1))
-            modification_time = csys.dir_mtime(self.path)
-
-            if modification_time < last_consult_time:
-                return log
-
-            log = git.log('-n 1 --format="%s" -- {}'.format(self.path)).split("\n")
-
-            consult_table[self.path] = (time.time(), log[0])
-            # config_file.write_variable("consult_table", consult_table)
-            return log[0][:42]
-
-    def edit_readme(self):
-        """
-        FIXME
-        need more editor support
-        """
-        call("vim {0}".format(self.path+"/README.md"), shell=True)
-        # git.add(self.path+"/README.md")
-        message = self.latest_commit_message()
-        # git.commit("{}/edit readme".format(message))
-
-    def commit(self):
-        """ Commit the object
-        """
-        # git.add(self.path)
-        commit_id = git.commit("commit all the files in {}".format(self.path))
-        self.config_file.write_variable("commit_id", commit_id)
-        # git.commit("save the commit id")
-
-    def commit_id(self):
-        """ Get the commit id
-        """
-        commit_id = self.config_file.read_variable("commit_id", None)
-        if commit_id is None:
-            raise Exception("")
-        return commit_id
-
     def is_impressed_fast(self):
         # return self.is_impressed()
         # config_file = utils.ConfigFile(os.environ["HOME"] + "/.Chern/git-cache")
@@ -676,44 +500,68 @@ has a link to object {}".format(succ_object, obj) )
         # config_file.write_variable("impression_consult_table", consult_table)
         return is_impressed
 
+    def impression_file_list(self, impression = ""):
+        if impression != "":
+            config_file = metadata.ConfigFile(self.path+"/.chern/impressions/{}/config.json".format(impression))
+            return config_file.read_variable("tree")
+        file_list = []
+        for dirpath, dirnames, filenames in csys.walk(self.path):
+            if "README.md" in filenames:
+                filenames.remove("README.md")
+            file_list.append([dirpath, dirnames, filenames])
+
+        return file_list
+
+    def pred_impressions(self, impression = ""):
+        if impression != "":
+            config_file = metadata.ConfigFile(self.path+"/.chern/impressions/{}/config.json".format(impression))
+            return config_file.read_variable("dependencies")
+        dependencies = []
+        for pred in self.predecessors():
+            dependencies.append(pred.impression())
+        return sorted(dependencies)
 
     def is_impressed(self, is_global=False):
         """ Judge whether the file is impressed
         """
-        if not self.is_git_committed():
-            return False
-        latest_commit_message = self.latest_commit_message()
-        if "Impress:" not in latest_commit_message:
-            return False
+        # Check whether there is an impression already
+        impression = self.impression()
         if self.impression() == "":
             return False
-        pred = self.predecessors()
-        if pred == []:
-            return True
-        pred_impression = []
-        for input_object in pred:
-            if not input_object.is_impressed_fast():
-                return False
-            else:
-                pred_impression.append(input_object.impression())
-        if sorted(pred_impression) == sorted(self.config_file.read_variable("pred_impression", [])):
-            return True
-        else:
+
+        file_list = self.impression_file_list()
+        if file_list != self.impression_file_list(impression):
+            return False
+        if self.pred_impressions() != self.pred_impressions(impression):
             return False
 
+        for dirpath, dirnames, filenames in file_list:
+            for f in filenames:
+                if not filecmp.cmp(self.path+"/{}/{}".format(dirpath, f),
+                               self.path+"/.chern/impressions/{}/contents/{}/{}".format(impression, dirpath, f)):
+                    return False
+        return True
+
     def impress(self):
-        if self.object_type() != "task" and self.object_type() != "algorithm":
+        """ Create an impression.
+        The impressions are store in a directory .chern/impressions/[uuid]
+        It is organized as following:
+            [uuid]
+            |------ contents
+            |------ config.json
+        In the config.json, the tree of the contents as well as the dependencies are stored.
+        The object_type is also saved in the json file.
+        The tree and the dependencies are sorted via name.
+        """
+        object_type = self.object_type()
+        if object_type != "task" and object_type != "algorithm":
             return
         if self.is_impressed_fast():
             print("Already impressed.")
             return
-        pred = self.predecessors()
-        pred_impression = []
-
-        for input_object in pred:
-            if not input_object.is_impressed_fast():
-                input_object.impress()
-            pred_impression.append(input_object.impression())
+        for pred in self.predecessors():
+            if not pred.is_impressed_fast():
+                pred.impress()
 
         # self.config_file.write_variable("pred_impression", pred_impression)
         impression = uuid.uuid4().hex
@@ -721,16 +569,35 @@ has a link to object {}".format(succ_object, obj) )
         impressions = self.config_file.read_variable("impressions", [])
         impressions.append(impression)
         self.config_file.write_variable("impressions", impressions)
-        csys.mkdir(self.path+"/.chern/impressions/"+impression)
-        for f in csys.list_dir(self.path):
-            print(f)
-            if f != ".chern" and f != "README.md":
-                csys.copy(f, self.path+"/.chern/impressions/"+impression)
-        impression_config = self.path+"/.chern/impressions/"+impression+"/dependences.json"
-        impression_config.write_variable(pred_impressions)
+
+        # Create an impression directory and
+        file_list = self.impression_file_list()
+        csys.mkdir(self.path+"/.chern/impressions/{}/contents".format(impression))
+        for dirpath, dirnames, filenames in file_list:
+            for f in filenames:
+                csys.copy(self.path+"/{}/{}".format(dirpath, f),
+                          self.path+"/.chern/impressions/{}/contents/{}/{}".format(impression, dirpath, f))
+
+        # Write tree and dependencies to the configuration file
+        dependencies = self.pred_impressions()
+        config_file = metadata.ConfigFile(self.path+"/.chern/impressions/{}/config.json".format(impression))
+        config_file.write_variable("tree", file_list)
+        config_file.write_variable("dependencies", dependencies)
+
+        # Write the basic metadata to the configuration file
+        object_type = {"task":"container", "algorithm":"image"}.get(object_type)
+        config_file.write_variable("object_type", object_type)
+        config_file.write_variable("impressions", impressions)
+
+        path_to_alias = self.config_file.read_variable("path_to_alias", {})
+        impression_to_alias = {}
+        for path, alias in path_to_alias.items():
+            impression = VObject(csys.project_path() + "/" + path).impression()
+            impression_to_alias[impression] = alias
+        config_file.write_variable("impression_to_alias", impression_to_alias)
 
     def impression(self):
-        impression = self.config_file.read_variable("impression")
+        impression = self.config_file.read_variable("impression", "")
         return impression
 
     def readme(self):
@@ -741,11 +608,3 @@ has a link to object {}".format(succ_object, obj) )
         """
         with open(self.path+"/README.md") as f:
             return f.read().strip("\n")
-
-    def __getitem__(self, index):
-        """
-        FIXME
-        This method should be written to realize the function like
-        a.b.c
-        """
-        pass

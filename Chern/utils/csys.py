@@ -121,6 +121,24 @@ def refine_path(path, home):
         path = os.path.abspath(path)
     return path
 
+def walk(top):
+    d = list_dir(top)
+    dirs = []
+    files = []
+    names = []
+    for f in d:
+        if f == ".chern": continue
+        if os.path.isdir(f):
+            dirs.append(f)
+        else:
+            names.append(f)
+    yield ".", dirs, names
+    for f in dirs:
+        for path, dirs, names in os.walk(f):
+            path = os.path.relpath(path, top)
+            yield (path, dirs, names)
+
+
 def special_path_string(path_string):
     """ Replace the path string . -> /
     rather than the following cases

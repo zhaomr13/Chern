@@ -29,6 +29,7 @@ def execute():
         if flag:
             job.execute()
             break
+    del waitting_jobs
 
 def status():
     daemon_path = csys.daemon_path()
@@ -58,3 +59,6 @@ def stop():
         return
     daemon_path = csys.daemon_path()
     subprocess.call("kill {}".format(open(daemon_path + "/daemon.pid").read()), shell=True)
+
+if __name__ == "__main__":
+    start()

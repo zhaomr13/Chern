@@ -2,13 +2,11 @@
 import click
 import os
 import Chern
-from IPython import start_ipython, get_ipython
 from Chern.kernel import VProject
 from Chern.kernel.ChernDaemon import start as daemon_start
 from Chern.kernel.ChernDaemon import stop as daemon_stop
 from Chern.utils import csys
 from Chern.kernel.ChernDatabase import ChernDatabase
-cherndb = ChernDatabase.instance()
 
 @click.group(invoke_without_command=True)
 @click.pass_context
@@ -67,6 +65,7 @@ def machine(command):
 
 def start_chern_ipython():
     profile_path = os.path.abspath(csys.local_config_dir()+"/profile")
+    from IPython import start_ipython, get_ipython
     start_ipython(argv=["--profile=chern", "--ipython-dir="+profile_path])
     ip = get_ipython()
     del ip.magics_manager.magics["line"]["ls"]
@@ -81,6 +80,7 @@ def is_first_time():
         return True
     if not os.path.exists(csys.local_config_dir()+"/profile"):
         return True
+    cherndb = ChernDatabase.instance()
     if cherndb.projects() == []:
         return True
     return False
@@ -114,3 +114,35 @@ At the same time, my girlfriend has the same surname in Chinese with S.S.Chern.
 This is the origin of the software name.
 """)
 
+@click.group()
+def cli_sh():
+    """ Chern command line command
+    """
+
+@cli_sh.command()
+def ls():
+    from Chern.interface import shell
+    shell.ls("")
+
+@cli_sh.command()
+@click.argument("path", type=str)
+def mkdir(path):
+    from Chern.interface import shell
+    shell.mkdir(path)
+
+@cli_sh.command()
+def ls_projects():
+    from Chern.interface import shell
+    shell.ls_projects("")
+
+@cli_sh.command()
+@click.argument("project", type=str)
+def cd_project(project):
+    """ Switch to the project ``PROJECT'
+    '"""
+    from Chern.interface import shell
+    shell.cd_project(project)
+
+
+def sh():
+    cli_sh()

@@ -6,6 +6,8 @@ import subprocess
 import Chern
 from Chern.utils import utils
 from Chern.utils import git
+from Chern.utils import csys
+from Chern.utils import metadata
 from Chern.kernel.VObject import VObject
 class VDirectory(VObject):
     """
@@ -62,14 +64,11 @@ def create_directory(path, inloop=False):
     object_type = VObject(parent_path).object_type()
     if object_type != "project" and object_type != "directory":
         raise Exception("create directory only under project or directory")
-    os.mkdir(path)
-    os.mkdir(path+"/.chern")
-    with open(path + "/.chern/config.py", "w") as f:
-        f.write("object_type = \"directory\"")
+    csys.mkdir(path)
+    csys.mkdir(path+"/.chern")
+    config_file = metadata.ConfigFile(path + "/.chern/config.json")
+    config_file.write_variable("object_type", "directory")
     directory = VObject(path)
-    git.add(path+"/.chern")
-    git.commit("Create directory at {}".format(
-        directory.invariant_path()))
     with open(path + "/README.md", "w") as f:
         f.write("Please write README for directory {}".format(
             directory.invariant_path() ) )
