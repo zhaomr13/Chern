@@ -216,13 +216,20 @@ const chern::Folders folders;
 
     def start(self):
         ps = subprocess.Popen("docker start -a {0}".format(self.container_id()),
-                              shell=True, stdout=subprocess.PIPE,
+                              shell=True,
+                              stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT)
-        ps.wait()
-        stdout = self.path + "/stdout"
-        with open(stdout, "w") as f:
-            f.write(ps.stdout.read().decode())
-        return (ps.poll() == 0)
+        while ps.poll() is None:
+            stdout = ps.stdout
+            if stdout is None:
+                continue
+            line = stdout.readline().decode()
+            # line = line.strip()
+            if line:
+                stdout = self.path + "/stdout"
+                with open(stdout, "a") as f:
+                    f.write(line)
+        return (ps.returncode == 0)
 
     def remove(self):
         ps = subprocess.Popen("docker rm -f {0}".format(self.container_id()),
