@@ -57,7 +57,7 @@ class VObject(object):
         """
         return self.config_file.read_variable("object_type", "")
 
-    def is_zombine(self):
+    def is_zombie(self):
         return self.object_type() == ""
 
     def color_tag(self, status):
@@ -210,7 +210,7 @@ class VObject(object):
                 continue
 
             for pred_object in obj.predecessors():
-                if pred_object.is_zombine() or not pred_object.has_successor(obj):
+                if pred_object.is_zombie() or not pred_object.has_successor(obj):
                     print("The predecessor \n\t {} \n\t does not exists or do not \
 has a link to object {}".format(pred_object, obj) )
                     choice = input("Would you like to remove the input or the algorithm? [Y/N]")
@@ -220,7 +220,7 @@ has a link to object {}".format(pred_object, obj) )
                         obj.impress()
 
             for succ_object in obj.successors():
-                if succ_object.is_zombine() or not succ_object.has_predecessor(obj):
+                if succ_object.is_zombie() or not succ_object.has_predecessor(obj):
                     print("The succecessor \n\t {} \n\t does not exists or do not \
 has a link to object {}".format(succ_object, obj) )
                     choice = input("Would you like to remove the output? [Y/N]")
@@ -242,7 +242,7 @@ has a link to object {}".format(succ_object, obj) )
                 project_path = csys.project_path()
                 pred_obj = VObject(project_path+"/"+path)
                 if not obj.has_predecessor(pred_obj):
-                    print("There seems being a zombine alias to {} in {}".format(pred_obj, obj))
+                    print("There seems being a zombie alias to {} in {}".format(pred_obj, obj))
                     choice = input("Would you like to remove it?[Y/N]")
                     if choice == "Y":
                         obj.remove_alias(obj.path_to_alias(path))
@@ -466,7 +466,7 @@ has a link to object {}".format(succ_object, obj) )
         for item in sub_directories:
             if os.path.isdir(self.path+"/"+item):
                 obj = VObject(self.path+"/"+item)
-                if obj.is_zombine():
+                if obj.is_zombie():
                     continue
                 sub_object_list.append(obj)
         return sub_object_list
@@ -528,6 +528,10 @@ has a link to object {}".format(succ_object, obj) )
         impression = self.impression()
         if self.impression() == "":
             return False
+
+        for pred in self.predecessors():
+            if not pred.is_impressed_fast():
+                return False
 
         file_list = self.impression_file_list()
         if file_list != self.impression_file_list(impression):

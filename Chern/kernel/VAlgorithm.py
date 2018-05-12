@@ -16,7 +16,9 @@ from Chern.utils import git
 from Chern.utils.utils import colorize
 from Chern.utils import metadata
 
+from Chern.kernel.ChernCommunicator import ChernCommunicator
 cherndb = ChernDatabase.instance()
+cherncc = ChernCommunicator.instance()
 
 class VAlgorithm(VObject):
     """ Algorithm class
@@ -37,15 +39,15 @@ class VAlgorithm(VObject):
                 return status
 
         if not self.is_impressed_fast():
-            status = "new"
-        elif not self.is_submitted():
-            status  = "impressed"
-        else:
-            status = self.image().status()
+            if consult_id:
+                consult_table[self.path] = (consult_id, "new")
+            return "new"
+
+        # hosts = cherncc.hosts()
+        status = cherncc.status("local", self.impression())
         if consult_id:
             consult_table[self.path] = (consult_id, status)
         return status
-
 
     def jobs(self):
         impressions = self.config_file.read_variable("impressions", [])
@@ -71,6 +73,17 @@ class VAlgorithm(VObject):
             return False
         return cherndb.job(self.impression()) is not None
 
+    def is_submitted(self):
+        return False
+        if not self.is_impressed_fast():
+            return False
+        if cherndb.job(self.impression()) is not None:
+            return True
+        else:
+            return False
+
+
+
     def submit(self):
         """ Submit """
         if self.is_submitted():
@@ -84,6 +97,14 @@ class VAlgorithm(VObject):
         image = self.image()
         image.config_file.write_variable("job_type", "image")
         cherndb.add_job(self.impression())
+
+    def submit(self, host = "local"):
+        if self.is_submitted():
+            print("Already submitted")
+            return
+        if not self.is_impressed_fast():
+            self.impress()
+        cherncc.submit(host, self.path+"/.chern/impressions", self.impression())
 
     def resubmit(self):
         if not self.is_submitted():

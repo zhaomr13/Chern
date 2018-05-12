@@ -22,10 +22,11 @@ class ChernCommunicator(object):
     def submit(self, host, path, impression, readme=None):
         tarname = "/tmp/{}.tar.gz".format(impression)
         tar = tarfile.open(tarname, "w:gz")
-        for dirpath, dirnames, filenames in os.walk(os.path.join(path, impression, "contents")):
+        for dirpath, dirnames, filenames in os.walk(os.path.join(path, impression)):
             for f in filenames:
                 fullpath = os.path.join(dirpath, f)
-                tar.add(fullpath, arcname=os.path.join("contents", f))
+                relpath = os.path.relpath(dirpath, os.path.join(path, impression))
+                tar.add(fullpath, arcname=os.path.join(relpath, f))
         if readme is not None:
             tar.add(readme, "README.md")
         tar.close()
@@ -48,5 +49,15 @@ class ChernCommunicator(object):
 
     def status(self, host, impression):
         url = self.url(host)
-        r = requests.get("http://127.0.0.1:5000/test")
+        r = requests.get("http://127.0.0.1:5000/status/{}".format(impression))
+        return r.text
+
+    def output_files(self, host, impression):
+        url = self.url(host)
+        r = requests.get("http://127.0.0.1:5000/outputs/{}".format(impression))
+        return r.text.split()
+
+    def get_file(self, host, impression, filename):
+        url = self.url(host)
+        r = requests.get("http://127.0.0.1:5000/getfile/{}/{}".format(impression, filename))
         return r.text

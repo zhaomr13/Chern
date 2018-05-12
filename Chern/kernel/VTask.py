@@ -38,27 +38,31 @@ class VTask(VObject):
                 status_color = "success"
             else:
                 status_color = "normal"
-            print("****",status,"*****")
             print(colorize("**** STATUS:", "title0"),
                 colorize(status, status_color) )
 
-        if self.is_submitted() and self.container().error() != "":
-            print(colorize("!!!! ERROR:\n", "title0"), self.container().error())
-        if self.is_submitted():
+        # if self.is_submitted() and self.container().error() != "":
+        # print(colorize("!!!! ERROR:\n", "title0"), self.container().error())
+        # if self.is_submitted():
+        if True:
             print("---------------")
-            if not os.path.exists(self.container().path+"/output"):
-                return
-            files = os.listdir(self.container().path+"/output")
+            files = self.output_files()
             if files == []: return
             files.sort()
             max_len = max([len(s) for s in files])
             columns = os.get_terminal_size().columns
-            nfiles = columns // (max_len+5+7)
+            nfiles = columns // (max_len+4+7)
             for i, f in enumerate(files):
                 if not f.startswith(".") and f != "README.md":
-                    print(("docker:{:<"+str(max_len+5)+"}").format(f), end="")
+                    print(("local:{:<"+str(max_len+4)+"}").format(f), end="")
                     if (i+1)%nfiles == 0:
                         print("")
+
+    def output_files(self):
+        return cherncc.output_files("local", self.impression())
+
+    def get_file(self, host, filename):
+        return cherncc.get_file("local", self.impression(), filename)
 
     def inputs(self):
         """ Input data. """
@@ -84,11 +88,12 @@ class VTask(VObject):
             return
         if not self.is_impressed_fast():
             self.impress()
+        print(self.impression())
         cherncc.submit(host, self.path+"/.chern/impressions", self.impression())
 
-    def view(self, file_name):
-        if file_name.startswith("docker:"):
-            path = self.container().path+"/output/"+file_name.replace("docker:", "").lstrip()
+    def view(self, filename):
+        if filename.startswith("local:"):
+            path = self.get_file("local:", filename[6:])
             if not csys.exists(path):
                 print("File: {} do not exists".format(path))
                 return
@@ -153,10 +158,7 @@ class VTask(VObject):
     def is_submitted(self):
         if not self.is_impressed_fast():
             return False
-        if cherndb.job(self.impression()) is not None:
-            return True
-        else:
-            return False
+        return cherncc.status() != "missing"
 
 
 
