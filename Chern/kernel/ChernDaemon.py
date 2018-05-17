@@ -28,6 +28,7 @@ def execute():
                 break
         if flag:
             job.execute()
+            print("Finish {0}".format(job), file=sys.stderr)
             break
 
 def status():
