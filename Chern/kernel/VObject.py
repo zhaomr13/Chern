@@ -421,7 +421,6 @@ has a link to object {}".format(succ_object, obj) )
         # Deal with the impression
         for obj in queue:
             # Calculate the absolute path of the new directory
-            print("Try to keep the impress of {}".format(obj))
             if obj.object_type() == "directory":
                 continue
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))

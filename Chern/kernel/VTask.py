@@ -186,35 +186,6 @@ class VTask(VObject):
         if consult_id:
             consult_table[self.path] = (consult_id, status)
         return status
-        """
-        if not self.is_submitted():
-            if consult_id:
-                consult_table[self.path] = (consult_id, "impressed")
-            return "impressed"
-        if self.algorithm() is not None:
-            if self.algorithm().status() != "built":
-                if consult_id:
-                    consult_table[self.path] = (consult_id, "submitted")
-                return "submitted"
-            for input_data in self.inputs():
-                if input_data.status(consult_id) != "done":
-                    if consult_id:
-                        consult_table[self.path] = (consult_id, "waitting")
-                    return "waitting"
-        status = self.container().status()
-        if consult_id:
-            consult_table[self.path] = (consult_id, status)
-
-        if status == "done":
-            output_md5 = self.output_md5()
-            if output_md5 == "":
-                output_md5 = self.container().output_md5()
-                self.config_file.write_variable("output_md5", output_md5)
-                output_md5s = self.config_file.read_variable("output_md5s", {})
-                output_md5s[self.impression()] = output_md5
-                self.config_file.write_variable("output_md5s", output_md5s)
-        return status
-        """
 
     def container(self):
         path = utils.storage_path() + "/" + self.impression()

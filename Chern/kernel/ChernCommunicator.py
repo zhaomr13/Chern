@@ -49,7 +49,10 @@ class ChernCommunicator(object):
 
     def status(self, host, impression):
         url = self.url(host)
-        r = requests.get("http://127.0.0.1:5000/status/{}".format(impression))
+        try:
+            r = requests.get("http://127.0.0.1:5000/status/{}".format(impression))
+        except:
+            return "ERROR"
         return r.text
 
     def output_files(self, host, impression):
