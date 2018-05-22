@@ -191,7 +191,6 @@ class VObject(object):
         succ_str = config_file.read_variable("successors", [])
         succ_str.append(self.invariant_path())
         config_file.write_variable("successors", succ_str)
-        print("!!!!!", path, succ_str)
 
         pred_str = self.config_file.read_variable("predecessors", [])
         pred_str.append(VObject(path).invariant_path())
