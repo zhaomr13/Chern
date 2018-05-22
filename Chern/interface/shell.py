@@ -127,12 +127,13 @@ def cp(line, inloop=True):
     else:
         destination = os.path.abspath(destination)
     if os.path.exists(destination):
-        destination += "/" + source
+        destination += "/" + os.path.basename(source)
     if source.startswith("p/") or source == "p":
         source = os.path.normpath(manager.p.path+destination.strip("p"))
     else:
         source = os.path.abspath(source)
 
+    print(source, destination)
     VObject(source).copy_to(destination)
 
 def ls(line):
