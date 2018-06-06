@@ -12,6 +12,16 @@ class VProject(VObject):
         from Chern.kernel.Helpme import project_helpme
         print(project_helpme.get(command, "No such command, try ``helpme'' alone."))
 
+    def submit(self):
+        sub_objects = self.sub_objects()
+        for sub_object in sub_objects:
+            if sub_object.object_type() == "task":
+                Chern.kernel.VTask.VTask(sub_object.path).submit()
+            elif sub_object.object_type() == "algorithm":
+                Chern.kernel.VAlgorithm.VAlgorithm(sub_object.path).submit()
+            else:
+                Chern.kernel.VDirectory.VDirectory(sub_object.path).submit()
+
     def status(self):
         sub_objects = self.sub_objects()
         for sub_object in sub_objects:
@@ -110,6 +120,7 @@ def use_project(path):
     global_config_file.write_variable("projects_path", projects_path)
     global_config_file.write_variable("current_project", project_name)
     os.chdir(project_path)
+
 
 def new_project(project_name):
     """ Create a new project

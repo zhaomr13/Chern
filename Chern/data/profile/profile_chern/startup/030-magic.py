@@ -1,3 +1,16 @@
+"""
+Here I define the behaviour of some commands:
+
+>>>> cd_project
+>>>> ls_projects
+>>>> cd
+>>>> mv
+>>>> cp
+>>>> rm
+>>>> ls
+>>>>
+
+"""
 from IPython.core.magic import register_line_magic
 import os
 import subprocess
@@ -10,6 +23,23 @@ from click.testing import CliRunner
 
 manager = get_manager()
 runner = CliRunner()
+
+@click.command()
+def ls_projects():
+    """ List all projects
+    """
+    manager.ls_projects()
+click_ls_projects = ls_projects
+
+@register_line_magic
+def ls_projects(line):
+    """ The extended cd function: cd number
+    """
+    result = runner.invoke(click_ls_projects, line.split())
+    output = result.output.rstrip("\n ")
+    if output != "":
+        print(output)
+del ls_projects
 
 #----------
 @click.command()
@@ -26,7 +56,9 @@ def cd_project(line):
     """ The extended cd function: cd number
     """
     result = runner.invoke(click_cd_project, line.split())
-    print(result.output.rstrip("\n"))
+    output = result.output.rstrip("\n ")
+    if output != "":
+        print(output)
 del cd_project
 
 @register_line_magic
@@ -34,7 +66,9 @@ def cdproject(line):
     """ The extended cd function: cd number
     """
     result = runner.invoke(click_cd_project, line.split())
-    print(result.output.rstrip("\n"))
+    output = result.output.rstrip("\n ")
+    if output != "":
+        print(output)
 del cdproject
 
 #----------
@@ -51,27 +85,68 @@ def cd(line):
     """ The extended cd function: cd number
     """
     result = runner.invoke(click_cd, line.split())
-    output = result.output.rstrip("\n")
+    output = result.output.rstrip("\n ")
     if output != "":
         print(output)
 del cd
+
+#----------
+@click.command()
+@click.argument("source")
+@click.argument("destination")
+def mv(source, destination):
+    """ Move directory or object
+    """
+    shell.mv(source, destination)
+click_mv = mv
 
 @register_line_magic
 def mv(line):
     """ Move a object to another object
     """
-    shell.mv(line)
+    result = runner.invoke(click_mv, line.split())
+    output = result.output.rstrip("\n ")
+    if output != "":
+        print(output)
 del mv
 
-# Copy object
+#----------
+@click.command()
+@click.argument("source")
+@click.argument("destination")
+def cp(source, destination):
+    """ Move directory or object
+    """
+    shell.cp(source, destination)
+click_cp = cp
+
 @register_line_magic
 def cp(line):
-    shell.cp(line)
+    """ Move a object to another object
+    """
+    result = runner.invoke(click_cp, line.split())
+    output = result.output.rstrip("\n ")
+    if output != "":
+        print(output)
 del cp
+
+#----------
+@click.command()
+@click.argument("object")
+def rm(object):
+    """ Remove an object
+    """
+    shell.rm(object)
+click_rm = rm
 
 @register_line_magic
 def rm(line):
-    shell.rm(line)
+    """ Remove an object
+    """
+    result = runner.invoke(click_rm, line.split())
+    output = result.output.rstrip("\n ")
+    if output != "":
+        print(output)
 del rm
 
 @register_line_magic
@@ -83,7 +158,9 @@ def helpme(line):
     commands.append("--help")
     func = globals()["click_" + commands[0]]
     result = runner.invoke(func, commands[1:])
-    print(result.output.rstrip("\n"))
+    output = result.output.rstrip("\n ")
+    if output != "":
+        print(output)
 del helpme
 
 @click.command()
@@ -105,21 +182,16 @@ def ls(show_readme, show_predecessors, show_subobjects, show_successors, show_st
     manager.c.ls(show_readme, show_predecessors, show_subobjects, show_status, show_successors)
 
 click_ls = ls
-
 @register_line_magic
 def ls(line):
     """ The extended cd function: cd number
     """
     result = runner.invoke(click_ls, line.split())
-    print(result.output.rstrip("\n"))
+    output = result.output.rstrip("\n ")
+    if output != "":
+        print(output)
 del ls
 
-@register_line_magic
-def ls_projects(line):
-    """ The extended cd function: cd number
-    """
-    manager.ls_projects()
-del ls_projects
 
 @register_line_magic
 def ll(line):
@@ -151,7 +223,9 @@ def addinput(line):
     """
     """
     result = runner.invoke(click_add_input, line.split())
-    print(result.output.rstrip("\n"))
+    output = result.output.rstrip("\n ")
+    if output != "":
+        print(output)
 del addinput
 
 #----------
@@ -168,7 +242,7 @@ def remove_input(line):
     """
     """
     result = runner.invoke(click_remove_input, line.split())
-    output = result.output.rstrip("\n")
+    output = result.output.rstrip("\n ")
     if output != "":
         print(output)
 del remove_input
@@ -178,7 +252,9 @@ def removeinput(line):
     """
     """
     result = runner.invoke(click_remove_input, line.split())
-    print(result.output.rstrip("\n"))
+    output = result.output.rstrip("\n ")
+    if output != "":
+        print(output)
 del removeinput
 
 

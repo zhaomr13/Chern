@@ -73,7 +73,7 @@ def cd(line):
         manager.switch_current_object(line)
         os.chdir(manager.c.path)
 
-def mv(line):
+def mv(source, destination):
     """
     Move or rename file. Will keep the link relationship.
     mv SOURCE DEST
@@ -83,27 +83,20 @@ def mv(line):
     mv SOURCE1 SOURCE2 SOURCE3 ... DIRECTORY is not supported
     use loop instead
     """
-    line = line.split(" ")
-    # Deal with the situation that command is not mv a b
-    if len(line) != 2:
-        print("Please lookup the USAGE of mv")
-        return
-    source = utils.special_path_string(line[0])
-    destination = utils.special_path_string(line[1])
-    if destination.startswith("p/") or destination == "p":
-        destination = os.path.normpath(csys.project_path() + destination.strip("p"))
+    if destination.startswith("@/") or destination == "@":
+        destination = os.path.normpath(csys.project_path() + destination.strip("@"))
     else:
         destination = os.path.abspath(destination)
     if os.path.exists(destination):
         destination += "/" + source
-    if source.startswith("p/") or source == "p":
-        source = os.path.normpath(csys.project_path() +destination.strip("p"))
+    if source.startswith("@/") or source == "@":
+        source = os.path.normpath(csys.project_path() +destination.strip("@"))
     else:
         source = os.path.abspath(source)
 
     VObject(source).move_to(destination)
 
-def cp(line):
+def cp(source, destination):
     """
     Move or rename file. Will keep the link relationship.
     mv SOURCE DEST
@@ -113,25 +106,20 @@ def cp(line):
     mv SOURCE1 SOURCE2 SOURCE3 ... DIRECTORY is not supported
     use loop instead
     """
-    line = line.split(" ")
-    # Deal with the situation that command is not mv a b
-    if len(line) != 2:
-        print("Please lookup the USAGE of cp")
-        return
-    source = line[0]
-    destination = line[1]
     if manager.c.object_type() == "task":
         manager.c.cp(source, destination)
         return
 
-    if destination.startswith("p/") or destination == "p":
-        destination = os.path.normpath(manager.p.path + destination.strip("p"))
+    if destination.startswith("@/") or destination == "@":
+        destination = os.path.normpath(manager.p.path + destination.strip("@"))
     else:
         destination = os.path.abspath(destination)
+
     if os.path.exists(destination):
-        destination += "/" + source
-    if source.startswith("p/") or source == "p":
-        source = os.path.normpath(manager.p.path+destination.strip("p"))
+        destination += "/" + os.path.basename(source)
+
+    if source.startswith("@/") or source == "@":
+        source = os.path.normpath(manager.p.path+destination.strip("@"))
     else:
         source = os.path.abspath(source)
 

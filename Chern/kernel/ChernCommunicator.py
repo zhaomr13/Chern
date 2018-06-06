@@ -52,7 +52,7 @@ class ChernCommunicator(object):
         try:
             r = requests.get("http://127.0.0.1:5000/status/{}".format(impression))
         except:
-            return "ERROR"
+            return "unconnected"
         return r.text
 
     def output_files(self, host, impression):

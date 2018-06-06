@@ -10,7 +10,9 @@
 from IPython.terminal.prompts import Prompts, Token
 import os
 from Chern.interface.ChernManager import get_manager
+from Chern.kernel.ChernDatabase import ChernDatabase
 
+cherndb = ChernDatabase.instance()
 class ChernPrompt(Prompts):
     def __init__(self, ip):
         super(ChernPrompt, self).__init__(ip)
@@ -21,7 +23,7 @@ class ChernPrompt(Prompts):
         if current_project_name == "/":
             return "[Chern]"
         else:
-            return "["+current_project_name+"] ["+os.path.relpath(manager.c.path, manager.p.path)+"]\n"
+            return "["+current_project_name+"] ["+os.path.relpath(manager.c.path, cherndb.project_path())+"]\n"
 
     def in_prompt_tokens(self, cli=None):
         return [(Token, self.get_prompt_name() ), (Token.Prompt, ' >>> ')]

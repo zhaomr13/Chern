@@ -10,7 +10,7 @@ from Chern.kernel import VAlgorithm
 from Chern.utils import utils
 from Chern.utils import metadata
 from Chern.utils.utils import debug
-from Chern.utils.utils import colorize
+from Chern.utils.pretty import colorize
 from Chern.utils import csys
 
 from Chern.kernel.ChernDatabase import ChernDatabase
@@ -36,6 +36,8 @@ class VTask(VObject):
             status = self.status()
             if status == "done":
                 status_color = "success"
+            elif status == "running":
+                status_color = "running"
             else:
                 status_color = "normal"
             print(colorize("**** STATUS:", "title0"),
@@ -158,7 +160,7 @@ class VTask(VObject):
     def is_submitted(self):
         if not self.is_impressed_fast():
             return False
-        return cherncc.status() != "missing"
+        return cherncc.status("local", self.impression()) != "missing"
 
 
 
