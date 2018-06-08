@@ -1,3 +1,5 @@
+""" Virtual class for all ```directory'', ``task'', ``algorithm''
+"""
 import os
 import shutil
 import time
@@ -51,16 +53,18 @@ class VObject(object):
         return os.path.relpath(path, self.path)
 
     def object_type(self):
-        """ Return the type of the object under a specific path.
-        If path is left blank, return the type of the object itself.
-        If the object does not exists, return ""
+        """ Return the type of the this object.
         """
         return self.config_file.read_variable("object_type", "")
 
     def is_zombie(self):
+        """ Judge whether it is actually an object
+        """
         return self.object_type() == ""
 
     def color_tag(self, status):
+        """ Get the color tag according to the status.
+        """
         if status == "built" or status == "done" or status == "finished":
             color_tag = "success"
         elif status == "failed" or status == "unfinished":
@@ -76,10 +80,14 @@ class VObject(object):
         I recommend to print also the README
         and the parameters|inputs|outputs ...
         """
+
+        """
+        FIXME: Should communicate with ChernCommunicator to get the runner status
         if not cherndb.is_docker_started():
             color_print("!!Warning: docker not started", color="warning")
         if daemon_status() != "started":
             color_print("!!Warning: runner not started, the status is {}".format(daemon_status()), color="warning")
+        """
 
         if show_readme:
             print(colorize("README:", "comment"))
@@ -125,7 +133,8 @@ class VObject(object):
 
     def add_arc_from(self, obj):
         """ Add an link from the object contains in `path' to this object.
-        FIXME: it directly operate the config_file of other object rather operate through.
+         o  --*--> (o) ----> o.
+        (o) --*-->  o         .
         """
         succ_str = obj.config_file.read_variable("successors", [])
         succ_str.append(self.invariant_path())
@@ -136,8 +145,10 @@ class VObject(object):
         self.config_file.write_variable("predecessors", pred_str)
 
     def remove_arc_from(self, obj, single=False):
-        """
-        Remove link from the path
+        """ Remove link from the path
+        If ``single'' is set to be True, we will only remove the arc in this object.
+         o  --X--> (o) ----> o. Remove this arc.
+        (o) --X-->  o         . If single set to False, this arc is removed.
         """
         if not single:
             config_file = obj.config_file
@@ -150,9 +161,9 @@ class VObject(object):
         self.config_file.write_variable("predecessors", pred_str)
 
     def add_arc_to(self, obj):
-        """
-        FIXME
-        Add a link from this object to the path object
+        """ Add a link from this object to the path object
+         o  -----> (o) --*-->  o .
+                    o  --*--> (o).
         """
         pred_str = obj.config_file.read_variable("predecessors", [])
         pred_str.append(self.invariant_path())
@@ -163,8 +174,9 @@ class VObject(object):
         config_file.write_variable("successors", succ_str)
 
     def remove_arc_to(self, obj, single=False):
-        """
-        remove the path to the path
+        """ remove the path to the path
+         o  -----> (o) --X-->  o .  Remove this arc.
+                    o  --X--> (o).  If single set to False, this arc is removed.
         """
         if not single:
             config_file = obj.config_file
@@ -177,8 +189,8 @@ class VObject(object):
         self.config_file.write_variable("successors", succ_str)
 
     def successors(self):
-        """
-        The successors of the current object
+        """ The successors of the current object
+        Return a list of [object]
         """
         succ_str = self.config_file.read_variable("successors", [])
         successors = []
@@ -188,6 +200,9 @@ class VObject(object):
         return successors
 
     def predecessors(self):
+        """ The predecessosr of the current object
+        Return a list of [object]
+        """
         pred_str = self.config_file.read_variable("predecessors", [])
         predecessors = []
         project_path = csys.project_path()
@@ -196,14 +211,20 @@ class VObject(object):
         return predecessors
 
     def has_successor(self, obj):
+        """ Judge whether the object has the specific successor
+        """
         succ_str = self.config_file.read_variable("successors", [])
         return obj.invariant_path() in succ_str
 
     def has_predecessor(self, obj):
+        """ Judge whether the object has the specific predecessor
+        """
         pred_str = self.config_file.read_variable("predecessors", [])
         return obj.invariant_path() in pred_str
 
     def doctor(self):
+        """ Try to exam and fix the repository.
+        """
         queue = self.sub_objects_recursively()
         for obj in queue:
             if obj.object_type() != "task" and obj.object_type() != "algorithm":
@@ -243,7 +264,7 @@ has a link to object {}".format(succ_object, obj) )
                 pred_obj = VObject(project_path+"/"+path)
                 if not obj.has_predecessor(pred_obj):
                     print("There seems being a zombie alias to {} in {}".format(pred_obj, obj))
-                    choice = input("Would you like to remove it?[Y/N]")
+                    choice = input("Would you like to remove it? [Y/N]")
                     if choice == "Y":
                         obj.remove_alias(obj.path_to_alias(path))
 
@@ -264,29 +285,21 @@ has a link to object {}".format(succ_object, obj) )
 
         for obj in queue:
             # Calculate the absolute path of the new directory
-            norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
+            norm_path = os.path.normpath( os.path.join(new_path, self.relative_path(obj.path)) )
             new_object = VObject(norm_path)
             new_object.clean_flow()
             new_object.clean_impressions()
 
         for obj in queue:
             # Calculate the absolute path of the new directory
-            norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
+            norm_path = os.path.normpath( os.path.join(new_path +"/"+ self.relative_path(obj.path)) )
             new_object = VObject(norm_path)
             for pred_object in obj.predecessors():
                 # if in the outside directory
                 if self.relative_path(pred_object.path).startswith(".."):
-                    """
-                    Do nothing
-                    new_object.add_arc_from(pred_object.path)
-                    alias1 = obj.path_to_alias(pred_object.path)
-                    alias2 = pred_object.path_to_alias(obj.path)
-                    new_object.set_alias(alias1, pred_object.invariant_path())
-                    pred_object.remove_alias(alias2)
-                    pred_object.set_alias(alias2, new_object.invariant_path())
-                    """
+                    pass
                 else:
-                # if in the same tree
+                    # if in the same tree
                     relative_path = self.relative_path(pred_object.path)
                     new_object.add_arc_from(VObject(new_path+"/"+relative_path))
                     alias1 = obj.path_to_alias(pred_object.invariant_path())
@@ -295,15 +308,7 @@ has a link to object {}".format(succ_object, obj) )
 
             for succ_object in obj.successors():
                 if self.relative_path(succ_object.path).startswith(".."):
-                    """
-                    Do nothing
-                    new_object.add_arc_to(succ_object.path)
-                    alias1 = obj.path_to_alias(succ_object.path)
-                    alias2 = succ_object.path_to_alias(obj.path)
-                    new_object.set_alias(alias1, succ_object.invariant_path())
-                    succ_object.remove_alias(alias2)
-                    succ_object.set_alias(alias2, new_object.invariant_path())
-                    """
+                    pass
 
         # Deal with the impression
         for obj in queue:
