@@ -160,7 +160,7 @@ class VTask(VObject):
     def is_submitted(self):
         if not self.is_impressed_fast():
             return False
-        return cherncc.status("local", self.impression()) != "missing"
+        return cherncc.status("local", self.impression()) != "impressed"
 
 
 
@@ -198,6 +198,11 @@ class VTask(VObject):
         After add source, the status of the task should be done
         """
         md5 = csys.dir_md5(path)
+        data_file = metadata.ConfigFile(os.path.join(self.path, "data.json"))
+        data_file.write_variable("md5", md5)
+        self.impress()
+        return
+
         if self.is_impressed_fast() and md5 == self.output_md5():
             pass
         else:

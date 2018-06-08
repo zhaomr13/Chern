@@ -28,8 +28,8 @@ class VAlgorithm(VObject):
         from Chern.kernel.Helpme import algorithm_helpme
         print(algorithm_helpme.get(command, "No such command, try ``helpme'' alone."))
 
-    def status(self, consult_id = None):
-        """ query the status of the current algorithm.
+    def status(self, consult_id = None, detailed = False):
+        """
         """
         if consult_id:
             consult_table = cherndb.status_consult_table

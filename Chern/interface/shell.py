@@ -175,6 +175,7 @@ def add_source(line):
     # line = os.path.abspath(line)
     manager.c.add_source(line)
 
+
 def jobs(line):
     object_type = manager.c.object_type()
     if object_type != "algorithm" and object_type != "task":
