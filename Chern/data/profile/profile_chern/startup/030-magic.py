@@ -420,6 +420,9 @@ del git
 
 @register_line_magic
 def vim(line):
+    if line.startswith("algorithm:"):
+        if manager.c.object_type() == "task" and manager.c.algorithm() is not None:
+            line = os.path.join(manager.c.algorithm().path, line[10:])
     subprocess.call("vim {}".format(line), shell=True)
     # git.commit("edit file {}".format(line))
 del vim

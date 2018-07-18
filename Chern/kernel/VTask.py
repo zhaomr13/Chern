@@ -45,9 +45,8 @@ class VTask(VObject):
 
         # if self.is_submitted() and self.container().error() != "":
         # print(colorize("!!!! ERROR:\n", "title0"), self.container().error())
-        # if self.is_submitted():
-        if True:
-            print("---------------")
+        if self.is_submitted():
+            print(colorize("---- Files:", "title0"))
             files = self.output_files()
             if files == []: return
             files.sort()
@@ -57,6 +56,22 @@ class VTask(VObject):
             for i, f in enumerate(files):
                 if not f.startswith(".") and f != "README.md":
                     print(("local:{:<"+str(max_len+4)+"}").format(f), end="")
+                    if (i+1)%nfiles == 0:
+                        print("")
+            print("")
+
+
+        if self.algorithm() is not None:
+            print(colorize("---- Algorithm files:", "title0"))
+            files = os.listdir(self.algorithm().path)
+            if files == []: return
+            files.sort()
+            max_len = max([len(s) for s in files])
+            columns = os.get_terminal_size().columns
+            nfiles = columns // (max_len+4+11)
+            for i, f in enumerate(files):
+                if not f.startswith(".") and f != "README.md":
+                    print(("algorithm:{:<"+str(max_len+4)+"}").format(f), end="")
                     if (i+1)%nfiles == 0:
                         print("")
 

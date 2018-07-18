@@ -171,7 +171,7 @@ class VObject(object):
 
         succ_str = self.config_file.read_variable("successors", [])
         succ_str.append(obj.invariant_path())
-        config_file.write_variable("successors", succ_str)
+        self.config_file.write_variable("successors", succ_str)
 
     def remove_arc_to(self, obj, single=False):
         """ remove the path to the path
@@ -387,11 +387,15 @@ has a link to object {}".format(succ_object, obj) )
             new_object = VObject(norm_path)
             new_object.clean_flow()
 
+        print("Do you forget to remove the file?")
+        print(queue)
         for obj in queue:
             # Calculate the absolute path of the new directory
+            print(obj)
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
             for pred_object in obj.predecessors():
+                print("pred ->", pred_object)
                 # if in the outside directory
                 if self.relative_path(pred_object.path).startswith(".."):
                     new_object.add_arc_from(pred_object)
@@ -408,11 +412,15 @@ has a link to object {}".format(succ_object, obj) )
                     VObject(norm_path).set_alias(alias2, new_object.invariant_path())
 
             for succ_object in obj.successors():
+                # if in the outside directory
+                print("succ ->", succ_object)
                 if self.relative_path(succ_object.path).startswith(".."):
-                    new_object.add_arc_to(succ_object.path)
+                    new_object.add_arc_to(succ_object)
+                    succ_object.remove_arc_from(self)
                     alias = obj.path_to_alias(succ_object.invariant_path())
                     succ_object.remove_alias(alias)
                     succ_object.set_alias(alias, new_object.invariant_path())
+        print("Do you forget to remove the file?")
 
         for obj in queue:
             for pred_object in obj.predecessors():
@@ -423,6 +431,7 @@ has a link to object {}".format(succ_object, obj) )
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object)
 
+        print("Do you forget to remove the file?")
         # Deal with the impression
         for obj in queue:
             # Calculate the absolute path of the new directory
@@ -434,6 +443,7 @@ has a link to object {}".format(succ_object, obj) )
         if self.object_type() == "directory":
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
 
+        print("Do you forget to remove the file?")
         shutil.rmtree(self.path)
 
     def add(self, src, dst):
