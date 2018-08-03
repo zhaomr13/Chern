@@ -46,8 +46,17 @@ def dir_md5(path):
 
     ps = subprocess.Popen("find -s {} -type f -exec md5sum {{}} \;".format(path),
                           shell=True, stdout=subprocess.PIPE)
-    ps.wait()
-    out = ps.stdout.read().decode().split()
+    out = ""
+    while ps.poll() is None:
+        stdout = ps.stdout
+        if stdout is None:
+            continue
+        line = stdout.readline().decode()
+            # line = line.strip()
+        if line:
+            out += line
+    out = out.split()
+    print(out)
     md5s = out[::2]
     names = [os.path.relpath(name, path) for name in out[1::2]]
     string = "".join(md5s + names)

@@ -117,8 +117,8 @@ class VTask(VObject):
             subprocess.Popen("open {}".format(path), shell=True)
 
     def cp(self, source, dst):
-        if source.startswith("docker:"):
-            path = self.container().path+"/output/"+source.replace("docker:", "").lstrip()
+        if source.startswith("local:"):
+            path = self.container().path+"/output/"+source.replace("local:", "").lstrip()
             if not csys.exists(path):
                 print("File: {} do not exists".format(path))
                 return
