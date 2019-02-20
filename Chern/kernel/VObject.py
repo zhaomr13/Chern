@@ -354,14 +354,17 @@ has a link to object {}".format(succ_object, obj) )
         self.config_file.write_variable("alias_to_path", alias_to_path)
 
     def clean_impressions(self):
+        """ Clean the impressions of the object,
+        this is used only when it is copied to a new place and needed to remove impression information.
+        """
         self.config_file.write_variable("impressions", [])
         self.config_file.write_variable("impression", "")
         self.config_file.write_variable("output_md5s", {})
         self.config_file.write_variable("output_md5", "")
 
     def clean_flow(self):
-        """
-        Clean all the alias, predecessors and successors
+        """ Clean all the alias, predecessors and successors,
+        this is used only when it is copied to a new place and needed to remove impression information.
         """
         self.config_file.write_variable("alias_to_path", {})
         self.config_file.write_variable("path_to_alias", {})
@@ -369,16 +372,20 @@ has a link to object {}".format(succ_object, obj) )
         self.config_file.write_variable("successors", [])
 
     def move_to(self, new_path):
-        """ mv to another path
+        """ move to another path
         """
         queue = self.sub_objects_recursively()
 
         # Make sure the related objects are all impressed
+        all_impressed = True
         for obj in queue:
             if obj.object_type() != "task" and obj.object_type() != "algorithm":
                 continue
             if not obj.is_impressed_fast():
-                obj.impress()
+                all_impressed = False
+                print("The {} {} is not impressed, please impress it and try again".format(obj.object_type(), obj))
+        if not all_impressed:
+            return
         shutil.copytree(self.path, new_path)
 
         for obj in queue:
@@ -387,15 +394,11 @@ has a link to object {}".format(succ_object, obj) )
             new_object = VObject(norm_path)
             new_object.clean_flow()
 
-        # print("Do you forget to remove the file?")
-        print(queue)
         for obj in queue:
             # Calculate the absolute path of the new directory
-            print(obj)
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
             new_object = VObject(norm_path)
             for pred_object in obj.predecessors():
-                print("pred ->", pred_object)
                 # if in the outside directory
                 if self.relative_path(pred_object.path).startswith(".."):
                     new_object.add_arc_from(pred_object)
@@ -413,14 +416,12 @@ has a link to object {}".format(succ_object, obj) )
 
             for succ_object in obj.successors():
                 # if in the outside directory
-                print("succ ->", succ_object)
                 if self.relative_path(succ_object.path).startswith(".."):
                     new_object.add_arc_to(succ_object)
                     succ_object.remove_arc_from(self)
                     alias = obj.path_to_alias(succ_object.invariant_path())
                     succ_object.remove_alias(alias)
                     succ_object.set_alias(alias, new_object.invariant_path())
-        # print("Do you forget to remove the file?")
 
         for obj in queue:
             for pred_object in obj.predecessors():
@@ -431,7 +432,6 @@ has a link to object {}".format(succ_object, obj) )
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object)
 
-        # print("Do you forget to remove the file?")
         # Deal with the impression
         for obj in queue:
             # Calculate the absolute path of the new directory
@@ -443,7 +443,6 @@ has a link to object {}".format(succ_object, obj) )
         if self.object_type() == "directory":
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
 
-        # print("Do you forget to remove the file?")
         shutil.rmtree(self.path)
 
     def add(self, src, dst):
@@ -486,8 +485,7 @@ has a link to object {}".format(succ_object, obj) )
         return sub_object_list
 
     def sub_objects_recursively(self):
-        """
-        Return a list of all the sub_objects
+        """ Return a list of all the sub_objects
         """
         queue = [self]
         index = 0
@@ -498,10 +496,7 @@ has a link to object {}".format(succ_object, obj) )
         return queue
 
     def is_impressed_fast(self):
-        # return self.is_impressed()
-        # config_file = utils.ConfigFile(os.environ["HOME"] + "/.Chern/git-cache")
         consult_table = cherndb.impression_consult_table
-        # config_file.read_variable("impression_consult_table", {})
         last_consult_time, is_impressed = consult_table.get(self.path, (-1,-1))
         now = time.time()
         if now - last_consult_time < 1:
@@ -511,7 +506,6 @@ has a link to object {}".format(succ_object, obj) )
             return is_impressed
         is_impressed = self.is_impressed()
         consult_table[self.path] = (time.time(), is_impressed)
-        # config_file.write_variable("impression_consult_table", consult_table)
         return is_impressed
 
     def impression_file_list(self, impression = ""):
@@ -523,7 +517,6 @@ has a link to object {}".format(succ_object, obj) )
             if "README.md" in filenames:
                 filenames.remove("README.md")
             file_list.append([dirpath, dirnames, filenames])
-
         return file_list
 
     def pred_impressions(self, impression = ""):
@@ -591,7 +584,6 @@ has a link to object {}".format(succ_object, obj) )
             if not pred.is_impressed_fast():
                 pred.impress()
 
-        # self.config_file.write_variable("pred_impression", pred_impression)
         impression = uuid.uuid4().hex
         self.config_file.write_variable("impression", impression)
         impressions = self.config_file.read_variable("impressions", [])
