@@ -13,10 +13,13 @@ from Chern.kernel.VDirectory import create_directory
 from Chern.kernel.ChernDatabase import ChernDatabase
 from Chern.utils.pretty import color_print
 from Chern.utils.pretty import colorize
+from Chern.kernel.ChernCommunicator import ChernCommunicator
+
 import time
 
 manager = get_manager()
 cherndb = ChernDatabase.instance()
+cherncc = ChernCommunicator.instance()
 
 def cd_project(line):
     manager.switch_project(line)
@@ -227,3 +230,14 @@ def remove_input(alias):
         return
     manager.c.remove_input(alias)
 
+def add_host(host, url):
+    cherncc.add_host(host, url)
+
+def hosts():
+    hosts = cherncc.hosts()
+    urls = cherncc.urls()
+    print("{0:<20}{1:20}".format("HOSTS", "STATUS"))
+    for host in hosts:
+        status = cherncc.host_status(host)
+        color_tag = {"ok":"ok", "unconnected":"warning"}[status]
+        print("{0:<20}{1:20}".format(host, colorize(status, color_tag)))

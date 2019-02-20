@@ -387,7 +387,7 @@ has a link to object {}".format(succ_object, obj) )
             new_object = VObject(norm_path)
             new_object.clean_flow()
 
-        print("Do you forget to remove the file?")
+        # print("Do you forget to remove the file?")
         print(queue)
         for obj in queue:
             # Calculate the absolute path of the new directory
@@ -420,7 +420,7 @@ has a link to object {}".format(succ_object, obj) )
                     alias = obj.path_to_alias(succ_object.invariant_path())
                     succ_object.remove_alias(alias)
                     succ_object.set_alias(alias, new_object.invariant_path())
-        print("Do you forget to remove the file?")
+        # print("Do you forget to remove the file?")
 
         for obj in queue:
             for pred_object in obj.predecessors():
@@ -431,7 +431,7 @@ has a link to object {}".format(succ_object, obj) )
                 if self.relative_path(succ_object.path).startswith(".."):
                     obj.remove_arc_to(succ_object)
 
-        print("Do you forget to remove the file?")
+        # print("Do you forget to remove the file?")
         # Deal with the impression
         for obj in queue:
             # Calculate the absolute path of the new directory
@@ -443,7 +443,7 @@ has a link to object {}".format(succ_object, obj) )
         if self.object_type() == "directory":
             norm_path = os.path.normpath(new_path +"/"+ self.relative_path(obj.path))
 
-        print("Do you forget to remove the file?")
+        # print("Do you forget to remove the file?")
         shutil.rmtree(self.path)
 
     def add(self, src, dst):
@@ -559,6 +559,16 @@ has a link to object {}".format(succ_object, obj) )
                                self.path+"/.chern/impressions/{}/contents/{}/{}".format(impression, dirpath, f)):
                     return False
         return True
+
+    def pack_impression(self, impression, difference=None):
+        if (is_packed(difference)):
+            unpack_impression(difference)
+
+    def unpack_impression(self, impression):
+        pass
+
+    def is_packed(self):
+        pass
 
     def impress(self):
         """ Create an impression.

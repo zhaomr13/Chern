@@ -21,6 +21,8 @@ from Chern.interface import shell
 import click
 from click.testing import CliRunner
 
+cherndb = ChernDatabase.instance()
+
 manager = get_manager()
 runner = CliRunner()
 
@@ -444,3 +446,44 @@ def check(line):
         line = "local"
     manager.c.check(line)
 del check
+
+#----------
+@click.command()
+@click.argument("host")
+@click.argument("url")
+def add_host(host, url):
+    """ add_host
+    """
+    shell.add_host(host, url)
+
+click_add_host = add_host
+
+@register_line_magic
+def add_host(line):
+    """ The extended cd function: cd number
+    """
+    result = runner.invoke(click_add_host, line.split())
+    output = result.output.rstrip("\n ")
+    if output != "":
+        print(output)
+del add_host
+
+#----------
+@click.command()
+def hosts():
+    """ show the hosts
+    """
+    shell.hosts()
+
+click_hosts = hosts
+
+@register_line_magic
+def hosts(line):
+    """ The extended cd function: cd number
+    """
+    result = runner.invoke(click_hosts, line.split())
+    output = result.output.rstrip("\n ")
+    if output != "":
+        print(output)
+del hosts
+

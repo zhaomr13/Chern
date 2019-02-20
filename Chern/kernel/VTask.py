@@ -33,15 +33,16 @@ class VTask(VObject):
             print(values[parameter])
 
         if show_status:
-            status = self.status()
-            if status == "done":
-                status_color = "success"
-            elif status == "running":
-                status_color = "running"
-            else:
-                status_color = "normal"
-            print(colorize("**** STATUS:", "title0"),
-                colorize(status, status_color) )
+                status = self.status()
+                if status == "done":
+                    status_color = "success"
+                elif status == "running":
+                    status_color = "running"
+                else:
+                    status_color = "normal"
+                print(colorize("**** STATUS:", "title0"),
+                    colorize(status, status_color) )
+
 
         # if self.is_submitted() and self.container().error() != "":
         # print(colorize("!!!! ERROR:\n", "title0"), self.container().error())
@@ -59,7 +60,6 @@ class VTask(VObject):
                     if (i+1)%nfiles == 0:
                         print("")
             print("")
-
 
         if self.algorithm() is not None:
             print(colorize("---- Algorithm files:", "title0"))
