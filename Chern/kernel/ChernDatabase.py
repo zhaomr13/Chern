@@ -95,8 +95,6 @@ class ChernDatabase(object):
         projects_path = local_config_file.read_variable("projects_path", {})
         return list(projects_path.keys())
 
-
-
     def project_path(self):
         """ Get The path of a specific project.
         You must be sure that the project exists.
