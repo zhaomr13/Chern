@@ -1,4 +1,5 @@
 from Chern.kernel.VProject import VProject
+from Chern.kernel.VProject import new_project
 from Chern.interface.ChernManager import get_manager
 import os
 
@@ -14,7 +15,7 @@ if current_project_name is None:
     # FIXME may exsit
     # os.mkdir(os.environ["HOME"] +"/.Chern")
     project_name = input("please input the new project name: ")
-    manager.new_project(project_name)
+    new_project(project_name)
     current_project_name = manager.get_current_project()
 
 current_project_path = manager.get_project_path(current_project_name)
