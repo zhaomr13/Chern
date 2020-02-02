@@ -59,6 +59,23 @@
 
         + add: FIXME what is it?
 
+        + rm:
+            Remove the object
+
+        + impression:
+            Return the impression of the object
+        + impress:
+            Make a impression
+        + is_impressed:
+            Judge whether this object is impressed
+        +
+
+        + pack_impression:
+        + unpack_impression:
+        + is_packed:
+            For future transfer purpose
+
+
 
 
 """
