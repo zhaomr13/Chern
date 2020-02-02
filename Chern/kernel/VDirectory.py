@@ -1,12 +1,37 @@
-"""
-A module
+""" The VDirectory class
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    VDirectory:
+    #Methods:
+        + helpme:
+            Print the helpme of this directory
+            FIXME: Maybe transfer to return the helpme and putting the
+            printing function to interface
+        + status:
+            Give the status of the object
+        + submit:
+            Submit the contents of the directory(apply submit to the tasks/algorithms/subdirectories)
+        ===================
+        Inherited from VObject
+        + __init__
+        + __str__, __repr__
+        + invariant_path, relative_path
+        + object_type, is_zombine
+        + color_tag
+        + ls
+        + copy_to, clean_impressions/flow
+        + rm
+        + move_to
+        + alias(and related)
+        + add/remove_arc_from/to
+        + (has)successor/predecessors(s)
+        + doctor
+        + pack(and related)
+        + impression(and related)
 """
 import os
 import subprocess
 import Chern
-from Chern.utils import utils
-from Chern.utils import git
-from Chern.utils import csys
+from Chern.utils import utils from Chern.utils import git from Chern.utils import csys
 from Chern.utils import metadata
 from Chern.kernel.VObject import VObject
 class VDirectory(VObject):
