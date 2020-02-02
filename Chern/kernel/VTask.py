@@ -1,3 +1,86 @@
+""" The VTask class
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Methods:
+        + helpme:
+            Print the helpme of the task
+        + ls:
+            First call the general ls and then print some other useful information:
+            parameters, status, outputs, algorithms
+        + output_files:
+            Get the information of the output_files from ChernCommunicator
+        + get_file:
+            Get file??? from ChernCommunicator
+
+        + inputs:
+        + outputs:
+
+        + submit
+            Submit the job to server. Through ChernCommunicator.
+        + resubmit
+            Resubmit the job to server. Through ChernCommunicator.
+        + view
+        + cp
+            Copy the output to some directory
+        + remove
+            Remove the task.
+        + jobs
+            Query the jobs of the task throught ChernCommunicator.
+
+        + view
+            Open the file through ChernCommunicator. This is quite temporatory. Because it can only open local file.
+
+        + is_submitted:
+            Judge whether the task is submitted or not. Ask this information from ChernCommunicator.
+
+        + output_md5:
+            Read the md5 of the output directory
+
+        + add_parameter
+        + remove_parameter:
+            Add/Remove parameter, should deal the problem of missing parameter/parameter already there.
+
+        + add_input
+            Add input to the task(with alias), print something, maybe changed later.
+        + remove_input
+            Remove input of the task through alias.
+
+        + add_algorithm
+            Add the algorithm correspnding to the task. if already has algorithm, replace the old one and print the message. Maybe changed later
+            because I do not want to print anything in the kernel.
+        + remove_algorithm
+            Remove the algorithm corresponding to the task. if nothing to remove it print the message. Maybe changed later because I do
+            not want to print anything in the kernel.
+        + algorithm
+            Return the algorithm corresponding to this task. If the task is not related to an algorithm, return None.
+
+        + container
+            Return the container corresponding the top impression.
+        + add_source
+            Make a new task, with raw data.
+
+        + add_output
+            ABANDONED
+        + remove_output
+            ABANDONED
+        ===================
+        Inherited from VObject
+        + __init__
+        + __str__, __repr__
+        + invariant_path, relative_path
+        + object_type, is_zombine
+        + color_tag
+        + ls
+        + copy_to, clean_impressions/flow
+        + rm
+        + move_to
+        + alias(and related)
+        + add/remove_arc_from/to
+        + (has)successor/predecessors(s)
+        + doctor
+        + pack(and related)
+        + impression(and related)
+
+"""
 import os
 import uuid
 import imp
@@ -123,9 +206,6 @@ class VTask(VObject):
                 print("File: {} do not exists".format(path))
                 return
             csys.copy(path, dst)
-
-
-
 
     def remove(self, remove_impression):
         impressions = self.config_file.read_variable("impressions", [])
